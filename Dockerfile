@@ -165,23 +165,14 @@ RUN npm install --network-timeout=600000
 # Copy application code (everything except package.json which we created)
 COPY . .
 
-# Hardcode build-time environment variables to avoid build-arg issues
-ENV NEXT_PUBLIC_SUPABASE_URL=https://wljwlgjeqoulxvwbfgpy.supabase.co
-ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsandsZ2plcW91bHh2d2JmZ3B5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3ODU1ODAsImV4cCI6MjA2ODM2MTU4MH0.t1CJVew2x97n4HUwerOOyijSblkw0R4GcSHadT1A7ek
-ENV NEXT_PUBLIC_APP_URL=https://painoptix-kmyw6.ondigitalocean.app
-ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_51KgX8CJCbOhp4gDdLuVE9Npd2IOCoeUUmLBvc3KI4kHxFKTbrJwVa2tzmxurnh4GA3NhaU1nILlh0S8mX9gTQHoG00QJnLuzhj
-ENV NEXT_PUBLIC_ENVIRONMENT=production
-ENV SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsandsZ2plcW91bHh2d2JmZ3B5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Mjc4NTU4MCwiZXhwIjoyMDY4MzYxNTgwfQ.Y-qMCqrjMlAk1tOrKhIyoi0561mDPHgnrkGiYvQfh4U
-
 # Build Next.js application with standalone output
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+# Environment variables are provided by DigitalOcean app spec
 # Debug: Print environment variables to verify they're set
 RUN echo "=== Build Environment ===" && \
-    echo "NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}" && \
-    echo "NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}" && \
-    echo "NEXT_PUBLIC_ENVIRONMENT=${NEXT_PUBLIC_ENVIRONMENT}" && \
+    echo "Build starting with environment variables from app spec" && \
     echo "========================"
 
 RUN npm run build
