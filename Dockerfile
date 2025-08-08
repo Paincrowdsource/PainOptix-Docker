@@ -270,7 +270,8 @@ COPY --from=builder --chown=app:app /app/.next/static ./.next/static
 COPY --from=builder --chown=app:app /app/public ./public
 
 # Copy content directory for PDF generation
-COPY --from=builder --chown=app:app /app/content ./content 2>/dev/null || true
+# Using glob pattern to handle missing directory gracefully
+COPY --from=builder --chown=app:app /app/content* ./
 
 # Install Puppeteer with bundled Chromium
 RUN npm install puppeteer@23.11.1 --no-save \
