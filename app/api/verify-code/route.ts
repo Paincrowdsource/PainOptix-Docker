@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     // SECURITY: Retrieve active verification code record
     // Only searches for unverified codes to prevent reuse
-    const { data: verificationRecord, error: fetchError } = await supabaseAdmin
+    const { data: verificationRecord, error: fetchError } = await supabaseAdmin()
       .from('verification_codes')
       .select('*')
       .eq('identifier', identifier)
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     // SECURITY: Check code expiration (15-minute window)
     if (new Date(verificationRecord.expires_at) < new Date()) {
       // Cleanup: Delete expired code to prevent accumulation
-      await supabaseAdmin
+      await supabaseAdmin()
         .from('verification_codes')
         .delete()
         .eq('id', verificationRecord.id)
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     // SECURITY: Validate submitted code against stored code
     if (verificationRecord.code !== code) {
       // Track failed attempt for rate limiting
-      await supabaseAdmin
+      await supabaseAdmin()
         .from('verification_codes')
         .update({ attempts: verificationRecord.attempts + 1 })
         .eq('id', verificationRecord.id)
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     }
 
     // SUCCESS: Mark code as verified to prevent reuse
-    await supabaseAdmin
+    await supabaseAdmin()
       .from('verification_codes')
       .update({ verified: true })
       .eq('id', verificationRecord.id)
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
 
     // AUDIT TRAIL: Log successful access for security monitoring
     // GDPR compliant: Legitimate interest for security purposes
-    await supabaseAdmin
+    await supabaseAdmin()
       .from('user_access_logs')
       .insert({
         user_identifier: identifier,

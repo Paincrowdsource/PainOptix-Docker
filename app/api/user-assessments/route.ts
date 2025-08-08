@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
 
     // AUTHORIZATION: Fetch assessments for authenticated user only
     // Uses OR condition to match either email or phone identifier
-    const { data: assessments, error } = await supabaseAdmin
+    const { data: assessments, error } = await supabaseAdmin()
       .from('assessments')
       .select(`
         id,

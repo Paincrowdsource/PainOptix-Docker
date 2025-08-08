@@ -23,7 +23,7 @@ async function checkRateLimit(identifier: string, ip: string, action: string): P
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
   
   // Check contact-based rate limit
-  const { data: contactLimits } = await supabaseAdmin
+  const { data: contactLimits } = await supabaseAdmin()
     .from('verification_rate_limits')
     .select('*')
     .eq('identifier', identifier)
@@ -32,7 +32,7 @@ async function checkRateLimit(identifier: string, ip: string, action: string): P
     .gte('window_start', oneHourAgo)
   
   // Check IP-based rate limit
-  const { data: ipLimits } = await supabaseAdmin
+  const { data: ipLimits } = await supabaseAdmin()
     .from('verification_rate_limits')
     .select('*')
     .eq('identifier', ip)
@@ -52,7 +52,7 @@ async function updateRateLimit(identifier: string, ip: string, action: string) {
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
   
   // Update contact rate limit
-  const { data: existingContact } = await supabaseAdmin
+  const { data: existingContact } = await supabaseAdmin()
     .from('verification_rate_limits')
     .select('*')
     .eq('identifier', identifier)
@@ -62,12 +62,12 @@ async function updateRateLimit(identifier: string, ip: string, action: string) {
     .single()
   
   if (existingContact) {
-    await supabaseAdmin
+    await supabaseAdmin()
       .from('verification_rate_limits')
       .update({ attempts: existingContact.attempts + 1 })
       .eq('id', existingContact.id)
   } else {
-    await supabaseAdmin
+    await supabaseAdmin()
       .from('verification_rate_limits')
       .insert({
         identifier,
@@ -78,7 +78,7 @@ async function updateRateLimit(identifier: string, ip: string, action: string) {
   }
   
   // Update IP rate limit
-  const { data: existingIp } = await supabaseAdmin
+  const { data: existingIp } = await supabaseAdmin()
     .from('verification_rate_limits')
     .select('*')
     .eq('identifier', ip)
@@ -88,12 +88,12 @@ async function updateRateLimit(identifier: string, ip: string, action: string) {
     .single()
   
   if (existingIp) {
-    await supabaseAdmin
+    await supabaseAdmin()
       .from('verification_rate_limits')
       .update({ attempts: existingIp.attempts + 1 })
       .eq('id', existingIp.id)
   } else {
-    await supabaseAdmin
+    await supabaseAdmin()
       .from('verification_rate_limits')
       .insert({
         identifier: ip,
@@ -133,8 +133,8 @@ export async function POST(request: NextRequest) {
     // AUTHORIZATION: Verify user has assessments before sending code
     // This prevents enumeration attacks and protects user privacy
     const query = identifierType === 'email' 
-      ? supabaseAdmin.from('assessments').select('id').eq('email', identifier)
-      : supabaseAdmin.from('assessments').select('id').eq('phone_number', identifier)
+      ? supabaseAdmin().from('assessments').select('id').eq('email', identifier)
+      : supabaseAdmin().from('assessments').select('id').eq('phone_number', identifier)
     
     const { data: assessments, error: assessmentError } = await query
 
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
     }
 
     // SECURITY: Invalidate any existing codes (prevents code reuse)
-    await supabaseAdmin
+    await supabaseAdmin()
       .from('verification_codes')
       .delete()
       .eq('identifier', identifier)
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15-minute expiration
 
     // Store verification code with metadata for tracking
-    const { error: insertError } = await supabaseAdmin
+    const { error: insertError } = await supabaseAdmin()
       .from('verification_codes')
       .insert({
         identifier,

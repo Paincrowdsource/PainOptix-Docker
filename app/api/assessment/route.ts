@@ -144,7 +144,7 @@ export async function PATCH(req: NextRequest) {
     }
     
     // Use admin client to bypass RLS
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin()
       .from('assessments')
       .update(updates)
       .eq('id', id)

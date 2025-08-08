@@ -61,6 +61,7 @@ RUN echo '{ \
     "tailwind-merge": "^3.3.1", \
     "twilio": "^5.7.3", \
     "winston": "^3.17.0", \
+    "ws": "^8.18.0", \
     "zod": "^4.0.10" \
   }, \
   "devDependencies": { \
@@ -145,6 +146,7 @@ RUN echo '{ \
     "tailwind-merge": "^3.3.1", \
     "twilio": "^5.7.3", \
     "winston": "^3.17.0", \
+    "ws": "^8.18.0", \
     "zod": "^4.0.10" \
   }, \
   "devDependencies": { \
@@ -165,15 +167,35 @@ RUN npm install --network-timeout=600000
 # Copy application code (everything except package.json which we created)
 COPY . .
 
+# Make DO's RUN_AND_BUILD_TIME envs visible as build args
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_APP_URL
+ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_ENVIRONMENT
+ARG SUPABASE_SERVICE_ROLE_KEY
+ARG SENDGRID_API_KEY
+ARG STRIPE_SECRET_KEY
+
+# Promote to ENV so Node/Next sees them at build
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_ENVIRONMENT=$NEXT_PUBLIC_ENVIRONMENT
+ENV SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
+ENV SENDGRID_API_KEY=$SENDGRID_API_KEY
+ENV STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY
+
 # Build Next.js application with standalone output
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Environment variables are provided by DigitalOcean app spec
-# Debug: Print environment variables to verify they're set
-RUN echo "=== Build Environment ===" && \
-    echo "Build starting with environment variables from app spec" && \
-    echo "========================"
+# More heap for Next build
+ENV NODE_OPTIONS=--max_old_space_size=2048
+
+# Optional: sanity (do NOT print secrets)
+RUN node -e "console.log('has URL?',!!process.env.NEXT_PUBLIC_SUPABASE_URL,'has SRK?',!!process.env.SUPABASE_SERVICE_ROLE_KEY)"
 
 RUN npm run build
 

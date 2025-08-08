@@ -124,7 +124,7 @@ export async function sendSMS(params: SendSMSParams): Promise<boolean> {
     // Check if user has opted out (unless this is a system message)
     if (!params.skipOptOutCheck) {
       try {
-        const { data: optOut } = await supabaseAdmin
+        const { data: optOut } = await supabaseAdmin()
           .from('sms_opt_outs')
           .select('phone_number')
           .eq('phone_number', phoneNumber)
