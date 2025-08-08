@@ -421,7 +421,6 @@ export default function GuidePage() {
             assessment.payment_tier === 'enhanced' || assessment.payment_tier === 5 ? 'enhanced' :
             'free'
           }
-          responses={assessment.responses}
         />
 
         {/* Premium PDF Download Section */}
