@@ -5,78 +5,76 @@ FROM node:20-slim AS deps
 WORKDIR /app
 
 # Create package.json directly in the Docker image (no package.json at repo root!)
-RUN cat > package.json << 'EOF'
-{
-  "name": "painoptix-app",
-  "version": "1.0.0",
-  "main": "index.js",
-  "engines": {
-    "node": "20.x",
-    "npm": "10.x"
-  },
-  "scripts": {
-    "dev": "next dev -p 3000",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@hookform/resolvers": "^5.1.1",
-    "@radix-ui/react-checkbox": "^1.3.2",
-    "@radix-ui/react-label": "^2.1.7",
-    "@radix-ui/react-progress": "^1.1.7",
-    "@radix-ui/react-radio-group": "^1.3.7",
-    "@radix-ui/react-slider": "^1.3.5",
-    "@radix-ui/react-slot": "^1.2.3",
-    "@react-pdf/font": "^4.0.2",
-    "@react-pdf/renderer": "^4.3.0",
-    "@sendgrid/mail": "^8.1.5",
-    "@sparticuz/chromium": "^119.0.2",
-    "@stripe/stripe-js": "^7.5.0",
-    "@supabase/auth-helpers-nextjs": "^0.10.0",
-    "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.52.0",
-    "@types/js-yaml": "^4.0.9",
-    "@types/jspdf": "^1.3.3",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "date-fns": "^4.1.0",
-    "dotenv": "^17.2.0",
-    "gray-matter": "^4.0.3",
-    "js-yaml": "^4.1.0",
-    "jspdf": "^3.0.1",
-    "jspdf-autotable": "^5.0.2",
-    "lucide-react": "^0.525.0",
-    "mammoth": "^1.9.1",
-    "marked": "^16.1.1",
-    "next": "^15.4.2",
-    "pdf-parse": "^1.1.1",
-    "puppeteer-core": "^24.15.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-hook-form": "^7.60.0",
-    "react-hot-toast": "^2.5.2",
-    "react-markdown": "^10.1.0",
-    "stripe": "^18.3.0",
-    "tailwind-merge": "^3.3.1",
-    "twilio": "^5.7.3",
-    "winston": "^3.17.0",
-    "zod": "^4.0.10"
-  },
-  "devDependencies": {
-    "@types/node": "^24.0.15",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9.31.0",
-    "eslint-config-next": "^15.4.2",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17",
-    "typescript": "^5.8.3"
-  }
-}
-EOF
+RUN echo '{ \
+  "name": "painoptix-app", \
+  "version": "1.0.0", \
+  "main": "index.js", \
+  "engines": { \
+    "node": "20.x", \
+    "npm": "10.x" \
+  }, \
+  "scripts": { \
+    "dev": "next dev -p 3000", \
+    "build": "next build", \
+    "start": "next start", \
+    "lint": "next lint", \
+    "typecheck": "tsc --noEmit" \
+  }, \
+  "dependencies": { \
+    "@hookform/resolvers": "^5.1.1", \
+    "@radix-ui/react-checkbox": "^1.3.2", \
+    "@radix-ui/react-label": "^2.1.7", \
+    "@radix-ui/react-progress": "^1.1.7", \
+    "@radix-ui/react-radio-group": "^1.3.7", \
+    "@radix-ui/react-slider": "^1.3.5", \
+    "@radix-ui/react-slot": "^1.2.3", \
+    "@react-pdf/font": "^4.0.2", \
+    "@react-pdf/renderer": "^4.3.0", \
+    "@sendgrid/mail": "^8.1.5", \
+    "@sparticuz/chromium": "^119.0.2", \
+    "@stripe/stripe-js": "^7.5.0", \
+    "@supabase/auth-helpers-nextjs": "^0.10.0", \
+    "@supabase/ssr": "^0.6.1", \
+    "@supabase/supabase-js": "^2.52.0", \
+    "@types/js-yaml": "^4.0.9", \
+    "@types/jspdf": "^1.3.3", \
+    "class-variance-authority": "^0.7.1", \
+    "clsx": "^2.1.1", \
+    "date-fns": "^4.1.0", \
+    "dotenv": "^17.2.0", \
+    "gray-matter": "^4.0.3", \
+    "js-yaml": "^4.1.0", \
+    "jspdf": "^3.0.1", \
+    "jspdf-autotable": "^5.0.2", \
+    "lucide-react": "^0.525.0", \
+    "mammoth": "^1.9.1", \
+    "marked": "^16.1.1", \
+    "next": "^15.4.2", \
+    "pdf-parse": "^1.1.1", \
+    "puppeteer-core": "^24.15.0", \
+    "react": "^19.1.0", \
+    "react-dom": "^19.1.0", \
+    "react-hook-form": "^7.60.0", \
+    "react-hot-toast": "^2.5.2", \
+    "react-markdown": "^10.1.0", \
+    "stripe": "^18.3.0", \
+    "tailwind-merge": "^3.3.1", \
+    "twilio": "^5.7.3", \
+    "winston": "^3.17.0", \
+    "zod": "^4.0.10" \
+  }, \
+  "devDependencies": { \
+    "@types/node": "^24.0.15", \
+    "@types/react": "^19.1.8", \
+    "@types/react-dom": "^19.1.6", \
+    "autoprefixer": "^10.4.21", \
+    "eslint": "^9.31.0", \
+    "eslint-config-next": "^15.4.2", \
+    "postcss": "^8.5.6", \
+    "tailwindcss": "^3.4.17", \
+    "typescript": "^5.8.3" \
+  } \
+}' > package.json
 
 # Install dependencies with increased network timeout
 RUN npm ci --only=production --network-timeout=600000 || npm install --production --network-timeout=600000
@@ -94,75 +92,73 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create package.json again for builder stage
-RUN cat > package.json << 'EOF'
-{
-  "name": "painoptix-app",
-  "version": "1.0.0",
-  "main": "index.js",
-  "engines": {
-    "node": "20.x",
-    "npm": "10.x"
-  },
-  "scripts": {
-    "build": "next build",
-    "start": "next start"
-  },
-  "dependencies": {
-    "@hookform/resolvers": "^5.1.1",
-    "@radix-ui/react-checkbox": "^1.3.2",
-    "@radix-ui/react-label": "^2.1.7",
-    "@radix-ui/react-progress": "^1.1.7",
-    "@radix-ui/react-radio-group": "^1.3.7",
-    "@radix-ui/react-slider": "^1.3.5",
-    "@radix-ui/react-slot": "^1.2.3",
-    "@react-pdf/font": "^4.0.2",
-    "@react-pdf/renderer": "^4.3.0",
-    "@sendgrid/mail": "^8.1.5",
-    "@sparticuz/chromium": "^119.0.2",
-    "@stripe/stripe-js": "^7.5.0",
-    "@supabase/auth-helpers-nextjs": "^0.10.0",
-    "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.52.0",
-    "@types/js-yaml": "^4.0.9",
-    "@types/jspdf": "^1.3.3",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "date-fns": "^4.1.0",
-    "dotenv": "^17.2.0",
-    "gray-matter": "^4.0.3",
-    "js-yaml": "^4.1.0",
-    "jspdf": "^3.0.1",
-    "jspdf-autotable": "^5.0.2",
-    "lucide-react": "^0.525.0",
-    "mammoth": "^1.9.1",
-    "marked": "^16.1.1",
-    "next": "^15.4.2",
-    "pdf-parse": "^1.1.1",
-    "puppeteer-core": "^24.15.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-hook-form": "^7.60.0",
-    "react-hot-toast": "^2.5.2",
-    "react-markdown": "^10.1.0",
-    "stripe": "^18.3.0",
-    "tailwind-merge": "^3.3.1",
-    "twilio": "^5.7.3",
-    "winston": "^3.17.0",
-    "zod": "^4.0.10"
-  },
-  "devDependencies": {
-    "@types/node": "^24.0.15",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9.31.0",
-    "eslint-config-next": "^15.4.2",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17",
-    "typescript": "^5.8.3"
-  }
-}
-EOF
+RUN echo '{ \
+  "name": "painoptix-app", \
+  "version": "1.0.0", \
+  "main": "index.js", \
+  "engines": { \
+    "node": "20.x", \
+    "npm": "10.x" \
+  }, \
+  "scripts": { \
+    "build": "next build", \
+    "start": "next start" \
+  }, \
+  "dependencies": { \
+    "@hookform/resolvers": "^5.1.1", \
+    "@radix-ui/react-checkbox": "^1.3.2", \
+    "@radix-ui/react-label": "^2.1.7", \
+    "@radix-ui/react-progress": "^1.1.7", \
+    "@radix-ui/react-radio-group": "^1.3.7", \
+    "@radix-ui/react-slider": "^1.3.5", \
+    "@radix-ui/react-slot": "^1.2.3", \
+    "@react-pdf/font": "^4.0.2", \
+    "@react-pdf/renderer": "^4.3.0", \
+    "@sendgrid/mail": "^8.1.5", \
+    "@sparticuz/chromium": "^119.0.2", \
+    "@stripe/stripe-js": "^7.5.0", \
+    "@supabase/auth-helpers-nextjs": "^0.10.0", \
+    "@supabase/ssr": "^0.6.1", \
+    "@supabase/supabase-js": "^2.52.0", \
+    "@types/js-yaml": "^4.0.9", \
+    "@types/jspdf": "^1.3.3", \
+    "class-variance-authority": "^0.7.1", \
+    "clsx": "^2.1.1", \
+    "date-fns": "^4.1.0", \
+    "dotenv": "^17.2.0", \
+    "gray-matter": "^4.0.3", \
+    "js-yaml": "^4.1.0", \
+    "jspdf": "^3.0.1", \
+    "jspdf-autotable": "^5.0.2", \
+    "lucide-react": "^0.525.0", \
+    "mammoth": "^1.9.1", \
+    "marked": "^16.1.1", \
+    "next": "^15.4.2", \
+    "pdf-parse": "^1.1.1", \
+    "puppeteer-core": "^24.15.0", \
+    "react": "^19.1.0", \
+    "react-dom": "^19.1.0", \
+    "react-hook-form": "^7.60.0", \
+    "react-hot-toast": "^2.5.2", \
+    "react-markdown": "^10.1.0", \
+    "stripe": "^18.3.0", \
+    "tailwind-merge": "^3.3.1", \
+    "twilio": "^5.7.3", \
+    "winston": "^3.17.0", \
+    "zod": "^4.0.10" \
+  }, \
+  "devDependencies": { \
+    "@types/node": "^24.0.15", \
+    "@types/react": "^19.1.8", \
+    "@types/react-dom": "^19.1.6", \
+    "autoprefixer": "^10.4.21", \
+    "eslint": "^9.31.0", \
+    "eslint-config-next": "^15.4.2", \
+    "postcss": "^8.5.6", \
+    "tailwindcss": "^3.4.17", \
+    "typescript": "^5.8.3" \
+  } \
+}' > package.json
 
 RUN npm ci --network-timeout=600000 || npm install --network-timeout=600000
 
