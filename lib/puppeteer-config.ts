@@ -1,30 +1,8 @@
-import puppeteer, { Browser, Page, LaunchOptions } from 'puppeteer-core';
-import fs from 'fs';
-
-// Try to find chromium executable in common locations
-function findChromium(): string | undefined {
-  const possiblePaths = [
-    '/usr/bin/chromium',
-    '/usr/bin/chromium-browser',
-    '/snap/bin/chromium',
-    '/usr/lib/chromium/chromium',
-    '/usr/lib/chromium-browser/chromium-browser',
-  ];
-  
-  for (const path of possiblePaths) {
-    if (fs.existsSync(path)) {
-      console.log(`Found chromium at: ${path}`);
-      return path;
-    }
-  }
-  
-  console.warn('Chromium not found in common paths, using puppeteer default');
-  return undefined;
-}
+import puppeteer, { Browser, Page, LaunchOptions } from 'puppeteer';
 
 // Puppeteer configuration optimized for DigitalOcean and Docker
 export const PUPPETEER_CONFIG: LaunchOptions = {
-  headless: 'new' as any, // Use new headless mode which is more stable
+  headless: true, // Use new headless mode which is more stable
   args: [
     '--no-sandbox',
     '--disable-setuid-sandbox',
@@ -34,7 +12,7 @@ export const PUPPETEER_CONFIG: LaunchOptions = {
     '--no-zygote',
     '--disable-blink-features=AutomationControlled',
   ],
-  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || findChromium(),
+  // Remove executablePath - let puppeteer use its bundled chromium
   // Increase timeout for slower containers
   timeout: 60000,
   // Prevent memory leaks

@@ -51,7 +51,7 @@ RUN echo '{ \
     "marked": "^16.1.1", \
     "next": "^15.4.2", \
     "pdf-parse": "^1.1.1", \
-    "puppeteer-core": "^24.15.0", \
+    "puppeteer": "^23.11.1", \
     "react": "^19.1.0", \
     "react-dom": "^19.1.0", \
     "react-hook-form": "^7.60.0", \
@@ -136,7 +136,7 @@ RUN echo '{ \
     "marked": "^16.1.1", \
     "next": "^15.4.2", \
     "pdf-parse": "^1.1.1", \
-    "puppeteer-core": "^24.15.0", \
+    "puppeteer": "^23.11.1", \
     "react": "^19.1.0", \
     "react-dom": "^19.1.0", \
     "react-hook-form": "^7.60.0", \
@@ -257,10 +257,6 @@ RUN groupadd -r app && useradd -r -g app -G audio,video app \
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Puppeteer configuration
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-
 # Memory optimization for large PDF generation
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
@@ -273,15 +269,29 @@ COPY --from=builder --chown=app:app /app/public ./public
 # Using glob pattern to handle missing directory gracefully
 COPY --from=builder --chown=app:app /app/content* ./
 
-# Install Puppeteer with bundled Chromium
-RUN npm install puppeteer@23.11.1 --no-save \
-    && chmod -R 755 /app/node_modules/puppeteer/.local-chromium 2>/dev/null || true
+# ensure we're in /app and owned by app
+WORKDIR /app
+
+# create cache dir for puppeteer under the app user and make sure it exists
+ENV PUPPETEER_CACHE_DIR=/home/app/.cache/puppeteer
+RUN mkdir -p /home/app/.cache/puppeteer && chown -R app:app /home/app
+
+# switch to app user BEFORE installing puppeteer so chromium lands in /home/app
+USER app
+
+# install puppeteer (downloads bundled Chromium)
+RUN npm set fund false && npm set audit false \
+ && npm install puppeteer@23.11.1 --no-save
+
+# sanity: print path puppeteer thinks it will use (path only, not a secret)
+RUN node -e "console.log('pupp executable:', require('puppeteer').executablePath())"
 
 # Create temp directory for Chromium with proper permissions
+USER root
 RUN mkdir -p /tmp/.chromium \
     && chown -R app:app /tmp/.chromium
 
-# Switch to non-root user
+# Switch back to non-root user
 USER app
 
 # Health check for DigitalOcean
