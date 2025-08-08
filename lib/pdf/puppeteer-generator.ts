@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 import { browserPool, configurePage, PDF_OPTIONS } from '@/lib/puppeteer-config';
 import { marked } from 'marked';
 import matter from 'gray-matter';

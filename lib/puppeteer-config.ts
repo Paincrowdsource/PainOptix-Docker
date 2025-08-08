@@ -1,4 +1,4 @@
-import puppeteer, { Browser, Page, LaunchOptions } from 'puppeteer';
+import puppeteer, { Browser, Page, LaunchOptions } from 'puppeteer-core';
 import fs from 'fs';
 
 // Try to find chromium executable in common locations
