@@ -417,7 +417,7 @@ export default function GuidePage() {
         <GuideContent 
           guideType={assessment.guide_type}
           tier={
-            (assessment.payment_tier && isHighestTier(String(assessment.payment_tier))) || assessment.payment_tier === 20 ? 'comprehensive' :
+            (assessment.payment_tier && isHighestTier(String(assessment.payment_tier))) || assessment.payment_tier === 20 ? 'monograph' :
             assessment.payment_tier === 'enhanced' || assessment.payment_tier === 5 ? 'enhanced' :
             'free'
           }
