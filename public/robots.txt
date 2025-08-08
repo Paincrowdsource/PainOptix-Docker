@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /guide/*/upgrade
+Sitemap: https://painoptix.com/sitemap.xml

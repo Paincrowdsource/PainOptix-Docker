@@ -1,0 +1,24 @@
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import AdminLayoutClient from './AdminLayoutClient';
+
+// Force dynamic rendering for all admin pages
+export const dynamic = 'force-dynamic';
+
+export default async function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const supabase = createServerComponentClient({ cookies });
+  
+  // Get the current user
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  // For login page, don't check auth
+  // Note: We can't access the pathname directly in server components
+  // So we'll handle this in the client component
+  
+  return <AdminLayoutClient user={user}>{children}</AdminLayoutClient>;
+}
