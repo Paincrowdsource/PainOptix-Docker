@@ -77,7 +77,7 @@ RUN echo '{ \
 }' > package.json
 
 # Install dependencies with increased network timeout
-RUN npm ci --only=production --network-timeout=600000 || npm install --production --network-timeout=600000
+RUN npm install --production --network-timeout=600000
 
 # Stage 2: Builder
 FROM node:20-slim AS builder
@@ -160,7 +160,7 @@ RUN echo '{ \
   } \
 }' > package.json
 
-RUN npm ci --network-timeout=600000 || npm install --network-timeout=600000
+RUN npm install --network-timeout=600000
 
 # Copy application code (everything except package.json which we created)
 COPY . .
