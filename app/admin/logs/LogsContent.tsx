@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Activity, AlertCircle, CheckCircle, XCircle, Clock, RefreshCw, Search, Filter } from 'lucide-react'
+import { Activity, AlertCircle, CheckCircle, XCircle, Clock, RefreshCw, Search, Filter, FileText, DollarSign, Mail, MessageSquare } from 'lucide-react'
 
 interface CommunicationLog {
   id: string
   assessment_id: string
-  type: 'email' | 'sms'
-  status: 'sent' | 'delivered' | 'failed' | 'bounced'
+  type: 'email' | 'sms' | 'pdf' | 'notification'
+  status: 'pending' | 'sent' | 'delivered' | 'failed' | 'bounced'
   recipient: string
   subject?: string
   message?: string
@@ -17,12 +17,35 @@ interface CommunicationLog {
   metadata?: any
 }
 
+interface PDFLog {
+  id: string
+  assessment_id: string
+  tier: string
+  status: string
+  error_message?: string
+  created_at: string
+  requested_by?: string
+}
+
+interface PaymentLog {
+  id: string
+  assessment_id: string
+  tier: string
+  status: string
+  amount_cents: number
+  customer_email: string
+  created_at: string
+}
+
 export default function LogsContent() {
   const [logs, setLogs] = useState<CommunicationLog[]>([])
+  const [pdfLogs, setPdfLogs] = useState<PDFLog[]>([])
+  const [paymentLogs, setPaymentLogs] = useState<PaymentLog[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'all' | 'communications' | 'pdfs' | 'payments'>('all')
   const [filterType, setFilterType] = useState<'all' | 'email' | 'sms'>('all')
-  const [filterStatus, setFilterStatus] = useState<'all' | 'sent' | 'delivered' | 'failed' | 'bounced'>('all')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'sent' | 'delivered' | 'failed' | 'bounced'>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [refreshing, setRefreshing] = useState(false)
 
@@ -31,28 +54,58 @@ export default function LogsContent() {
       setRefreshing(true)
       const supabase = createClientComponentClient()
       
-      let query = supabase
+      // Fetch communication logs
+      let commQuery = supabase
         .from('communication_logs')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(100)
 
       if (filterType !== 'all') {
-        query = query.eq('type', filterType)
+        commQuery = commQuery.eq('type', filterType)
       }
       
       if (filterStatus !== 'all') {
-        query = query.eq('status', filterStatus)
+        commQuery = commQuery.eq('status', filterStatus)
       }
 
       if (searchTerm) {
-        query = query.or(`recipient.ilike.%${searchTerm}%,assessment_id.ilike.%${searchTerm}%`)
+        commQuery = commQuery.or(`recipient.ilike.%${searchTerm}%,assessment_id.ilike.%${searchTerm}%`)
       }
 
-      const { data, error } = await query
+      const { data: commData, error: commError } = await commQuery
 
-      if (error) throw error
-      setLogs(data || [])
+      if (commError && commError.code !== 'PGRST116') {
+        throw commError
+      }
+      setLogs(commData || [])
+
+      // Fetch PDF logs
+      const { data: pdfData, error: pdfError } = await supabase
+        .from('pdf_generation_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50)
+
+      if (pdfError && pdfError.code !== 'PGRST116') {
+        console.error('PDF logs error:', pdfError)
+      } else if (pdfData) {
+        setPdfLogs(pdfData)
+      }
+
+      // Fetch payment logs
+      const { data: payData, error: payError } = await supabase
+        .from('payment_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50)
+
+      if (payError && payError.code !== 'PGRST116') {
+        console.error('Payment logs error:', payError)
+      } else if (payData) {
+        setPaymentLogs(payData)
+      }
+
     } catch (err: any) {
       console.error('Error fetching logs:', err)
       setError(err.message)
@@ -95,7 +148,21 @@ export default function LogsContent() {
   }
 
   const getTypeBadgeClass = (type: string) => {
-    return type === 'email' ? 'bg-purple-100 text-purple-800' : 'bg-indigo-100 text-indigo-800'
+    switch(type) {
+      case 'email': return 'bg-purple-100 text-purple-800'
+      case 'sms': return 'bg-indigo-100 text-indigo-800'
+      case 'pdf': return 'bg-orange-100 text-orange-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getTypeIcon = (type: string) => {
+    switch(type) {
+      case 'email': return <Mail className="h-4 w-4" />
+      case 'sms': return <MessageSquare className="h-4 w-4" />
+      case 'pdf': return <FileText className="h-4 w-4" />
+      default: return <AlertCircle className="h-4 w-4" />
+    }
   }
 
   if (loading && !refreshing) {
@@ -270,12 +337,58 @@ export default function LogsContent() {
         </div>
       </div>
 
+      {/* Tabs for different log types */}
+      <div className="mb-6 border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'all'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            All Activity
+          </button>
+          <button
+            onClick={() => setActiveTab('communications')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'communications'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Communications ({logs.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('pdfs')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'pdfs'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            PDF Generation ({pdfLogs.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('payments')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'payments'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Payments ({paymentLogs.length})
+          </button>
+        </nav>
+      </div>
+
       {/* Summary Stats */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Logs</p>
+              <p className="text-sm font-medium text-gray-600">Total Communications</p>
               <p className="text-2xl font-bold text-gray-900">{logs.length}</p>
             </div>
             <Activity className="h-8 w-8 text-gray-400" />
@@ -285,24 +398,20 @@ export default function LogsContent() {
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Delivered</p>
-              <p className="text-2xl font-bold text-green-600">
-                {logs.filter(l => l.status === 'delivered').length}
-              </p>
+              <p className="text-sm font-medium text-gray-600">PDFs Generated</p>
+              <p className="text-2xl font-bold text-orange-600">{pdfLogs.length}</p>
             </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
+            <FileText className="h-8 w-8 text-orange-500" />
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Failed</p>
-              <p className="text-2xl font-bold text-red-600">
-                {logs.filter(l => l.status === 'failed' || l.status === 'bounced').length}
-              </p>
+              <p className="text-sm font-medium text-gray-600">Payments</p>
+              <p className="text-2xl font-bold text-green-600">{paymentLogs.length}</p>
             </div>
-            <XCircle className="h-8 w-8 text-red-500" />
+            <DollarSign className="h-8 w-8 text-green-500" />
           </div>
         </div>
 
