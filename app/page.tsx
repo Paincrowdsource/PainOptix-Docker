@@ -91,10 +91,6 @@ export default function LandingPage() {
       {/* Medical Authority Hero Section */}
       <section className="relative min-h-[700px] bg-white flex items-center">
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 text-center">
-          {/* FDA compliance badge - clean and professional */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-300 rounded mb-8">
-            <span className="text-sm font-medium text-gray-700">FDA Compliant Medical Assessment</span>
-          </div>
 
           {/* Main headline - refined medical typography */}
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-normal tracking-tight text-gray-900 leading-[1.1]" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
@@ -142,7 +138,7 @@ export default function LandingPage() {
                   <span className="text-2xl font-semibold text-[#0B5394]">16</span>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">Clinical Questions</h3>
-                <p className="text-sm text-gray-600">Evidence-based assessment</p>
+                <p className="text-sm text-gray-600">Based on proven medical guidelines</p>
               </div>
               
               {/* 9 Conditions */}
