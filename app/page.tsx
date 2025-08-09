@@ -198,8 +198,8 @@ export default function LandingPage() {
                 <div className="flex-grow">
                   <h3 className="text-xl font-medium text-gray-900 mb-2">Complete Assessment</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Answer 16 clinically-validated questions about your symptoms, pain patterns, and medical history. 
-                    Our assessment uses evidence-based protocols developed by medical professionals.
+                    Answer 16 medically reviewed questions about your symptoms, pain patterns, and medical history. 
+                    Our process follows proven medical guidelines developed by experienced healthcare professionals.
                   </p>
                 </div>
               </div>
@@ -219,7 +219,7 @@ export default function LandingPage() {
                 <div className="flex-grow">
                   <h3 className="text-xl font-medium text-gray-900 mb-2">Receive Your Guide</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Get a personalized educational guide based on your specific condition. 
+                    Get an educational guide matched to your symptoms. 
                     Choose from basic (free), enhanced ($5), or comprehensive ($20) options.
                   </p>
                 </div>
@@ -240,8 +240,8 @@ export default function LandingPage() {
                 <div className="flex-grow">
                   <h3 className="text-xl font-medium text-gray-900 mb-2">Take Informed Action</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Use your guide&apos;s evidence-based recommendations to make informed decisions 
-                    about your care and discuss options with your healthcare provider.
+                    Use your guide&apos;s evidence-based information to better understand your condition, 
+                    explore self-care strategies, and discuss next steps with your healthcare provider.
                   </p>
                 </div>
               </div>
