@@ -267,7 +267,7 @@ export default function LandingPage() {
                 </div>
                 
                 <h3 className="text-2xl font-medium text-gray-900 mb-2">Bradley W. Carpentier, MD</h3>
-                <p className="text-gray-600 mb-6">Board Certified Physician</p>
+                <p className="text-gray-600 mb-6">Board-Certified Pain Medicine Specialist</p>
                 
                 {/* Professional credentials - clean text */}
                 <div className="flex flex-wrap gap-6 justify-center text-sm text-gray-600">
@@ -282,9 +282,8 @@ export default function LandingPage() {
               {/* Professional quote */}
               <div className="max-w-3xl mx-auto">
                 <blockquote className="text-lg text-gray-700 italic leading-relaxed">
-                  &quot;With extensive experience in treating musculoskeletal conditions, 
-                  Dr. Carpentier developed PainOptix to bridge the gap between 
-                  clinical expertise and patient education.&quot;
+                  &quot;Real medical expertise—clear, proven guidance so you can 
+                  understand your pain and take the right next step.&quot;
                 </blockquote>
               </div>
             </div>
@@ -358,11 +357,17 @@ export default function LandingPage() {
               <div className="flex gap-6">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Shield className="w-4 h-4 text-gray-400" />
-                  <span>FDA Compliant</span>
+                  <div className="flex flex-col">
+                    <span className="font-medium">FDA Alignment</span>
+                    <span className="text-[10px]">Developed in Alignment with FDA Educational Content Guidelines</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Lock className="w-4 h-4 text-gray-400" />
-                  <span>HIPAA Secure</span>
+                  <div className="flex flex-col">
+                    <span className="font-medium">HIPAA</span>
+                    <span className="text-[10px]">Data Protected Under HIPAA Privacy & Security Standards</span>
+                  </div>
                 </div>
               </div>
             </div>
