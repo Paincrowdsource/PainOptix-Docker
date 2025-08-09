@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 
 interface GuideContentProps {
   guideType: string
@@ -87,7 +86,7 @@ export function GuideContent({ guideType, tier, responses }: GuideContentProps) 
 
   return (
     <div className="prose prose-lg max-w-none">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      <ReactMarkdown>{content}</ReactMarkdown>
     </div>
   )
 }
