@@ -9,6 +9,7 @@ import { GuideContent } from './GuideContent'
 import { formatAssessmentResponses } from '@/lib/assessment-formatter'
 import { isHighestTier, getTierDisplayName, mapDbTierToUrl } from '@/lib/utils/tier-mapping'
 import UserDeleteModal from '@/components/UserDeleteModal'
+import { downloadPDF } from '@/lib/pdf-download'
 
 interface Assessment {
   id: string
@@ -434,7 +435,7 @@ export default function GuidePage() {
             {/* Show appropriate download based on payment tier */}
             {((assessment.payment_tier && isHighestTier(String(assessment.payment_tier))) || assessment.payment_tier === 20) ? (
               <button
-                onClick={() => window.location.href = `/api/download-guide?id=${assessment.id}&tier=monograph`}
+                onClick={() => downloadPDF(assessment.id, 'monograph')}
                 className="group relative w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 
                   text-white rounded-2xl font-medium hover:scale-[1.02] transition-all duration-300 
                   shadow-xl hover:shadow-2xl flex items-center justify-between"
@@ -447,7 +448,7 @@ export default function GuidePage() {
               </button>
             ) : (assessment.payment_tier === 'enhanced' || assessment.payment_tier === 5) ? (
               <button
-                onClick={() => window.location.href = `/api/download-guide?id=${assessment.id}&tier=enhanced`}
+                onClick={() => downloadPDF(assessment.id, 'enhanced')}
                 className="group relative w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 
                   text-white rounded-2xl font-medium hover:scale-[1.02] transition-all duration-300 
                   shadow-xl hover:shadow-2xl flex items-center justify-between"
@@ -460,7 +461,7 @@ export default function GuidePage() {
               </button>
             ) : (
               <button
-                onClick={() => window.location.href = `/api/download-guide?id=${assessment.id}&tier=free`}
+                onClick={() => downloadPDF(assessment.id, 'free')}
                 className="group relative w-full px-8 py-4 bg-gradient-to-r from-gray-600 to-gray-700 
                   text-white rounded-2xl font-medium hover:scale-[1.02] transition-all duration-300 
                   shadow-xl hover:shadow-2xl flex items-center justify-between"
