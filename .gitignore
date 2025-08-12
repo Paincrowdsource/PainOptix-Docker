@@ -56,4 +56,4 @@ test-*.js
 
 # Logs
 /logs/
-*.log
+*.logapp-spec.yaml

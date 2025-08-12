@@ -68,6 +68,7 @@ function verifySession(token: string): { identifier: string } | null {
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = supabaseAdmin();
   try {
     // AUTHENTICATION: Extract Bearer token from Authorization header
     const authorization = request.headers.get('authorization')
@@ -92,7 +93,7 @@ export async function GET(request: NextRequest) {
 
     // AUTHORIZATION: Fetch assessments for authenticated user only
     // Uses OR condition to match either email or phone identifier
-    const supabase = supabaseAdmin();
+    // Removed duplicate: const supabase = supabaseAdmin();
     const { data: assessments, error } = await supabase
       .from('assessments')
       .select(`

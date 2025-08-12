@@ -41,6 +41,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { randomUUID } from 'crypto'
 
 export async function POST(request: NextRequest) {
+  const supabase = supabaseAdmin();
   try {
     const { identifier, code } = await request.json()
     
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // SECURITY: Retrieve active verification code record
     // Only searches for unverified codes to prevent reuse
-    const supabase = supabaseAdmin();
+    // Removed duplicate: const supabase = supabaseAdmin();
     const { data: verificationRecord, error: fetchError } = await supabase
       .from('verification_codes')
       .select('*')

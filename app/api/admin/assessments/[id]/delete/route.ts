@@ -7,6 +7,8 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const supabase = supabaseAdmin();
+  
   try {
     // Verify admin authentication
     const admin = await requireAdminAuth(req);
@@ -21,7 +23,6 @@ export async function DELETE(
     }
 
     // Get assessment details before deletion for audit log
-    const supabase = supabaseAdmin();
     const { data: assessment, error: fetchError } = await supabase
       .from('assessments')
       .select('email, phone_number, guide_type')

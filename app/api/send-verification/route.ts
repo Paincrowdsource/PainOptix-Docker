@@ -95,6 +95,7 @@ async function updateRateLimit(identifier: string, ip: string, action: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = supabaseAdmin();
   try {
     const { identifier, identifierType } = await request.json()
     

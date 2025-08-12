@@ -36,6 +36,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function DELETE(request: NextRequest) {
+  const supabase = supabaseAdmin();
   try {
     const { assessmentId } = await request.json()
     
@@ -49,7 +50,7 @@ export async function DELETE(request: NextRequest) {
 
     // SECURITY: Verify assessment exists before proceeding
     // This prevents enumeration attacks and ensures we have data to delete
-    const supabase = supabaseAdmin();
+    // Removed duplicate: const supabase = supabaseAdmin();
     const { data: assessment, error: fetchError } = await supabase
       .from('assessments')
       .select('*')

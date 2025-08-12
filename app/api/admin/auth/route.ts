@@ -3,12 +3,13 @@ import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function POST(request: NextRequest) {
+  const supabase = supabaseAdmin();
   try {
     const { userId, email } = await request.json();
     const cookieStore = await cookies();
 
     // Verify admin role using admin client (doesn't require auth cookies)
-    const supabase = supabaseAdmin();
+    // Removed duplicate: const supabase = supabaseAdmin();
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('user_role, email')
