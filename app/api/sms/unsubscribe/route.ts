@@ -35,7 +35,8 @@ export async function POST(req: NextRequest) {
     logger.info('Processing SMS opt-out', { phoneNumber })
     
     // 1. Add to opt-out table
-    const { error: optOutError } = await supabaseAdmin()
+    const supabase = supabaseAdmin();
+    const { error: optOutError } = await supabase
       .from('sms_opt_outs')
       .upsert({
         phone_number: phoneNumber,
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
     
     // 2. Update any existing assessments with this phone number
-    const { error: assessmentError } = await supabaseAdmin()
+    const { error: assessmentError } = await supabase
       .from('assessments')
       .update({ sms_opted_out: true })
       .eq('phone_number', phoneNumber)

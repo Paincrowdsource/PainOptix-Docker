@@ -49,7 +49,8 @@ export async function DELETE(request: NextRequest) {
 
     // SECURITY: Verify assessment exists before proceeding
     // This prevents enumeration attacks and ensures we have data to delete
-    const { data: assessment, error: fetchError } = await supabaseAdmin()
+    const supabase = supabaseAdmin();
+    const { data: assessment, error: fetchError } = await supabase
       .from('assessments')
       .select('*')
       .eq('id', assessmentId)
@@ -80,7 +81,7 @@ export async function DELETE(request: NextRequest) {
     // This ensures clean deletion without orphaned records
     
     // 1. Delete assessment_progress records (dependent on session_id)
-    const { error: progressError } = await supabaseAdmin()
+    const { error: progressError } = await supabase
       .from('assessment_progress')
       .delete()
       .eq('session_id', assessment.session_id)
@@ -94,7 +95,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 2. Delete assessment_sessions record (dependent on assessment)
-    const { error: sessionError } = await supabaseAdmin()
+    const { error: sessionError } = await supabase
       .from('assessment_sessions')
       .delete()
       .eq('session_id', assessment.session_id)
@@ -108,7 +109,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 3. Delete guide_deliveries records (tracks email/SMS delivery)
-    const { error: deliveriesError } = await supabaseAdmin()
+    const { error: deliveriesError } = await supabase
       .from('guide_deliveries')
       .delete()
       .eq('assessment_id', assessmentId)
@@ -122,7 +123,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 4. Delete follow_ups records (14-day follow-up data)
-    const { error: followUpsError } = await supabaseAdmin()
+    const { error: followUpsError } = await supabase
       .from('follow_ups')
       .delete()
       .eq('assessment_id', assessmentId)
@@ -136,7 +137,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 5. Delete telehealth_appointments records (future feature tracking)
-    const { error: telehealthError } = await supabaseAdmin()
+    const { error: telehealthError } = await supabase
       .from('telehealth_appointments')
       .delete()
       .eq('assessment_id', assessmentId)
@@ -150,7 +151,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 6. Delete paincrowdsource_sync_queue records (integration data)
-    const { error: syncQueueError } = await supabaseAdmin()
+    const { error: syncQueueError } = await supabase
       .from('paincrowdsource_sync_queue')
       .delete()
       .eq('assessment_id', assessmentId)
@@ -164,7 +165,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 7. Finally, delete the main assessment record (contains personal data)
-    const { error: assessmentError } = await supabaseAdmin()
+    const { error: assessmentError } = await supabase
       .from('assessments')
       .delete()
       .eq('id', assessmentId)
@@ -179,7 +180,7 @@ export async function DELETE(request: NextRequest) {
 
     // 8. REGULATORY COMPLIANCE: Create audit log entry for SAMD requirements
     // This maintains traceability without storing personal data
-    const { error: auditError } = await supabaseAdmin()
+    const { error: auditError } = await supabase
       .from('deletion_audit_log')
       .insert({
         deleted_by: 'user_self_service', // Source of deletion request

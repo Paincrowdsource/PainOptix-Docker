@@ -21,7 +21,8 @@ export async function DELETE(
     }
 
     // Get assessment details before deletion for audit log
-    const { data: assessment, error: fetchError } = await supabaseAdmin()
+    const supabase = supabaseAdmin();
+    const { data: assessment, error: fetchError } = await supabase
       .from('assessments')
       .select('email, phone_number, guide_type')
       .eq('id', assessmentId)
@@ -40,7 +41,7 @@ export async function DELETE(
     }
 
     // Delete the assessment (cascade will handle related records)
-    const { error: deleteError } = await supabaseAdmin()
+    const { error: deleteError } = await supabase
       .from('assessments')
       .delete()
       .eq('id', assessmentId);

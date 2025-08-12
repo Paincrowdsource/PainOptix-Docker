@@ -8,7 +8,8 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
 
     // Verify admin role using admin client (doesn't require auth cookies)
-    const { data: profile, error: profileError } = await supabaseAdmin()
+    const supabase = supabaseAdmin();
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('user_role, email')
       .eq('id', userId)
