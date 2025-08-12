@@ -8,6 +8,7 @@ import fs from 'fs/promises';
 import { getGuideContent } from './content-loader';
 import { replacePlaceholders } from '@/lib/pdf-helpers';
 import { processMarkdownWithImages } from './image-processor';
+import { enhancedDomGlueShipScript } from './enhanced-dom-glue-ship';
 
 // Configure marked to handle our markdown properly
 marked.setOptions({
@@ -24,7 +25,8 @@ async function getBrowser() {
 export async function generatePdfV2(
   markdownFilePath: string,
   assessmentData: any,
-  tier: 'free' | 'enhanced' | 'monograph'
+  tier: 'free' | 'enhanced' | 'monograph',
+  options: { enhancedV2Enabled?: boolean } = {}
 ): Promise<Buffer> {
   let browser;
   let page;
@@ -88,7 +90,7 @@ export async function generatePdfV2(
     console.log('After image processing, content includes ![?', cleanedContent.includes('!['));
     
     // 4. Convert to HTML
-    const contentAsHtml = await marked.parse(cleanedContent);
+    let contentAsHtml = await marked.parse(cleanedContent);
     console.log('HTML contains img tags?', contentAsHtml.includes('<img'));
     if (tier === 'monograph') {
       const imgCount = (contentAsHtml.match(/<img/g) || []).length;
@@ -98,6 +100,116 @@ export async function generatePdfV2(
         console.log('First img tag:', firstImg);
       }
     }
+    
+    // LOG ENHANCED PATH ENTRY
+    console.log('[ENHANCED-PATH-ENTRY]', {
+      inputTier: tier,
+      env: {
+        ENHANCED_PARAGRAPH_BULLETS: process.env.ENHANCED_PARAGRAPH_BULLETS,
+        ENHANCED_RENDERER: process.env.ENHANCED_RENDERER
+      },
+      slug: assessmentData?.guide_type
+    });
+    
+    // LOG PRE-HTML SUMMARY
+    console.log('[ENHANCED-PRE-HTML-SUMMARY]', {
+      hasUL: /<ul/i.test(contentAsHtml),
+      hasLI: /<li/i.test(contentAsHtml),
+      len: contentAsHtml.length
+    });
+    
+    // Enhanced tier optimizations - only apply if V2 is enabled
+    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+      console.log('Applying Enhanced V2 tier optimizations (flag enabled)...');
+      
+      // Step 1: Transform lists to hanging-bullet paragraphs
+      // This matches DOCX formatting and prevents bad wrapping
+      const transformLists = (html: string): string => {
+        // Handle unordered lists
+        html = html.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (match, listContent) => {
+          // Transform each <li> to a hanging bullet paragraph
+          const items = listContent.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (liMatch: string, liContent: string) => {
+            // Clean up the content (remove nested tags if needed)
+            const cleanContent = liContent.trim();
+            return `<p class="enh-bullet"><span class="dot">•</span><span class="txt">${cleanContent}</span></p>`;
+          });
+          return items;
+        });
+        
+        // Handle ordered lists similarly
+        let olCounter = 1;
+        html = html.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (match, listContent) => {
+          olCounter = 1; // Reset counter for each list
+          const items = listContent.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (liMatch: string, liContent: string) => {
+            const cleanContent = liContent.trim();
+            const num = olCounter++;
+            return `<p class="enh-bullet"><span class="dot">${num}.</span><span class="txt">${cleanContent}</span></p>`;
+          });
+          return items;
+        });
+        
+        return html;
+      };
+      
+      contentAsHtml = transformLists(contentAsHtml);
+      
+      // LOG AFTER LIST TRANSFORM
+      console.log('[ENHANCED-LIST-TRANSFORM]', {
+        enhBullets: (contentAsHtml.match(/class="enh-bullet"/g) || []).length,
+        remainingLI: (contentAsHtml.match(/<li/gi) || []).length
+      });
+      
+      // Step 2: Wrap citations with preceding word to prevent orphaning
+      // This keeps the last word before a citation together with the citation
+      contentAsHtml = contentAsHtml.replace(
+        /(\b[^\s<]+)\s+(\[[^\]]+\])/g,
+        '<span class="nowrap">$1 $2</span>'
+      );
+      
+      // Step 3: Protect problematic phrases from breaking
+      const problemPhrases = [
+        'reduce discomfort',
+        'checking spine mobility',
+        'with light movement',
+        'spine mobility',
+        'lumbar support',
+        'gentle walking',
+        'conservative care',
+        'medical guidelines',
+        'physical exam',
+        'medical history',
+        'facet arthropathy',
+        'cauda equina'
+      ];
+      
+      problemPhrases.forEach(phrase => {
+        const regex = new RegExp(`\\b(${phrase})\\b`, 'gi');
+        contentAsHtml = contentAsHtml.replace(
+          regex,
+          '<span class="nowrap">$1</span>'
+        );
+      });
+      
+      // Step 4: Protect parenthetical expressions
+      contentAsHtml = contentAsHtml.replace(
+        /\(e\.g\.[^)]{1,40}\)/g,
+        (match) => `<span class="nowrap">${match}</span>`
+      );
+      
+      // Step 5: Keep numbers with their units
+      contentAsHtml = contentAsHtml.replace(/(\d+)\s+(weeks?|months?|years?|days?|hours?|minutes?)/gi, '$1&nbsp;$2');
+      contentAsHtml = contentAsHtml.replace(/(\d+)\s*–\s*(\d+)/g, '$1–$2');
+      contentAsHtml = contentAsHtml.replace(/(\d+)%/g, '$1%');
+      
+      // Step 6: Feature flag check (for rollback capability)
+      const useEnhancedBullets = process.env.ENHANCED_PARAGRAPH_BULLETS !== 'false';
+      if (!useEnhancedBullets) {
+        console.log('Enhanced paragraph bullets disabled via ENHANCED_PARAGRAPH_BULLETS env var');
+        // Revert to original HTML if feature is disabled
+        contentAsHtml = await marked.parse(cleanedContent);
+      }
+    }
+    
     
     // Check if images were added to HTML
     if (tier === 'monograph' && contentAsHtml.includes('<img')) {
@@ -110,8 +222,21 @@ export async function generatePdfV2(
     
     // 5. Pass frontmatter to template
     logger.info('Generating HTML template...');
-    const fullHtml = getPdfHtmlTemplate(contentAsHtml, assessmentData, tier, frontmatter);
+    let fullHtml = getPdfHtmlTemplate(contentAsHtml, assessmentData, tier, frontmatter);
     logger.info('HTML template generated, length:', fullHtml.length);
+    
+    // No special processing needed - clean HTML generation
+    
+    // DEBUG: Save HTML for comparison
+    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+      try {
+        const debugPath = `debug-${assessmentData.guide_type}-enhanced-v2.html`;
+        await fs.writeFile(debugPath, fullHtml);
+        console.log(`[DEBUG] Saved HTML to ${debugPath}`);
+      } catch (e) {
+        console.log('[DEBUG] Could not save HTML:', e);
+      }
+    }
     
     // 6. Launch Puppeteer and generate PDF
     console.info('Step 1: Getting browser from pool...');
@@ -121,9 +246,12 @@ export async function generatePdfV2(
     page = await browser.newPage();
     await configurePage(page);
     
+    // Pipe browser console to Node console
+    page.on('console', msg => console.log('[PAGE]', msg.text()));
+    
     // Set explicit viewport for consistent rendering across all tiers
-    // Use wider viewport to prevent text wrapping issues
-    await page.setViewport({ width: 1920, height: 2700 }); // Wide viewport for proper text flow
+    // Use EXTRA wide viewport to prevent text wrapping issues
+    await page.setViewport({ width: 2400, height: 3400 }); // Extra wide viewport to prevent citation breaks
     console.info('Step 3: New page opened with A4 viewport. Setting content...');
     
     // Check if the HTML content is valid before setting it
@@ -144,6 +272,54 @@ export async function generatePdfV2(
     console.info('Step 5: Content set. Generating PDF...');
     console.log('[PDF] Content set successfully');
     logger.info('Page content set');
+    
+    // DOM-aware glue for Enhanced tier to prevent citation/phrase orphaning
+    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+      console.log('[ENHANCED-DOM-GLUE] Starting DOM-aware glue...');
+      
+      // First inject styles
+      await page.addStyleTag({ content: `
+        .nowrap { white-space: nowrap; }
+        .cite { display: inline-block; }
+        .glue { display: inline-block; }
+        .bib { margin-top: 6pt; }
+        .bib-item { 
+          margin: 6pt 0; 
+          line-height: 1.35; 
+          page-break-inside: avoid; 
+          break-inside: avoid; 
+        }
+        @media print { 
+          a[href]::after { content: none !important; } 
+        }
+      `});
+      
+      // Execute the enhanced DOM glue script
+      await page.evaluate(enhancedDomGlueShipScript);
+      console.log('[ENHANCED-DOM-GLUE] DOM-aware glue applied');
+      
+      // Inject the print CSS LAST to ensure it overrides everything
+      await page.addStyleTag({ content: '@media print{a[href]::after{content:none!important}}' });
+      console.log('[ENHANCED-DOM-GLUE] Injected final print CSS to stop DOI duplication');
+      
+      // Save the final HTML after all transformations for debugging
+      try {
+        const finalHtml = await page.content();
+        const slug = assessmentData.guide_type || assessmentData.guideType || 'unknown';
+        await fs.mkdir('debug', { recursive: true });
+        const debugPath = `debug/enhanced-${slug}-final.html`;
+        await fs.writeFile(debugPath, finalHtml);
+        console.log(`[DEBUG] Saved final HTML with DOM glue to ${debugPath}`);
+        
+        // Also check counts in the final HTML
+        const enhBulletCount = (finalHtml.match(/class="enh-bullet"/g) || []).length;
+        const citeCount = (finalHtml.match(/class="cite"/g) || []).length;
+        const nowrapCount = (finalHtml.match(/class="nowrap"/g) || []).length;
+        console.log('[DEBUG] Final HTML counts:', { enhBullets: enhBulletCount, cites: citeCount, nowraps: nowrapCount });
+      } catch (e) {
+        console.log('[DEBUG] Could not save final HTML:', e);
+      }
+    }
     
     // Before generating PDF, check if images loaded
     if (tier === 'monograph') {
@@ -207,9 +383,9 @@ export async function generatePdfV2(
       `,
       margin: {
         top: '0.75in',
-        right: '0.5in',  // Reduced right margin for more text width
+        right: '0.4in',  // Further reduced for maximum text width
         bottom: '1in',
-        left: '0.5in'    // Reduced left margin for more text width
+        left: '0.4in'    // Further reduced for maximum text width
       },
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {
@@ -261,7 +437,8 @@ export async function generatePdfV2(
 export async function generatePdfFromContent(
   guideType: string,
   assessmentData: any,
-  tier: 'free' | 'enhanced' | 'monograph'
+  tier: 'free' | 'enhanced' | 'monograph',
+  options: { enhancedV2Enabled?: boolean } = {}
 ): Promise<Buffer> {
   let browser;
   let page;
@@ -343,13 +520,123 @@ export async function generatePdfFromContent(
     
     // 4. Convert to HTML
     logger.info('Converting markdown to HTML...');
-    const contentAsHtml = await marked.parse(cleanedContent);
+    let contentAsHtml = await marked.parse(cleanedContent);
     logger.info('HTML conversion complete, length:', contentAsHtml.length);
+    
+    // LOG ENHANCED PATH ENTRY (generatePdfFromContent)
+    console.log('[ENHANCED-PATH-ENTRY-FROM-CONTENT]', {
+      inputTier: tier,
+      env: {
+        ENHANCED_PARAGRAPH_BULLETS: process.env.ENHANCED_PARAGRAPH_BULLETS,
+        ENHANCED_RENDERER: process.env.ENHANCED_RENDERER
+      },
+      slug: assessmentData?.guide_type || guideType
+    });
+    
+    // LOG PRE-HTML SUMMARY
+    console.log('[ENHANCED-PRE-HTML-SUMMARY-FROM-CONTENT]', {
+      hasUL: /<ul/i.test(contentAsHtml),
+      hasLI: /<li/i.test(contentAsHtml),
+      len: contentAsHtml.length
+    });
+    
+    // Enhanced tier optimizations (same as in generatePdfV2)
+    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+      console.log('Applying Enhanced V2 tier optimizations (from content, flag enabled)...');
+      
+      // Step 1: Transform lists to hanging-bullet paragraphs
+      const transformLists = (html: string): string => {
+        // Handle unordered lists
+        html = html.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (match, listContent) => {
+          const items = listContent.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (liMatch: string, liContent: string) => {
+            const cleanContent = liContent.trim();
+            return `<p class="enh-bullet"><span class="dot">•</span><span class="txt">${cleanContent}</span></p>`;
+          });
+          return items;
+        });
+        
+        // Handle ordered lists
+        let olCounter = 1;
+        html = html.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (match, listContent) => {
+          olCounter = 1;
+          const items = listContent.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (liMatch: string, liContent: string) => {
+            const cleanContent = liContent.trim();
+            const num = olCounter++;
+            return `<p class="enh-bullet"><span class="dot">${num}.</span><span class="txt">${cleanContent}</span></p>`;
+          });
+          return items;
+        });
+        
+        return html;
+      };
+      
+      contentAsHtml = transformLists(contentAsHtml);
+      
+      // LOG AFTER LIST TRANSFORM
+      console.log('[ENHANCED-LIST-TRANSFORM]', {
+        enhBullets: (contentAsHtml.match(/class="enh-bullet"/g) || []).length,
+        remainingLI: (contentAsHtml.match(/<li/gi) || []).length
+      });
+      
+      // Step 2: Wrap citations with preceding word
+      contentAsHtml = contentAsHtml.replace(
+        /(\b[^\s<]+)\s+(\[[^\]]+\])/g,
+        '<span class="nowrap">$1 $2</span>'
+      );
+      
+      // Step 3: Protect problematic phrases
+      const problemPhrases = [
+        'reduce discomfort',
+        'checking spine mobility',
+        'with light movement',
+        'spine mobility',
+        'lumbar support',
+        'gentle walking',
+        'conservative care',
+        'medical guidelines',
+        'physical exam',
+        'medical history',
+        'facet arthropathy',
+        'cauda equina'
+      ];
+      
+      problemPhrases.forEach(phrase => {
+        const regex = new RegExp(`\\b(${phrase})\\b`, 'gi');
+        contentAsHtml = contentAsHtml.replace(
+          regex,
+          '<span class="nowrap">$1</span>'
+        );
+      });
+      
+      // Step 4: Protect parenthetical expressions
+      contentAsHtml = contentAsHtml.replace(
+        /\(e\.g\.[^)]{1,40}\)/g,
+        (match) => `<span class="nowrap">${match}</span>`
+      );
+      
+      // Step 5: Keep numbers with their units
+      contentAsHtml = contentAsHtml.replace(/(\d+)\s+(weeks?|months?|years?|days?|hours?|minutes?)/gi, '$1&nbsp;$2');
+      contentAsHtml = contentAsHtml.replace(/(\d+)\s*–\s*(\d+)/g, '$1–$2');
+      contentAsHtml = contentAsHtml.replace(/(\d+)%/g, '$1%');
+    }
     
     // 5. Pass frontmatter to template
     logger.info('Generating HTML template...');
-    const fullHtml = getPdfHtmlTemplate(contentAsHtml, assessmentData, tier, frontmatter);
+    let fullHtml = getPdfHtmlTemplate(contentAsHtml, assessmentData, tier, frontmatter);
     logger.info('HTML template generated, length:', fullHtml.length);
+    
+    // No special processing needed - clean HTML generation
+    
+    // DEBUG: Save HTML for comparison
+    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+      try {
+        const debugPath = `debug-${assessmentData.guide_type}-enhanced-v2.html`;
+        await fs.writeFile(debugPath, fullHtml);
+        console.log(`[DEBUG] Saved HTML to ${debugPath}`);
+      } catch (e) {
+        console.log('[DEBUG] Could not save HTML:', e);
+      }
+    }
     
     // 6. Launch Puppeteer and generate PDF
     console.info('Step 1: Getting browser from pool...');
@@ -359,9 +646,12 @@ export async function generatePdfFromContent(
     page = await browser.newPage();
     await configurePage(page);
     
+    // Pipe browser console to Node console
+    page.on('console', msg => console.log('[PAGE]', msg.text()));
+    
     // Set explicit viewport for consistent rendering across all tiers
-    // Use wider viewport to prevent text wrapping issues
-    await page.setViewport({ width: 1920, height: 2700 }); // Wide viewport for proper text flow
+    // Use EXTRA wide viewport to prevent text wrapping issues
+    await page.setViewport({ width: 2400, height: 3400 }); // Extra wide viewport to prevent citation breaks
     console.info('Step 3: New page opened with A4 viewport. Setting content...');
     
     // Check if the HTML content is valid before setting it
@@ -382,6 +672,54 @@ export async function generatePdfFromContent(
     console.info('Step 5: Content set. Generating PDF...');
     console.log('[PDF] Content set successfully');
     logger.info('Page content set');
+    
+    // DOM-aware glue for Enhanced tier to prevent citation/phrase orphaning
+    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+      console.log('[ENHANCED-DOM-GLUE] Starting DOM-aware glue...');
+      
+      // First inject styles
+      await page.addStyleTag({ content: `
+        .nowrap { white-space: nowrap; }
+        .cite { display: inline-block; }
+        .glue { display: inline-block; }
+        .bib { margin-top: 6pt; }
+        .bib-item { 
+          margin: 6pt 0; 
+          line-height: 1.35; 
+          page-break-inside: avoid; 
+          break-inside: avoid; 
+        }
+        @media print { 
+          a[href]::after { content: none !important; } 
+        }
+      `});
+      
+      // Execute the enhanced DOM glue script
+      await page.evaluate(enhancedDomGlueShipScript);
+      console.log('[ENHANCED-DOM-GLUE] DOM-aware glue applied');
+      
+      // Inject the print CSS LAST to ensure it overrides everything
+      await page.addStyleTag({ content: '@media print{a[href]::after{content:none!important}}' });
+      console.log('[ENHANCED-DOM-GLUE] Injected final print CSS to stop DOI duplication');
+      
+      // Save the final HTML after all transformations for debugging
+      try {
+        const finalHtml = await page.content();
+        const slug = assessmentData.guide_type || assessmentData.guideType || 'unknown';
+        await fs.mkdir('debug', { recursive: true });
+        const debugPath = `debug/enhanced-${slug}-final.html`;
+        await fs.writeFile(debugPath, finalHtml);
+        console.log(`[DEBUG] Saved final HTML with DOM glue to ${debugPath}`);
+        
+        // Also check counts in the final HTML
+        const enhBulletCount = (finalHtml.match(/class="enh-bullet"/g) || []).length;
+        const citeCount = (finalHtml.match(/class="cite"/g) || []).length;
+        const nowrapCount = (finalHtml.match(/class="nowrap"/g) || []).length;
+        console.log('[DEBUG] Final HTML counts:', { enhBullets: enhBulletCount, cites: citeCount, nowraps: nowrapCount });
+      } catch (e) {
+        console.log('[DEBUG] Could not save final HTML:', e);
+      }
+    }
     
     // Before generating PDF, check if images loaded
     if (tier === 'monograph') {
@@ -445,9 +783,9 @@ export async function generatePdfFromContent(
       `,
       margin: {
         top: '0.75in',
-        right: '0.5in',  // Reduced right margin for more text width
+        right: '0.4in',  // Further reduced for maximum text width
         bottom: '1in',
-        left: '0.5in'    // Reduced left margin for more text width
+        left: '0.4in'    // Further reduced for maximum text width
       },
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {

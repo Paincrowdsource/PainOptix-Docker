@@ -7,6 +7,9 @@ import { logger } from '@/lib/logger';
 import path from 'path';
 import fs from 'fs/promises';
 
+// Force Node.js runtime for Puppeteer
+export const runtime = 'nodejs';
+
 async function checkFileExists(filePath: string): Promise<boolean> {
   try {
     await fs.access(filePath);
@@ -16,7 +19,7 @@ async function checkFileExists(filePath: string): Promise<boolean> {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { assessmentId, tier: requestedTier } = body;
@@ -25,6 +28,10 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ message: 'Assessment ID is required.' }), { status: 400 });
     }
 
+    // Feature flag for Enhanced V2 - only activates when explicitly enabled
+    const envFlag = process.env.ENHANCED_V2 === '1' || process.env.ENHANCED_V2 === 'true';
+    const headerFlag = req.headers.get('x-po-enhanced-v2') === '1';
+    
     console.info(`PDF download request: assessmentId=${assessmentId}, tier=${requestedTier}`);
 
     // ---- UNIFIED DATA RETRIEVAL ----
@@ -85,6 +92,12 @@ export async function POST(req: Request) {
     const contentDir = actualTier === 'comprehensive' ? 'monograph' : actualTier;
     const puppeteerTier = actualTier === 'comprehensive' ? 'monograph' : actualTier as 'free' | 'enhanced' | 'monograph';
 
+    // Compute Enhanced V2 flag - only for enhanced tier and when explicitly enabled
+    const enhancedV2Enabled = puppeteerTier === 'enhanced' && (envFlag || headerFlag);
+    if (enhancedV2Enabled) {
+      console.info('Enhanced V2 formatting enabled via flag');
+    }
+
     // Generate PDF
     let pdfBuffer: Buffer;
     
@@ -94,10 +107,11 @@ export async function POST(req: Request) {
         logger.info(`Generating PDF from pre-loaded content`, {
           tier: puppeteerTier,
           guideType: guideType,
-          contentDir: contentDir
+          contentDir: contentDir,
+          enhancedV2Enabled
         });
         
-        pdfBuffer = await generatePdfFromContent(guideType, assessmentData, puppeteerTier);
+        pdfBuffer = await generatePdfFromContent(guideType, assessmentData, puppeteerTier, { enhancedV2Enabled });
       } else {
         // Development: Use file system
         const filePath = path.join(process.cwd(), 'content/guides', contentDir, `${guideType}.md`);
@@ -106,10 +120,11 @@ export async function POST(req: Request) {
           tier: puppeteerTier,
           filePath: filePath,
           guideType: guideType,
-          contentDir: contentDir
+          contentDir: contentDir,
+          enhancedV2Enabled
         });
         
-        pdfBuffer = await generatePdfV2(filePath, assessmentData, puppeteerTier);
+        pdfBuffer = await generatePdfV2(filePath, assessmentData, puppeteerTier, { enhancedV2Enabled });
       }
     } catch (puppeteerError: any) {
       logger.error('Puppeteer PDF generation failed:', {
@@ -143,8 +158,9 @@ export async function POST(req: Request) {
       console.warn(`Warning: PDF size (${pdfSizeMB}MB) exceeds recommended limit`);
     }
     
-    // Return the PDF
-    return new Response(Buffer.from(pdfBuffer), {
+    // Return the PDF with proper body type for Node runtime
+    const pdfBody = new Uint8Array(pdfBuffer); // Convert Buffer to Uint8Array for proper BodyInit
+    return new Response(pdfBody, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="painoptix-${guideType}-${actualTier}.pdf"`,

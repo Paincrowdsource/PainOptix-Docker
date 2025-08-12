@@ -1,48 +1,59 @@
 # Dependencies
-node_modules
+node_modules/
 .pnp
 .pnp.js
 
-# Testing
-coverage
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
 
 # Next.js
 .next/
 out/
-
-# Production
-build
-dist
-
-# Misc
-.DS_Store
-*.pem
+build/
+dist/
 
 # Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
-# Local env files
-.env*.local
-.env
+# Misc
+.DS_Store
+*.pem
+.idea/
+.vscode/
 
-# Vercel
-.vercel
+# Supabase
+.supabase/
 
-# TypeScript
+# Testing
+coverage/
+.nyc_output/
+
+# Typescript
 *.tsbuildinfo
 next-env.d.ts
 
-# IDE
-.vscode
-.idea
+# Netlify
+.netlify/
 
-# DigitalOcean app spec with secrets
-app-spec.yaml
-app-spec-*.yaml
+# Chromium downloads
+chromium/
 
-# Temporary files
-*.tmp
-*.bak
-.temp/
+# Test files
+test-*.pdf
+
+# Windows phantom file
+nul
+test-*.ts
+test-*.js
+
+# Logs
+/logs/
+*.log
