@@ -296,9 +296,38 @@ export async function generatePdfV2(
       
       // Execute the enhanced DOM glue script inline
       await page.evaluate(() => {
-        console.log('[DOM-GLUE] Enhanced V2 DOM glue would run here');
-        // TODO: Add actual DOM glue code if needed
-        // For now, the CSS transformations are sufficient
+        console.log('[DOM-GLUE] Starting actual DOM glue');
+        
+        // 1. Remove all <br> tags and escaped versions
+        document.querySelectorAll('br').forEach(br => br.replaceWith(' '));
+        
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        const textNodes = [];
+        let node;
+        while (node = walker.nextNode()) {
+          textNodes.push(node);
+        }
+        
+        textNodes.forEach(textNode => {
+          let text = textNode.nodeValue || '';
+          // Remove literal <br> and escaped versions
+          text = text.replace(/<\s*br\s*\/?>/gi, ' ');
+          text = text.replace(/&lt;\s*br\s*\/?&gt;/gi, ' ');
+          textNode.nodeValue = text;
+        });
+        
+        // 2. Fix word( patterns - ensure space before parenthesis
+        document.querySelectorAll('p, li, div').forEach(el => {
+          el.innerHTML = el.innerHTML.replace(/(\w)\(/g, '$1 (');
+        });
+        
+        // 3. Glue citations - keep [Author et al., YEAR] together
+        document.querySelectorAll('p').forEach(p => {
+          p.innerHTML = p.innerHTML.replace(/(\S+\s+\S+\s+)(\[[^\]]+\])/g, 
+            '<span style="white-space: nowrap;">$1$2</span>');
+        });
+        
+        console.log('[DOM-GLUE] Completed');
       });
       console.log('[ENHANCED-DOM-GLUE] DOM-aware glue applied');
       
@@ -700,9 +729,38 @@ export async function generatePdfFromContent(
       
       // Execute the enhanced DOM glue script inline
       await page.evaluate(() => {
-        console.log('[DOM-GLUE] Enhanced V2 DOM glue would run here');
-        // TODO: Add actual DOM glue code if needed
-        // For now, the CSS transformations are sufficient
+        console.log('[DOM-GLUE] Starting actual DOM glue');
+        
+        // 1. Remove all <br> tags and escaped versions
+        document.querySelectorAll('br').forEach(br => br.replaceWith(' '));
+        
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        const textNodes = [];
+        let node;
+        while (node = walker.nextNode()) {
+          textNodes.push(node);
+        }
+        
+        textNodes.forEach(textNode => {
+          let text = textNode.nodeValue || '';
+          // Remove literal <br> and escaped versions
+          text = text.replace(/<\s*br\s*\/?>/gi, ' ');
+          text = text.replace(/&lt;\s*br\s*\/?&gt;/gi, ' ');
+          textNode.nodeValue = text;
+        });
+        
+        // 2. Fix word( patterns - ensure space before parenthesis
+        document.querySelectorAll('p, li, div').forEach(el => {
+          el.innerHTML = el.innerHTML.replace(/(\w)\(/g, '$1 (');
+        });
+        
+        // 3. Glue citations - keep [Author et al., YEAR] together
+        document.querySelectorAll('p').forEach(p => {
+          p.innerHTML = p.innerHTML.replace(/(\S+\s+\S+\s+)(\[[^\]]+\])/g, 
+            '<span style="white-space: nowrap;">$1$2</span>');
+        });
+        
+        console.log('[DOM-GLUE] Completed');
       });
       console.log('[ENHANCED-DOM-GLUE] DOM-aware glue applied');
       
