@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
 
     // Verify admin role using admin client (doesn't require auth cookies)
-    // Removed duplicate: const supabase = supabaseAdmin();
+    // Removed duplicate: // Duplicate removed: const supabase = supabaseAdmin();
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('user_role, email')

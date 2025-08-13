@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
 
     // AUTHORIZATION: Fetch assessments for authenticated user only
     // Uses OR condition to match either email or phone identifier
-    // Removed duplicate: const supabase = supabaseAdmin();
+    // Removed duplicate: // Duplicate removed: const supabase = supabaseAdmin();
     const { data: assessments, error } = await supabase
       .from('assessments')
       .select(`

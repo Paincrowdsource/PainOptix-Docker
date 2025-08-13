@@ -39,6 +39,7 @@ async function checkRateLimit(identifier: string, ip: string, action: string): P
 
 // Update rate limit
 async function updateRateLimit(identifier: string, ip: string, action: string) {
+  const supabase = supabaseAdmin();
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
   
   // Update contact rate limit

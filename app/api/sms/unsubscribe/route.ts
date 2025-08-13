@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     logger.info('Processing SMS opt-out', { phoneNumber })
     
     // 1. Add to opt-out table
-    // Removed duplicate: const supabase = supabaseAdmin();
+    // Removed duplicate: // Duplicate removed: const supabase = supabaseAdmin();
     const { error: optOutError } = await supabase
       .from('sms_opt_outs')
       .upsert({

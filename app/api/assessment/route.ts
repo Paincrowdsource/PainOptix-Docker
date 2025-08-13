@@ -146,7 +146,7 @@ export async function PATCH(req: NextRequest) {
     }
     
     // Use admin client to bypass RLS
-    // Removed duplicate: const supabase = supabaseAdmin();
+    // Removed duplicate: // Duplicate removed: const supabase = supabaseAdmin();
     const { data, error } = await supabase
       .from('assessments')
       .update(updates)

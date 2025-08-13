@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // SECURITY: Retrieve active verification code record
     // Only searches for unverified codes to prevent reuse
-    // Removed duplicate: const supabase = supabaseAdmin();
+    // Removed duplicate: // Duplicate removed: const supabase = supabaseAdmin();
     const { data: verificationRecord, error: fetchError } = await supabase
       .from('verification_codes')
       .select('*')

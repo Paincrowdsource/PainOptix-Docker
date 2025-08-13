@@ -50,7 +50,7 @@ export async function DELETE(request: NextRequest) {
 
     // SECURITY: Verify assessment exists before proceeding
     // This prevents enumeration attacks and ensures we have data to delete
-    // Removed duplicate: const supabase = supabaseAdmin();
+    // Removed duplicate: // Duplicate removed: const supabase = supabaseAdmin();
     const { data: assessment, error: fetchError } = await supabase
       .from('assessments')
       .select('*')
