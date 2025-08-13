@@ -89,6 +89,7 @@ export async function POST(req: NextRequest) {
 
 // Handle GET requests for webhook configuration verification
 export async function GET(req: NextRequest) {
+  const supabase = supabaseAdmin();
   return NextResponse.json({
     status: 'ok',
     message: 'PainOptix SMS unsubscribe webhook is active',

@@ -130,6 +130,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const supabase = supabaseAdmin();
   try {
     const body = await req.json()
     
