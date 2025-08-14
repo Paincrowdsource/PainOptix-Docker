@@ -89,6 +89,47 @@ export async function generatePdfV2(
     console.log('After image processing, content includes <img>?', cleanedContent.includes('<img'));
     console.log('After image processing, content includes ![?', cleanedContent.includes('!['));
     
+    // Enhanced V2: Clean markdown processing
+    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+      console.log('[ENHANCED-V2] Applying clean markdown processing');
+      
+      // Get human-readable condition name
+      const conditionNames: Record<string, string> = {
+        'si_joint_dysfunction': 'Sacroiliac Joint Pain',
+        'sciatica': 'Sciatica',
+        'facet_arthropathy': 'Facet Joint Arthropathy',
+        'muscular_nslbp': 'Muscular Lower Back Pain',
+        'central_disc_bulge': 'Central Disc Bulge',
+        'canal_stenosis': 'Spinal Canal Stenosis',
+        'lumbar_instability': 'Lumbar Instability',
+        'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
+        'urgent_symptoms': 'Urgent Symptoms'
+      };
+      const conditionName = conditionNames[condition] || condition.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      // Fix "Learn About" title to include condition name
+      cleanedContent = cleanedContent.replace(/^#\s*Learn About\s*$/m, `# Learn About ${conditionName}`);
+      cleanedContent = cleanedContent.replace(/^Learn About\s*$/m, `Learn About ${conditionName}`);
+      
+      // Clean up bullets - ensure consistent formatting
+      cleanedContent = cleanedContent.replace(/^[•·]\s*/gm, '• ');
+      cleanedContent = cleanedContent.replace(/^\*\s+/gm, '• ');
+      
+      // Fix quotes and special characters
+      cleanedContent = cleanedContent.replace(/[""]/g, '"');
+      cleanedContent = cleanedContent.replace(/['']/g, "'");
+      cleanedContent = cleanedContent.replace(/–/g, '-');
+      cleanedContent = cleanedContent.replace(/—/g, '-');
+      
+      // Ensure proper spacing around citations
+      cleanedContent = cleanedContent.replace(/\s*(\[[^\]]+\])/g, ' $1');
+      
+      // Fix word( patterns - ensure space before parenthesis
+      cleanedContent = cleanedContent.replace(/(\w)\(/g, '$1 (');
+      
+      console.log('[ENHANCED-V2] Clean markdown processing completed');
+    }
+    
     // 4. Convert to HTML
     let contentAsHtml = await marked.parse(cleanedContent);
     console.log('HTML contains img tags?', contentAsHtml.includes('<img'));
@@ -273,81 +314,18 @@ export async function generatePdfV2(
     console.log('[PDF] Content set successfully');
     logger.info('Page content set');
     
-    // DOM-aware glue for Enhanced tier to prevent citation/phrase orphaning
+    // Enhanced V2: Clean markdown processing approach (DOM manipulation disabled)
     if (tier === 'enhanced' && options.enhancedV2Enabled) {
-      console.log('[ENHANCED-DOM-GLUE] Starting DOM-aware glue...');
+      console.log('[ENHANCED-V2] Using clean markdown processing - DOM manipulation disabled');
       
-      // First inject styles
+      // Just add clean print styles without DOM manipulation
       await page.addStyleTag({ content: `
-        .nowrap { white-space: nowrap; }
-        .cite { display: inline-block; }
-        .glue { display: inline-block; }
-        .bib { margin-top: 6pt; }
-        .bib-item { 
-          margin: 6pt 0; 
-          line-height: 1.35; 
-          page-break-inside: avoid; 
-          break-inside: avoid; 
-        }
         @media print { 
           a[href]::after { content: none !important; } 
         }
       `});
       
-      // Wait for DOM to stabilize before applying glue
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Execute the enhanced DOM glue script inline
-      await page.evaluate(() => {
-        console.log('[DOM-GLUE] Starting actual DOM glue');
-        
-        // 1. Remove all <br> tags and escaped versions
-        document.querySelectorAll('br').forEach(br => br.replaceWith(' '));
-        
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-        const textNodes = [];
-        let node;
-        while (node = walker.nextNode()) {
-          textNodes.push(node);
-        }
-        
-        textNodes.forEach(textNode => {
-          let text = textNode.nodeValue || '';
-          // Remove literal <br> and escaped versions
-          text = text.replace(/<\s*br\s*\/?>/gi, ' ');
-          text = text.replace(/&lt;\s*br\s*\/?&gt;/gi, ' ');
-          textNode.nodeValue = text;
-        });
-        
-        // 2. Fix word( patterns - ensure space before parenthesis
-        document.querySelectorAll('p, li, div').forEach(el => {
-          el.innerHTML = el.innerHTML.replace(/(\w)\(/g, '$1 (');
-        });
-        
-        // 3. Glue citations - keep [Author et al., YEAR] together
-        document.querySelectorAll('p').forEach(p => {
-          p.innerHTML = p.innerHTML.replace(/(\S+\s+\S+\s+)(\[[^\]]+\])/g, 
-            '<span style="white-space: nowrap;">$1$2</span>');
-        });
-        
-        console.log('[DOM-GLUE] Completed');
-        
-        // Log what we actually did
-        const stats = {
-          brTags: document.querySelectorAll('br').length,
-          paragraphs: document.querySelectorAll('p').length,
-          enhBullets: document.querySelectorAll('.enh-bullet').length,
-          bodyLength: document.body.innerHTML.length
-        };
-        console.log('[DOM-GLUE-STATS]', JSON.stringify(stats));
-      });
-      console.log('[ENHANCED-DOM-GLUE] DOM-aware glue applied');
-      
-      // Inject the print CSS LAST to ensure it overrides everything
-      await page.addStyleTag({ content: '@media print{a[href]::after{content:none!important}}' });
-      console.log('[ENHANCED-DOM-GLUE] Injected final print CSS to stop DOI duplication');
-      
-      // Save the final HTML after all transformations for debugging
+      // Note: All formatting is now handled in markdown processing before HTML conversion
       try {
         const finalHtml = await page.content();
         const slug = assessmentData.guide_type || assessmentData.guideType || 'unknown';
@@ -718,81 +696,18 @@ export async function generatePdfFromContent(
     console.log('[PDF] Content set successfully');
     logger.info('Page content set');
     
-    // DOM-aware glue for Enhanced tier to prevent citation/phrase orphaning
+    // Enhanced V2: Clean markdown processing approach (DOM manipulation disabled)
     if (tier === 'enhanced' && options.enhancedV2Enabled) {
-      console.log('[ENHANCED-DOM-GLUE] Starting DOM-aware glue...');
+      console.log('[ENHANCED-V2] Using clean markdown processing - DOM manipulation disabled');
       
-      // First inject styles
+      // Just add clean print styles without DOM manipulation
       await page.addStyleTag({ content: `
-        .nowrap { white-space: nowrap; }
-        .cite { display: inline-block; }
-        .glue { display: inline-block; }
-        .bib { margin-top: 6pt; }
-        .bib-item { 
-          margin: 6pt 0; 
-          line-height: 1.35; 
-          page-break-inside: avoid; 
-          break-inside: avoid; 
-        }
         @media print { 
           a[href]::after { content: none !important; } 
         }
       `});
       
-      // Wait for DOM to stabilize before applying glue
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Execute the enhanced DOM glue script inline
-      await page.evaluate(() => {
-        console.log('[DOM-GLUE] Starting actual DOM glue');
-        
-        // 1. Remove all <br> tags and escaped versions
-        document.querySelectorAll('br').forEach(br => br.replaceWith(' '));
-        
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-        const textNodes = [];
-        let node;
-        while (node = walker.nextNode()) {
-          textNodes.push(node);
-        }
-        
-        textNodes.forEach(textNode => {
-          let text = textNode.nodeValue || '';
-          // Remove literal <br> and escaped versions
-          text = text.replace(/<\s*br\s*\/?>/gi, ' ');
-          text = text.replace(/&lt;\s*br\s*\/?&gt;/gi, ' ');
-          textNode.nodeValue = text;
-        });
-        
-        // 2. Fix word( patterns - ensure space before parenthesis
-        document.querySelectorAll('p, li, div').forEach(el => {
-          el.innerHTML = el.innerHTML.replace(/(\w)\(/g, '$1 (');
-        });
-        
-        // 3. Glue citations - keep [Author et al., YEAR] together
-        document.querySelectorAll('p').forEach(p => {
-          p.innerHTML = p.innerHTML.replace(/(\S+\s+\S+\s+)(\[[^\]]+\])/g, 
-            '<span style="white-space: nowrap;">$1$2</span>');
-        });
-        
-        console.log('[DOM-GLUE] Completed');
-        
-        // Log what we actually did
-        const stats = {
-          brTags: document.querySelectorAll('br').length,
-          paragraphs: document.querySelectorAll('p').length,
-          enhBullets: document.querySelectorAll('.enh-bullet').length,
-          bodyLength: document.body.innerHTML.length
-        };
-        console.log('[DOM-GLUE-STATS]', JSON.stringify(stats));
-      });
-      console.log('[ENHANCED-DOM-GLUE] DOM-aware glue applied');
-      
-      // Inject the print CSS LAST to ensure it overrides everything
-      await page.addStyleTag({ content: '@media print{a[href]::after{content:none!important}}' });
-      console.log('[ENHANCED-DOM-GLUE] Injected final print CSS to stop DOI duplication');
-      
-      // Save the final HTML after all transformations for debugging
+      // Note: All formatting is now handled in markdown processing before HTML conversion
       try {
         const finalHtml = await page.content();
         const slug = assessmentData.guide_type || assessmentData.guideType || 'unknown';
