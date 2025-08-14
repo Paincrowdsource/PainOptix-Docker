@@ -294,6 +294,9 @@ export async function generatePdfV2(
         }
       `});
       
+      // Wait for DOM to stabilize before applying glue
+      await page.waitForTimeout(500);
+      
       // Execute the enhanced DOM glue script inline
       await page.evaluate(() => {
         console.log('[DOM-GLUE] Starting actual DOM glue');
@@ -328,6 +331,15 @@ export async function generatePdfV2(
         });
         
         console.log('[DOM-GLUE] Completed');
+        
+        // Log what we actually did
+        const stats = {
+          brTags: document.querySelectorAll('br').length,
+          paragraphs: document.querySelectorAll('p').length,
+          enhBullets: document.querySelectorAll('.enh-bullet').length,
+          bodyLength: document.body.innerHTML.length
+        };
+        console.log('[DOM-GLUE-STATS]', JSON.stringify(stats));
       });
       console.log('[ENHANCED-DOM-GLUE] DOM-aware glue applied');
       
@@ -727,6 +739,9 @@ export async function generatePdfFromContent(
         }
       `});
       
+      // Wait for DOM to stabilize before applying glue
+      await page.waitForTimeout(500);
+      
       // Execute the enhanced DOM glue script inline
       await page.evaluate(() => {
         console.log('[DOM-GLUE] Starting actual DOM glue');
@@ -761,6 +776,15 @@ export async function generatePdfFromContent(
         });
         
         console.log('[DOM-GLUE] Completed');
+        
+        // Log what we actually did
+        const stats = {
+          brTags: document.querySelectorAll('br').length,
+          paragraphs: document.querySelectorAll('p').length,
+          enhBullets: document.querySelectorAll('.enh-bullet').length,
+          bodyLength: document.body.innerHTML.length
+        };
+        console.log('[DOM-GLUE-STATS]', JSON.stringify(stats));
       });
       console.log('[ENHANCED-DOM-GLUE] DOM-aware glue applied');
       
