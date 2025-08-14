@@ -108,8 +108,11 @@ export async function generatePdfV2(
       const conditionName = conditionNames[condition] || condition.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
       
       // Fix "Learn About" title to include condition name
-      cleanedContent = cleanedContent.replace(/^#\s*Learn About\s*$/m, `# Learn About ${conditionName}`);
-      cleanedContent = cleanedContent.replace(/^Learn About\s*$/m, `Learn About ${conditionName}`);
+      // Handle various formats: with or without #, with partial text
+      cleanedContent = cleanedContent.replace(/^(#+\s*)?Learn About\s*.*$/m, `## Learn About ${conditionName}`);
+      
+      // Keep citations attached to their preceding text with non-breaking space
+      cleanedContent = cleanedContent.replace(/(\S+)\s+(\[[^\]]+\])/g, '$1\u00A0$2');
       
       // Clean up bullets - ensure consistent formatting
       cleanedContent = cleanedContent.replace(/^[•·]\s*/gm, '• ');
@@ -318,10 +321,41 @@ export async function generatePdfV2(
     if (tier === 'enhanced' && options.enhancedV2Enabled) {
       console.log('[ENHANCED-V2] Using clean markdown processing - DOM manipulation disabled');
       
-      // Just add clean print styles without DOM manipulation
+      // Add clean print styles and prevent awkward breaks
       await page.addStyleTag({ content: `
+        /* Prevent awkward line breaks */
+        p, li {
+          hyphens: none !important;
+          word-break: normal !important;
+          overflow-wrap: normal !important;
+          line-height: 1.6 !important;
+        }
+        
+        /* Keep citations with their text */
+        p > span:last-child {
+          white-space: nowrap !important;
+        }
+        
+        /* Better bullet formatting */
+        li {
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+          margin-bottom: 0.5em !important;
+        }
+        
+        /* Keep headings with following content */
+        h1, h2, h3, h4, h5, h6 {
+          page-break-after: avoid !important;
+          break-after: avoid !important;
+        }
+        
         @media print { 
-          a[href]::after { content: none !important; } 
+          a[href]::after { content: none !important; }
+          
+          /* Ensure bullets don't break */
+          ul, ol {
+            page-break-inside: avoid !important;
+          }
         }
       `});
       
@@ -700,10 +734,41 @@ export async function generatePdfFromContent(
     if (tier === 'enhanced' && options.enhancedV2Enabled) {
       console.log('[ENHANCED-V2] Using clean markdown processing - DOM manipulation disabled');
       
-      // Just add clean print styles without DOM manipulation
+      // Add clean print styles and prevent awkward breaks
       await page.addStyleTag({ content: `
+        /* Prevent awkward line breaks */
+        p, li {
+          hyphens: none !important;
+          word-break: normal !important;
+          overflow-wrap: normal !important;
+          line-height: 1.6 !important;
+        }
+        
+        /* Keep citations with their text */
+        p > span:last-child {
+          white-space: nowrap !important;
+        }
+        
+        /* Better bullet formatting */
+        li {
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+          margin-bottom: 0.5em !important;
+        }
+        
+        /* Keep headings with following content */
+        h1, h2, h3, h4, h5, h6 {
+          page-break-after: avoid !important;
+          break-after: avoid !important;
+        }
+        
         @media print { 
-          a[href]::after { content: none !important; } 
+          a[href]::after { content: none !important; }
+          
+          /* Ensure bullets don't break */
+          ul, ol {
+            page-break-inside: avoid !important;
+          }
         }
       `});
       
