@@ -1,6 +1,7 @@
 "use client"
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Lock, Activity, ArrowRight, Shield, Award, CheckCircle, Clock } from 'lucide-react'
@@ -262,8 +263,14 @@ export default function LandingPage() {
             <div className="text-center">
               {/* Clean professional presentation */}
               <div className="mb-8">
-                <div className="w-32 h-32 rounded-full bg-gray-100 mx-auto mb-6 flex items-center justify-center">
-                  <span className="text-4xl font-light text-gray-600">BC</span>
+                <div className="w-32 h-32 rounded-full bg-gray-100 mx-auto mb-6 flex items-center justify-center overflow-hidden">
+                  <Image 
+                    src="/images/dr-carpentier-headshot.jpg" 
+                    alt="Dr. Bradley W. Carpentier, MD"
+                    width={128}
+                    height={128}
+                    className="rounded-full object-cover w-full h-full"
+                  />
                 </div>
                 
                 <h3 className="text-2xl font-medium text-gray-900 mb-2">Bradley W. Carpentier, MD</h3>
