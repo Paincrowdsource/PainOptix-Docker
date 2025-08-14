@@ -32,6 +32,12 @@ export async function POST(req: NextRequest) {
     const envFlag = process.env.ENHANCED_V2 === '1' || process.env.ENHANCED_V2 === 'true';
     const headerFlag = req.headers.get('x-po-enhanced-v2') === '1';
     
+    // Debug logging for V2 detection
+    console.log('[API-DEBUG] ENHANCED_V2 env:', process.env.ENHANCED_V2);
+    console.log('[API-DEBUG] x-po-enhanced-v2 header:', req.headers.get('x-po-enhanced-v2'));
+    console.log('[API-DEBUG] envFlag:', envFlag);
+    console.log('[API-DEBUG] headerFlag:', headerFlag);
+    
     console.info(`PDF download request: assessmentId=${assessmentId}, tier=${requestedTier}`);
 
     // ---- UNIFIED DATA RETRIEVAL ----
@@ -94,6 +100,9 @@ export async function POST(req: NextRequest) {
 
     // Compute Enhanced V2 flag - only for enhanced tier and when explicitly enabled
     const enhancedV2Enabled = puppeteerTier === 'enhanced' && (envFlag || headerFlag);
+    console.log('[API-DEBUG] puppeteerTier:', puppeteerTier);
+    console.log('[API-DEBUG] enhancedV2Enabled computed as:', enhancedV2Enabled);
+    console.log('[API-DEBUG] Passing to PDF generator:', { puppeteerTier, enhancedV2Enabled });
     if (enhancedV2Enabled) {
       console.info('Enhanced V2 formatting enabled via flag');
     }

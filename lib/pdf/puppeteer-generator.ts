@@ -30,13 +30,21 @@ export async function generatePdfV2(
 ): Promise<Buffer> {
   let browser;
   let page;
+  
+  // Debug V2 detection
+  console.log('[V2-DEBUG] Enhanced V2 Enabled:', options.enhancedV2Enabled);
+  console.log('[V2-DEBUG] Tier:', tier);
+  console.log('[V2-DEBUG] Should apply V2:', tier === 'enhanced' && options.enhancedV2Enabled);
+  console.log('[V2-DEBUG] ENHANCED_V2 env:', process.env.ENHANCED_V2);
+  
   try {
     logger.info('Starting PDF generation', { 
       filePath: markdownFilePath, 
       tier, 
       assessmentId: assessmentData.id,
       environment: process.env.NODE_ENV,
-      netlify: process.env.NETLIFY
+      netlify: process.env.NETLIFY,
+      enhancedV2Enabled: options.enhancedV2Enabled
     });
 
     // 1. Read the markdown content
@@ -90,8 +98,9 @@ export async function generatePdfV2(
     console.log('After image processing, content includes ![?', cleanedContent.includes('!['));
     
     // Enhanced V2: Clean markdown processing
+    console.log('[V2-CHECK] About to check V2 conditions. Tier:', tier, 'V2 Enabled:', options.enhancedV2Enabled);
     if (tier === 'enhanced' && options.enhancedV2Enabled) {
-      console.log('[ENHANCED-V2] Applying clean markdown processing');
+      console.log('[ENHANCED-V2] Applying clean markdown processing - V2 IS ACTIVE');
       
       // Get human-readable condition name
       const conditionNames: Record<string, string> = {
