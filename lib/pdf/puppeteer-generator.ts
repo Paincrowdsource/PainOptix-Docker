@@ -295,7 +295,7 @@ export async function generatePdfV2(
       `});
       
       // Wait for DOM to stabilize before applying glue
-      await page.waitForTimeout(500);
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Execute the enhanced DOM glue script inline
       await page.evaluate(() => {
@@ -740,7 +740,7 @@ export async function generatePdfFromContent(
       `});
       
       // Wait for DOM to stabilize before applying glue
-      await page.waitForTimeout(500);
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Execute the enhanced DOM glue script inline
       await page.evaluate(() => {
