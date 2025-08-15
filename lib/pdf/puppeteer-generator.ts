@@ -48,6 +48,21 @@ function normalizeBullets(markdown: string): string {
   return out.join('\n');
 }
 
+// Helper function to strip END markers from content (all tiers)
+function stripEndMarkers(md: string): string {
+  // Remove lines that are exactly "END", "[END]", ">>END" or surrounded by whitespace (case-sensitive, sentinel form)
+  md = md.replace(/(^|\n)\s*(\[?END\]?|>>END)\s*(?=\n|$)/g, '\n');
+
+  // Extra guard: if " END " leaked inline inside bibliography lines, drop the token
+  // Example: "1. Chou ... END\n2. Cohen ..." → remove the orphan "END"
+  md = md.replace(/(\n\d+\.\s.*?)(\s+END\s*)(?=\n)/g, '$1');
+
+  // Convert >>BIBLIOGRAPHY to proper markdown heading
+  md = md.replace(/^\s*>>\s*BIBLIOGRAPHY\s*$/gmi, '## Bibliography');
+
+  return md;
+}
+
 // Helper function to get browser from pool
 async function getBrowser() {
   logger.info('Getting browser instance from pool...');
@@ -142,6 +157,19 @@ export async function generatePdfV2(
         .replace(/<!--[\s\S]*?-->/g, '')
         .replace(/^END$/gm, '')  // Remove standalone END lines
         .replace(/^DISCLAIMER$/gm, '## Disclaimer');  // Convert DISCLAIMER to heading
+    }
+    
+    // Strip END markers for all tiers (monograph protection)
+    if (tier === 'monograph') {
+      console.log('[MONO-END] before-strip count:',
+        (cleanedContent.match(/(^|\n)\s*(\[?END\]?|>>END)\s*(?=\n|$)/g) || []).length);
+    }
+    
+    cleanedContent = stripEndMarkers(cleanedContent);
+    
+    if (tier === 'monograph') {
+      console.log('[MONO-END] after-strip count:',
+        (cleanedContent.match(/(^|\n)\s*(\[?END\]?|>>END)\s*(?=\n|$)/g) || []).length);
     }
     
     // Replace static placeholders
@@ -289,6 +317,36 @@ export async function generatePdfV2(
     // 4. Convert to HTML
     let contentAsHtml = await marked.parse(cleanedContent);
     console.log('HTML contains img tags?', contentAsHtml.includes('<img'));
+    
+    // HTML failsafe: Remove any residual "END" node that slipped through as its own paragraph/span
+    contentAsHtml = contentAsHtml.replace(/>\s*(\[?END\]?|>>END)\s*</g, '><');
+    
+    // Apply bibliography processing for monographs too (ensure proper list formatting)
+    if (tier === 'monograph') {
+      // Process >>BIBLIOGRAPHY sections for monographs
+      const monoBibRx = />>\s*BIBLIOGRAPHY\s*<\/p>([\s\S]*?)(?=<h|$)/i;
+      contentAsHtml = contentAsHtml.replace(monoBibRx, (match, bibContent) => {
+        // Parse the bibliography content and create proper list
+        const lines = bibContent.split('\n').map((l: string) => l.trim()).filter(Boolean);
+        const entries: string[] = [];
+        let cur = '';
+        
+        for (const line of lines) {
+          // Remove any paragraph tags and extract text
+          const cleanLine = line.replace(/<\/?p[^>]*>/g, '').trim();
+          if (/^\d+\.\s?/.test(cleanLine)) {
+            if (cur) entries.push(cur.trim());
+            cur = cleanLine.replace(/^(\d+)\.\s?/, '');
+          } else if (cleanLine && !cleanLine.includes('>>END')) {
+            cur += (cur ? ' ' : '') + cleanLine;
+          }
+        }
+        if (cur) entries.push(cur.trim());
+        
+        const lis = entries.map((e: string) => `<li>${e}</li>`).join('');
+        return `<h2>Bibliography</h2>\n<ol class="bibliography">${lis}</ol>`;
+      });
+    }
     
     // Post-HTML cleanup for any remaining artifacts
     if (tier === 'enhanced' && options.enhancedV2Enabled) {
@@ -904,6 +962,19 @@ export async function generatePdfFromContent(
         .replace(/^DISCLAIMER$/gm, '## Disclaimer');  // Convert DISCLAIMER to heading
     }
     
+    // Strip END markers for all tiers (monograph protection)
+    if (tier === 'monograph') {
+      console.log('[MONO-END] before-strip count:',
+        (cleanedContent.match(/(^|\n)\s*(\[?END\]?|>>END)\s*(?=\n|$)/g) || []).length);
+    }
+    
+    cleanedContent = stripEndMarkers(cleanedContent);
+    
+    if (tier === 'monograph') {
+      console.log('[MONO-END] after-strip count:',
+        (cleanedContent.match(/(^|\n)\s*(\[?END\]?|>>END)\s*(?=\n|$)/g) || []).length);
+    }
+    
     // Replace static placeholders
     if (cleanedContent) {
       cleanedContent = cleanedContent.replace(/\[Name Placeholder\]/g, assessmentData.name || 'Patient');
@@ -1001,6 +1072,36 @@ export async function generatePdfFromContent(
     logger.info('Converting markdown to HTML...');
     let contentAsHtml = await marked.parse(cleanedContent);
     logger.info('HTML conversion complete, length:', contentAsHtml.length);
+    
+    // HTML failsafe: Remove any residual "END" node that slipped through as its own paragraph/span
+    contentAsHtml = contentAsHtml.replace(/>\s*(\[?END\]?|>>END)\s*</g, '><');
+    
+    // Apply bibliography processing for monographs too (ensure proper list formatting)
+    if (tier === 'monograph') {
+      // Process >>BIBLIOGRAPHY sections for monographs
+      const monoBibRx = />>\s*BIBLIOGRAPHY\s*<\/p>([\s\S]*?)(?=<h|$)/i;
+      contentAsHtml = contentAsHtml.replace(monoBibRx, (match, bibContent) => {
+        // Parse the bibliography content and create proper list
+        const lines = bibContent.split('\n').map((l: string) => l.trim()).filter(Boolean);
+        const entries: string[] = [];
+        let cur = '';
+        
+        for (const line of lines) {
+          // Remove any paragraph tags and extract text
+          const cleanLine = line.replace(/<\/?p[^>]*>/g, '').trim();
+          if (/^\d+\.\s?/.test(cleanLine)) {
+            if (cur) entries.push(cur.trim());
+            cur = cleanLine.replace(/^(\d+)\.\s?/, '');
+          } else if (cleanLine && !cleanLine.includes('>>END')) {
+            cur += (cur ? ' ' : '') + cleanLine;
+          }
+        }
+        if (cur) entries.push(cur.trim());
+        
+        const lis = entries.map((e: string) => `<li>${e}</li>`).join('');
+        return `<h2>Bibliography</h2>\n<ol class="bibliography">${lis}</ol>`;
+      });
+    }
     
     // Post-HTML cleanup for any remaining artifacts
     if (tier === 'enhanced' && options.enhancedV2Enabled) {
