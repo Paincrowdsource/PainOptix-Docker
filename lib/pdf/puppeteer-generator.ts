@@ -129,10 +129,19 @@ export async function generatePdfV2(
       cleanedContent = cleanedContent.replace(/(\S+)\s+(\[[^\]]+\])/g, '$1\u00A0$2');
       
       // Prevent DOI URLs from breaking mid-URL
-      // Use zero-width space after slashes to allow breaking at logical points
+      // Use non-breaking spaces to keep DOI URLs together
       cleanedContent = cleanedContent.replace(
         /(https:\/\/doi\.org\/[^\s\]]+)/g,
-        (match) => match.replace(/\//g, '/\u200B')
+        (match) => {
+          // Replace forward slashes after doi.org with non-breaking slashes
+          // Keep the protocol slashes normal, only fix the DOI path
+          const parts = match.split('doi.org/');
+          if (parts.length === 2) {
+            // Keep protocol normal, make DOI path non-breaking
+            return parts[0] + 'doi.org/\u00A0' + parts[1].replace(/\//g, '/\u00A0');
+          }
+          return match;
+        }
       );
       
       // Clean up bullets - ensure consistent formatting
@@ -150,6 +159,24 @@ export async function generatePdfV2(
       
       // Fix word( patterns - ensure space before parenthesis
       cleanedContent = cleanedContent.replace(/(\w)\(/g, '$1 (');
+      
+      // Process bibliography section specifically to prevent all URL breaks
+      const bibliographyRegex = /^(##?\s*(?:Bibliography|References))$([\s\S]*?)(?=^##?\s|$)/gm;
+      cleanedContent = cleanedContent.replace(bibliographyRegex, (match, title, content) => {
+        // Make all URLs in bibliography completely non-breaking
+        let fixedContent = content;
+        
+        // Handle all URLs in bibliography, not just DOIs
+        fixedContent = fixedContent.replace(
+          /(https?:\/\/[^\s\)]+)/g,
+          (urlMatch) => {
+            // Use non-breaking spaces after each slash to prevent any breaking
+            return urlMatch.replace(/\//g, '/\u00A0');
+          }
+        );
+        
+        return `${title}${fixedContent}`;
+      });
       
       console.log('[ENHANCED-V2] Clean markdown processing completed');
     }
