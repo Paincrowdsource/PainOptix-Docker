@@ -421,10 +421,14 @@ export async function generatePdfV2(
     // Pipe browser console to Node console
     page.on('console', msg => console.log('[PAGE]', msg.text()));
     
-    // Set explicit viewport for consistent rendering across all tiers
-    // Use EXTRA wide viewport to prevent text wrapping issues
-    await page.setViewport({ width: 2400, height: 3400 }); // Extra wide viewport to prevent citation breaks
-    console.info('Step 3: New page opened with A4 viewport. Setting content...');
+    // Set viewport to match US Letter size properly (not A4!)
+    await page.setViewport({ 
+      width: 816,  // 8.5 inches * 96 DPI
+      height: 1056, // 11 inches * 96 DPI
+      deviceScaleFactor: 1 
+    });
+    console.info('Step 3: New page opened with US Letter viewport. Setting content...');
+    console.log('[WIDTH-DEBUG] Page viewport:', await page.viewport());
     
     // Check if the HTML content is valid before setting it
     if (!fullHtml || typeof fullHtml !== 'string' || fullHtml.length < 50) {
@@ -438,10 +442,26 @@ export async function generatePdfV2(
     console.log('[PDF] HTML contains img tags:', fullHtml.includes('<img'));
     
     await page.setContent(fullHtml, { 
-      waitUntil: 'networkidle0', // Try 'domcontentloaded' if images cause hanging
+      waitUntil: 'networkidle0',
       timeout: 30000 
     });
-    console.info('Step 5: Content set. Generating PDF...');
+    console.info('Step 5: Content set. Checking dimensions...');
+    
+    // Check actual dimensions for overflow
+    const dimensions = await page.evaluate(() => {
+      return {
+        bodyWidth: document.body.scrollWidth,
+        bodyHeight: document.body.scrollHeight,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        overflow: document.body.scrollWidth > window.innerWidth
+      };
+    });
+    console.log('[WIDTH-DEBUG] Actual dimensions:', dimensions);
+    if (dimensions.overflow) {
+      console.warn('[WARNING] Content is overflowing the page width!');
+    }
+    
     console.log('[PDF] Content set successfully');
     logger.info('Page content set');
     
@@ -1006,10 +1026,14 @@ export async function generatePdfFromContent(
     // Pipe browser console to Node console
     page.on('console', msg => console.log('[PAGE]', msg.text()));
     
-    // Set explicit viewport for consistent rendering across all tiers
-    // Use EXTRA wide viewport to prevent text wrapping issues
-    await page.setViewport({ width: 2400, height: 3400 }); // Extra wide viewport to prevent citation breaks
-    console.info('Step 3: New page opened with A4 viewport. Setting content...');
+    // Set viewport to match US Letter size properly (not A4!)
+    await page.setViewport({ 
+      width: 816,  // 8.5 inches * 96 DPI
+      height: 1056, // 11 inches * 96 DPI
+      deviceScaleFactor: 1 
+    });
+    console.info('Step 3: New page opened with US Letter viewport. Setting content...');
+    console.log('[WIDTH-DEBUG] Page viewport:', await page.viewport());
     
     // Check if the HTML content is valid before setting it
     if (!fullHtml || typeof fullHtml !== 'string' || fullHtml.length < 50) {
@@ -1023,10 +1047,26 @@ export async function generatePdfFromContent(
     console.log('[PDF] HTML contains img tags:', fullHtml.includes('<img'));
     
     await page.setContent(fullHtml, { 
-      waitUntil: 'networkidle0', // Try 'domcontentloaded' if images cause hanging
+      waitUntil: 'networkidle0',
       timeout: 30000 
     });
-    console.info('Step 5: Content set. Generating PDF...');
+    console.info('Step 5: Content set. Checking dimensions...');
+    
+    // Check actual dimensions for overflow
+    const dimensions = await page.evaluate(() => {
+      return {
+        bodyWidth: document.body.scrollWidth,
+        bodyHeight: document.body.scrollHeight,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        overflow: document.body.scrollWidth > window.innerWidth
+      };
+    });
+    console.log('[WIDTH-DEBUG] Actual dimensions:', dimensions);
+    if (dimensions.overflow) {
+      console.warn('[WARNING] Content is overflowing the page width!');
+    }
+    
     console.log('[PDF] Content set successfully');
     logger.info('Page content set');
     
