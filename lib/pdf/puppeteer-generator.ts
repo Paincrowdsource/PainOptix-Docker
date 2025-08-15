@@ -225,6 +225,11 @@ export async function generatePdfV2(
       const doiCount = (cleanedContent.match(/doi\.org/g) || []).length;
       console.log('[DEBUG] DOI URLs found after shortening:', doiCount);
       
+      // DEBUG: count bullet lines and references before Markdown render
+      const bulletLinesBefore = (cleanedContent.match(/(^|\n)[ \t]*[•◦▪‣·][ \t]*/g) || []).length;
+      const dashListBefore = (cleanedContent.match(/(^|\n)[ \t]*[-*+][ \t]+/g) || []).length;
+      console.log('[ENHANCED-DIAG] bullets-before:', bulletLinesBefore, 'dashlists-before:', dashListBefore);
+      
       // Clean up bullets - ensure consistent formatting
       cleanedContent = cleanedContent.replace(/^[•·]\s*/gm, '• ');
       cleanedContent = cleanedContent.replace(/^\*\s+/gm, '• ');
@@ -272,6 +277,11 @@ export async function generatePdfV2(
       
       // Normalize manual bullets to proper lists
       cleanedContent = normalizeBullets(cleanedContent);
+      
+      // DEBUG: count after normalization
+      const bulletLinesAfter = (cleanedContent.match(/(^|\n)[ \t]*[•◦▪‣·][ \t]*/g) || []).length;
+      const dashListAfter = (cleanedContent.match(/(^|\n)[ \t]*[-*+][ \t]+/g) || []).length;
+      console.log('[ENHANCED-DIAG] bullets-after:', bulletLinesAfter, 'dashlists-after:', dashListAfter);
       
       console.log('[ENHANCED-V2] Clean markdown processing completed');
     }
@@ -364,12 +374,15 @@ export async function generatePdfV2(
         return html;
       };
       
-      contentAsHtml = transformLists(contentAsHtml);
+      // DISABLED: Keep semantic HTML lists instead of converting to enh-bullet
+      // contentAsHtml = transformLists(contentAsHtml);
       
-      // LOG AFTER LIST TRANSFORM
-      console.log('[ENHANCED-LIST-TRANSFORM]', {
-        enhBullets: (contentAsHtml.match(/class="enh-bullet"/g) || []).length,
-        remainingLI: (contentAsHtml.match(/<li/gi) || []).length
+      // LOG LIST STATUS (no longer transforming)
+      console.log('[ENHANCED-LIST-STATUS]', {
+        ulCount: (contentAsHtml.match(/<ul/gi) || []).length,
+        olCount: (contentAsHtml.match(/<ol/gi) || []).length,
+        liCount: (contentAsHtml.match(/<li/gi) || []).length,
+        bibliographyOL: (contentAsHtml.match(/<ol class="bibliography">/g) || []).length
       });
       
       // Step 2: Wrap citations with preceding word to prevent orphaning
@@ -543,27 +556,39 @@ export async function generatePdfV2(
           max-width: 100% !important;
         }
         
-        /* Lists */
-        ul, ol { 
-          padding-left: 1.5em !important; 
+        /* Lists: simple, predictable */
+        ul, ol {
+          padding-left: 1.25em !important;
           margin: 0.5em 0 !important;
           list-style-position: outside !important;
         }
-        li { 
-          margin: 0.25em 0 !important; 
-          break-inside: avoid; 
+        li {
+          margin: 0.2em 0 !important;
+          break-inside: avoid;
           page-break-inside: avoid;
           text-align: left !important;
         }
         
-        /* Bibliography specific styling */
-        ol.bibliography {
-          padding-left: 2em !important;
+        /* Bibliography: drop hanging indent (it was causing numbers on their own line) */
+        ol.bibliography { padding-left: 1.5em !important; }
+        ol.bibliography > li {
+          margin: 0.35em 0 !important;
+          text-indent: 0 !important;     /* ← critical */
+          padding-left: 0 !important;     /* ← critical */
         }
-        ol.bibliography li {
-          margin: 0.5em 0 !important;
-          text-indent: -1em !important;
-          padding-left: 1em !important;
+        
+        /* Force normal wrapping everywhere (no nowrap anchors that stretch lines) */
+        a, .citation {
+          white-space: normal !important;
+          display: inline !important;
+        }
+        
+        /* Paragraph & list text should never justify-stretch */
+        p, li {
+          text-align: left !important;
+          text-justify: auto !important;
+          letter-spacing: normal !important;
+          word-spacing: normal !important;
         }
         
         /* Ensure consistent left alignment and normal spacing */
@@ -1031,12 +1056,15 @@ export async function generatePdfFromContent(
         return html;
       };
       
-      contentAsHtml = transformLists(contentAsHtml);
+      // DISABLED: Keep semantic HTML lists instead of converting to enh-bullet
+      // contentAsHtml = transformLists(contentAsHtml);
       
-      // LOG AFTER LIST TRANSFORM
-      console.log('[ENHANCED-LIST-TRANSFORM]', {
-        enhBullets: (contentAsHtml.match(/class="enh-bullet"/g) || []).length,
-        remainingLI: (contentAsHtml.match(/<li/gi) || []).length
+      // LOG LIST STATUS (no longer transforming)
+      console.log('[ENHANCED-LIST-STATUS]', {
+        ulCount: (contentAsHtml.match(/<ul/gi) || []).length,
+        olCount: (contentAsHtml.match(/<ol/gi) || []).length,
+        liCount: (contentAsHtml.match(/<li/gi) || []).length,
+        bibliographyOL: (contentAsHtml.match(/<ol class="bibliography">/g) || []).length
       });
       
       // Step 2: Wrap citations with preceding word
@@ -1191,27 +1219,39 @@ export async function generatePdfFromContent(
           max-width: 100% !important;
         }
         
-        /* Lists */
-        ul, ol { 
-          padding-left: 1.5em !important; 
+        /* Lists: simple, predictable */
+        ul, ol {
+          padding-left: 1.25em !important;
           margin: 0.5em 0 !important;
           list-style-position: outside !important;
         }
-        li { 
-          margin: 0.25em 0 !important; 
-          break-inside: avoid; 
+        li {
+          margin: 0.2em 0 !important;
+          break-inside: avoid;
           page-break-inside: avoid;
           text-align: left !important;
         }
         
-        /* Bibliography specific styling */
-        ol.bibliography {
-          padding-left: 2em !important;
+        /* Bibliography: drop hanging indent (it was causing numbers on their own line) */
+        ol.bibliography { padding-left: 1.5em !important; }
+        ol.bibliography > li {
+          margin: 0.35em 0 !important;
+          text-indent: 0 !important;     /* ← critical */
+          padding-left: 0 !important;     /* ← critical */
         }
-        ol.bibliography li {
-          margin: 0.5em 0 !important;
-          text-indent: -1em !important;
-          padding-left: 1em !important;
+        
+        /* Force normal wrapping everywhere (no nowrap anchors that stretch lines) */
+        a, .citation {
+          white-space: normal !important;
+          display: inline !important;
+        }
+        
+        /* Paragraph & list text should never justify-stretch */
+        p, li {
+          text-align: left !important;
+          text-justify: auto !important;
+          letter-spacing: normal !important;
+          word-spacing: normal !important;
         }
         
         /* Ensure consistent left alignment and normal spacing */
