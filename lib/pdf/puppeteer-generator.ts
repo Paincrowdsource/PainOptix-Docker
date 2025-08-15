@@ -166,7 +166,7 @@ export async function generatePdfV2(
       
       // Use guide_type from assessment data if available, fallback to extracted condition
       const actualCondition = assessmentData.guide_type || assessmentData.guideType || condition;
-      const conditionName = conditionNames[actualCondition] || actualCondition.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const conditionName = conditionNames[actualCondition] || actualCondition.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
       
       console.log('[TITLE-DEBUG] actualCondition:', actualCondition);
       console.log('[TITLE-DEBUG] conditionName:', conditionName);
@@ -207,29 +207,44 @@ export async function generatePdfV2(
       // Fix word( patterns - ensure space before parenthesis
       cleanedContent = cleanedContent.replace(/(\w)\(/g, '$1 (');
       
-      // Process bibliography section with proper formatting
+      // Process bibliography section with better formatting
       const bibliographyRegex = /^(##?\s*(?:Bibliography|References))$([\s\S]*?)$/m;
       cleanedContent = cleanedContent.replace(bibliographyRegex, (match, title, content) => {
-        let fixedContent = content;
+        // Remove https:// prefixes and END markers first
+        let fixedContent = content.replace(/https:\/\//g, '').replace(/\bEND\b/g, '');
         
-        // Remove https:// prefixes to shorten URLs
-        fixedContent = fixedContent.replace(/https:\/\//g, '');
+        // Parse entries more carefully
+        const lines = fixedContent.split('\n').filter(line => line.trim());
+        const entries = [];
+        let currentEntry = '';
         
-        // Remove END markers
-        fixedContent = fixedContent.replace(/\bEND\b(?!\w)/g, '');
-        fixedContent = fixedContent.replace(/^END$/gm, '');
+        for (const line of lines) {
+          if (/^\d+\./.test(line.trim())) {
+            // New entry starts
+            if (currentEntry) {
+              entries.push(currentEntry.trim());
+            }
+            currentEntry = line;
+          } else if (currentEntry) {
+            // Continuation of current entry
+            currentEntry += ' ' + line.trim();
+          }
+        }
         
-        // Split by numbers followed by period and reformat
-        const entries = fixedContent.split(/(?=\d+\.)/g)
-          .filter(entry => entry.trim())
-          .map(entry => {
-            // Ensure proper formatting with line break before each entry
-            return entry.trim().replace(/^(\d+)\.\s*/, '\n$1. ');
-          });
+        // Add last entry
+        if (currentEntry) {
+          entries.push(currentEntry.trim());
+        }
         
-        console.log('[DEBUG] Processing bibliography section');
+        // Format with proper spacing - double line break between entries
+        const formattedEntries = entries.map(entry => {
+          // Ensure proper number formatting with spacing
+          return entry.replace(/^(\d+)\.\s*/, '\n\n$1. ');
+        });
         
-        return `${title}\n${entries.join('\n')}`;
+        console.log('[DEBUG] Bibliography: found', entries.length, 'entries');
+        
+        return `${title}\n${formattedEntries.join('')}`;
       });
       
       console.log('[ENHANCED-V2] Clean markdown processing completed');
@@ -421,13 +436,13 @@ export async function generatePdfV2(
     // Pipe browser console to Node console
     page.on('console', msg => console.log('[PAGE]', msg.text()));
     
-    // Set viewport to match US Letter size properly (not A4!)
+    // Use wider viewport for better text rendering
     await page.setViewport({ 
-      width: 816,  // 8.5 inches * 96 DPI
-      height: 1056, // 11 inches * 96 DPI
+      width: 1200,  // Wider viewport for better text flow
+      height: 1600, // Proper height
       deviceScaleFactor: 1 
     });
-    console.info('Step 3: New page opened with US Letter viewport. Setting content...');
+    console.info('Step 3: New page opened with wider viewport. Setting content...');
     console.log('[WIDTH-DEBUG] Page viewport:', await page.viewport());
     
     // Check if the HTML content is valid before setting it
@@ -471,22 +486,28 @@ export async function generatePdfV2(
       
       // Add clean print styles and prevent awkward breaks
       await page.addStyleTag({ content: `
-        /* Enhanced V2 Typography - Optimized for readability */
+        /* Use more of the available page width */
         body {
-          font-size: 11pt !important;  /* Slightly smaller to fit better */
-          line-height: 1.5 !important;
-          padding: 0;
-          margin: 0;
-          width: 100%;
+          font-size: 12pt !important;  /* Increase back to 12pt */
+          line-height: 1.6 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
           box-sizing: border-box;
         }
         
-        /* Content width constraints */
-        .content, p, li, div {
-          max-width: 7in !important;  /* Full usable width (8.5 - 0.75 - 0.75) */
-          word-wrap: break-word !important;
-          overflow-wrap: break-word !important;
-          hyphens: auto !important;  /* Allow hyphenation when needed */
+        /* Content should use most of the page */
+        .content, article, main, div.wrapper, body > div {
+          max-width: 6.5in !important;  /* Use more width (8.5 - 1 - 1 margins) */
+          margin: 0 auto !important;
+          padding: 0 0.5in !important;
+        }
+        
+        /* Force text to wrap properly without breaking words */
+        p, li, div, span {
+          word-break: normal !important;  /* Don't break words unnecessarily */
+          overflow-wrap: break-word !important;  /* Only break long words */
+          hyphens: none !important;  /* No auto-hyphenation */
         }
         
         h2 { 
@@ -838,7 +859,7 @@ export async function generatePdfFromContent(
       
       // Use the proper guide type, not a file path
       const actualCondition = assessmentData.guide_type || assessmentData.guideType || guideType;
-      const conditionName = conditionNames[actualCondition] || actualCondition.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const conditionName = conditionNames[actualCondition] || actualCondition.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
       
       console.log('[TITLE-DEBUG-FROM-CONTENT] actualCondition:', actualCondition);
       console.log('[TITLE-DEBUG-FROM-CONTENT] conditionName:', conditionName);
@@ -1026,13 +1047,13 @@ export async function generatePdfFromContent(
     // Pipe browser console to Node console
     page.on('console', msg => console.log('[PAGE]', msg.text()));
     
-    // Set viewport to match US Letter size properly (not A4!)
+    // Use wider viewport for better text rendering
     await page.setViewport({ 
-      width: 816,  // 8.5 inches * 96 DPI
-      height: 1056, // 11 inches * 96 DPI
+      width: 1200,  // Wider viewport for better text flow
+      height: 1600, // Proper height
       deviceScaleFactor: 1 
     });
-    console.info('Step 3: New page opened with US Letter viewport. Setting content...');
+    console.info('Step 3: New page opened with wider viewport. Setting content...');
     console.log('[WIDTH-DEBUG] Page viewport:', await page.viewport());
     
     // Check if the HTML content is valid before setting it
@@ -1076,22 +1097,28 @@ export async function generatePdfFromContent(
       
       // Add clean print styles and prevent awkward breaks
       await page.addStyleTag({ content: `
-        /* Enhanced V2 Typography - Optimized for readability */
+        /* Use more of the available page width */
         body {
-          font-size: 11pt !important;  /* Slightly smaller to fit better */
-          line-height: 1.5 !important;
-          padding: 0;
-          margin: 0;
-          width: 100%;
+          font-size: 12pt !important;  /* Increase back to 12pt */
+          line-height: 1.6 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
           box-sizing: border-box;
         }
         
-        /* Content width constraints */
-        .content, p, li, div {
-          max-width: 7in !important;  /* Full usable width (8.5 - 0.75 - 0.75) */
-          word-wrap: break-word !important;
-          overflow-wrap: break-word !important;
-          hyphens: auto !important;  /* Allow hyphenation when needed */
+        /* Content should use most of the page */
+        .content, article, main, div.wrapper, body > div {
+          max-width: 6.5in !important;  /* Use more width (8.5 - 1 - 1 margins) */
+          margin: 0 auto !important;
+          padding: 0 0.5in !important;
+        }
+        
+        /* Force text to wrap properly without breaking words */
+        p, li, div, span {
+          word-break: normal !important;  /* Don't break words unnecessarily */
+          overflow-wrap: break-word !important;  /* Only break long words */
+          hyphens: none !important;  /* No auto-hyphenation */
         }
         
         h2 { 
