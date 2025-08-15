@@ -7,7 +7,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = supabaseAdmin;
+  const supabase = supabaseAdmin();
   
   try {
     // Verify admin authentication
