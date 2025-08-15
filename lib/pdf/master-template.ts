@@ -151,11 +151,17 @@ export function getPdfHtmlTemplate(
     }
   `;
 
-  const tierBadge = tier === 'monograph' ? 
-    '<span class="tier-badge tier-monograph">COMPREHENSIVE MONOGRAPH</span>' :
-    tier === 'enhanced' ?
-    '<span class="tier-badge tier-enhanced">ENHANCED CLINICAL GUIDE</span>' :
-    '';
+  // Only show tier badge if subtitle doesn't already say the same thing
+  const showTierBadge = tier === 'monograph' || 
+    (tier === 'enhanced' && frontmatter.subtitle !== 'Enhanced Clinical Guide');
+  
+  const tierBadge = showTierBadge ? (
+    tier === 'monograph' ? 
+      '<span class="tier-badge tier-monograph">COMPREHENSIVE MONOGRAPH</span>' :
+      tier === 'enhanced' ?
+      '<span class="tier-badge tier-enhanced">ENHANCED CLINICAL GUIDE</span>' :
+      ''
+  ) : '';
 
   return `
     <!DOCTYPE html>
@@ -168,8 +174,8 @@ export function getPdfHtmlTemplate(
       <body>
         <div class="cover-page">
           <h1 class="cover-title">${frontmatter.title || (assessment.guideType ? assessment.guideType.replace(/_/g, ' ').toUpperCase() : 'ASSESSMENT GUIDE')}</h1>
-          ${frontmatter.subtitle ? `<h2>${frontmatter.subtitle}</h2>` : ''}
-          ${tierBadge}
+          ${frontmatter.subtitle && frontmatter.subtitle !== 'Enhanced Clinical Guide' ? `<h2>${frontmatter.subtitle}</h2>` : ''}
+          ${tierBadge || (tier === 'enhanced' ? '<h2>Enhanced Clinical Guide</h2>' : '')}
           <p style="margin-top: 48pt;">
             <strong>Prepared for:</strong> ${assessment.name || 'Patient'}<br/>
             <strong>Date:</strong> ${currentDate}<br/>

@@ -138,6 +138,10 @@ export async function generatePdfV2(
     if (tier === 'enhanced' && options.enhancedV2Enabled) {
       console.log('[ENHANCED-V2] Applying clean markdown processing - V2 IS ACTIVE');
       
+      // AGGRESSIVE HTML CLEANUP - Remove all br tags before markdown processing
+      cleanedContent = cleanedContent.replace(/<br\s*\/?>/gi, ' ');
+      cleanedContent = cleanedContent.replace(/&lt;br\s*\/?&gt;/gi, ' ');
+      
       // Get human-readable condition name
       const conditionNames: Record<string, string> = {
         'si_joint_dysfunction': 'Sacroiliac Joint Pain',
@@ -196,6 +200,10 @@ export async function generatePdfV2(
         // Remove all https:// prefixes in bibliography to shorten URLs
         fixedContent = fixedContent.replace(/https:\/\//g, '');
         
+        // Remove any lingering END markers in bibliography
+        fixedContent = fixedContent.replace(/\bEND\b(?!\w)/g, '');
+        fixedContent = fixedContent.replace(/^END$/gm, '');
+        
         // Log for debugging
         console.log('[DEBUG] Processing bibliography section');
         
@@ -208,6 +216,13 @@ export async function generatePdfV2(
     // 4. Convert to HTML
     let contentAsHtml = await marked.parse(cleanedContent);
     console.log('HTML contains img tags?', contentAsHtml.includes('<img'));
+    
+    // Post-HTML cleanup for any remaining artifacts
+    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+      // Final cleanup of any HTML br tags that might have been generated
+      contentAsHtml = contentAsHtml.replace(/<br\s*\/?>/gi, ' ');
+      contentAsHtml = contentAsHtml.replace(/&lt;br\s*\/?&gt;/gi, ' ');
+    }
     
     // Post-process HTML to fix bibliography DOI URLs for Enhanced V2
     if (tier === 'enhanced' && options.enhancedV2Enabled) {
@@ -418,6 +433,10 @@ export async function generatePdfV2(
         body {
           font-size: 12pt !important;
           line-height: 1.6 !important;
+          max-width: 6in !important;  /* Constrain width to prevent cutoff */
+          margin: 0 auto !important;
+          word-wrap: break-word !important;
+          overflow-wrap: break-word !important;
         }
         
         h2 { 
@@ -586,9 +605,9 @@ export async function generatePdfV2(
       `,
       margin: {
         top: '0.75in',
-        right: '0.4in',  // Further reduced for maximum text width
+        right: '1.2in',  // INCREASED to prevent text cutoff
         bottom: '1in',
-        left: '0.4in'    // Further reduced for maximum text width
+        left: '0.75in'   // Slightly increased for balance
       },
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {
@@ -741,6 +760,50 @@ export async function generatePdfFromContent(
       cleanedContent = replacePlaceholders(cleanedContent, assessmentData.responses);
     }
     
+    // Enhanced V2: Clean markdown processing BEFORE image processing
+    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+      console.log('[ENHANCED-V2] Applying clean markdown processing (generatePdfFromContent)');
+      
+      // AGGRESSIVE HTML CLEANUP - Remove all br tags before markdown processing
+      cleanedContent = cleanedContent.replace(/<br\s*\/?>/gi, ' ');
+      cleanedContent = cleanedContent.replace(/&lt;br\s*\/?&gt;/gi, ' ');
+      
+      // Get human-readable condition name
+      const conditionNames: Record<string, string> = {
+        'si_joint_dysfunction': 'Sacroiliac Joint Pain',
+        'sciatica': 'Sciatica',
+        'facet_arthropathy': 'Facet Joint Arthropathy',
+        'muscular_nslbp': 'Muscular Lower Back Pain',
+        'central_disc_bulge': 'Central Disc Bulge',
+        'canal_stenosis': 'Spinal Canal Stenosis',
+        'lumbar_instability': 'Lumbar Instability',
+        'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
+        'urgent_symptoms': 'Urgent Symptoms'
+      };
+      const conditionName = conditionNames[guideType] || guideType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      // Fix "Learn About" title to include condition name with proper spacing
+      cleanedContent = cleanedContent.replace(/^(#+\s*)?Learn About\s*.*$/m, `\n## Learn About ${conditionName}\n\n`);
+      
+      // Keep citations attached to their preceding text
+      cleanedContent = cleanedContent.replace(/\[([^,]+),\s+(\d{4})\]/g, '[$1,\u00A0$2]');
+      cleanedContent = cleanedContent.replace(/\[([A-Z][a-z]+),\s+/g, '[$1,\u00A0');
+      cleanedContent = cleanedContent.replace(/(\S+)\s+(\[[^\]]+\])/g, '$1\u00A0$2');
+      
+      // Shorten DOI URLs
+      cleanedContent = cleanedContent.replace(/https:\/\/doi\.org\//g, 'doi.org/');
+      
+      // Process bibliography section
+      const bibliographyRegex = /^(##?\s*(?:Bibliography|References))$([\s\S]*?)(?=^##?\s|$)/gm;
+      cleanedContent = cleanedContent.replace(bibliographyRegex, (match, title, content) => {
+        let fixedContent = content;
+        fixedContent = fixedContent.replace(/https:\/\//g, '');
+        fixedContent = fixedContent.replace(/\bEND\b(?!\w)/g, '');
+        fixedContent = fixedContent.replace(/^END$/gm, '');
+        return `${title}${fixedContent}`;
+      });
+    }
+    
     // Process markdown to add images for monographs
     try {
       logger.info('Processing markdown with images...');
@@ -755,6 +818,13 @@ export async function generatePdfFromContent(
     logger.info('Converting markdown to HTML...');
     let contentAsHtml = await marked.parse(cleanedContent);
     logger.info('HTML conversion complete, length:', contentAsHtml.length);
+    
+    // Post-HTML cleanup for any remaining artifacts
+    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+      // Final cleanup of any HTML br tags that might have been generated
+      contentAsHtml = contentAsHtml.replace(/<br\s*\/?>/gi, ' ');
+      contentAsHtml = contentAsHtml.replace(/&lt;br\s*\/?&gt;/gi, ' ');
+    }
     
     // LOG ENHANCED PATH ENTRY (generatePdfFromContent)
     console.log('[ENHANCED-PATH-ENTRY-FROM-CONTENT]', {
@@ -916,6 +986,10 @@ export async function generatePdfFromContent(
         body {
           font-size: 12pt !important;
           line-height: 1.6 !important;
+          max-width: 6in !important;  /* Constrain width to prevent cutoff */
+          margin: 0 auto !important;
+          word-wrap: break-word !important;
+          overflow-wrap: break-word !important;
         }
         
         h2 { 
@@ -1084,9 +1158,9 @@ export async function generatePdfFromContent(
       `,
       margin: {
         top: '0.75in',
-        right: '0.4in',  // Further reduced for maximum text width
+        right: '1.2in',  // INCREASED to prevent text cutoff
         bottom: '1in',
-        left: '0.4in'    // Further reduced for maximum text width
+        left: '0.75in'   // Slightly increased for balance
       },
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {
