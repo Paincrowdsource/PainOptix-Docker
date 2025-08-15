@@ -121,6 +121,11 @@ export async function generatePdfV2(
       cleanedContent = cleanedContent.replace(/^(#+\s*)?Learn About\s*.*$/m, `## Learn About ${conditionName}`);
       
       // Keep citations attached to their preceding text with non-breaking space
+      // First, glue author name to year within citations to prevent [Weber, 1983] from splitting
+      cleanedContent = cleanedContent.replace(/\[([^,]+),\s+(\d{4})\]/g, '[$1,\u00A0$2]');
+      // Also handle other citation formats with commas
+      cleanedContent = cleanedContent.replace(/\[([A-Z][a-z]+),\s+/g, '[$1,\u00A0');
+      // Then ensure the whole citation stays with preceding text
       cleanedContent = cleanedContent.replace(/(\S+)\s+(\[[^\]]+\])/g, '$1\u00A0$2');
       
       // Clean up bullets - ensure consistent formatting
