@@ -57,3 +57,24 @@ test-*.js
 # Logs
 /logs/
 *.logapp-spec.yaml
+
+# Test files - don't commit
+test-*.js
+test-*.pdf
+verify-*.js
+test-baseline-*.js
+test-bulletproof-*.js
+test-mono-*.js
+
+# Debug files
+debug/
+debug-*.html
+*.debug.html
+
+# Backup files
+*.backup-*
+*.bak
+
+# Local PDF tests
+*.test.pdf
+local-pdfs/
