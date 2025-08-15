@@ -98,7 +98,9 @@ export async function generatePdfV2(
       cleanedContent = cleanedContent
         .replace(/>>EXECUTIVE_SUMMARY[\s\S]*?>>END/g, '')
         .replace(/>>KEY_POINTS[\s\S]*?>>END/g, '')
-        .replace(/<!--[\s\S]*?-->/g, '');
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/^END$/gm, '')  // Remove standalone END lines
+        .replace(/^DISCLAIMER$/gm, '## Disclaimer');  // Convert DISCLAIMER to heading
     }
     
     // Replace static placeholders
@@ -406,6 +408,22 @@ export async function generatePdfV2(
       
       // Add clean print styles and prevent awkward breaks
       await page.addStyleTag({ content: `
+        /* Enhanced V2 Typography - Larger, more readable */
+        body {
+          font-size: 12pt !important;
+          line-height: 1.6 !important;
+        }
+        
+        h2 { 
+          font-size: 16pt !important;
+          margin-top: 1.5em !important;
+        }
+        
+        h3 { 
+          font-size: 14pt !important;
+          margin-top: 1.2em !important;
+        }
+        
         /* Prevent awkward line breaks */
         p, li {
           hyphens: none !important;
@@ -424,6 +442,14 @@ export async function generatePdfV2(
           page-break-inside: avoid !important;
           break-inside: avoid !important;
           margin-bottom: 0.5em !important;
+        }
+        
+        /* Bibliography specific formatting */
+        .bibliography li,
+        #bibliography li {
+          margin-bottom: 0.5em !important;
+          padding-right: 0.5in !important;
+          font-size: 11pt !important;
         }
         
         /* Keep headings with following content */
@@ -689,7 +715,9 @@ export async function generatePdfFromContent(
       cleanedContent = cleanedContent
         .replace(/>>EXECUTIVE_SUMMARY[\s\S]*?>>END/g, '')
         .replace(/>>KEY_POINTS[\s\S]*?>>END/g, '')
-        .replace(/<!--[\s\S]*?-->/g, '');
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/^END$/gm, '')  // Remove standalone END lines
+        .replace(/^DISCLAIMER$/gm, '## Disclaimer');  // Convert DISCLAIMER to heading
     }
     
     // Replace static placeholders
@@ -878,6 +906,22 @@ export async function generatePdfFromContent(
       
       // Add clean print styles and prevent awkward breaks
       await page.addStyleTag({ content: `
+        /* Enhanced V2 Typography - Larger, more readable */
+        body {
+          font-size: 12pt !important;
+          line-height: 1.6 !important;
+        }
+        
+        h2 { 
+          font-size: 16pt !important;
+          margin-top: 1.5em !important;
+        }
+        
+        h3 { 
+          font-size: 14pt !important;
+          margin-top: 1.2em !important;
+        }
+        
         /* Prevent awkward line breaks */
         p, li {
           hyphens: none !important;
@@ -896,6 +940,14 @@ export async function generatePdfFromContent(
           page-break-inside: avoid !important;
           break-inside: avoid !important;
           margin-bottom: 0.5em !important;
+        }
+        
+        /* Bibliography specific formatting */
+        .bibliography li,
+        #bibliography li {
+          margin-bottom: 0.5em !important;
+          padding-right: 0.5in !important;
+          font-size: 11pt !important;
         }
         
         /* Keep headings with following content */

@@ -23,14 +23,14 @@ export const PUPPETEER_CONFIG: LaunchOptions = {
 
 // PDF generation options optimized for medical documents
 export const PDF_OPTIONS = {
-  format: 'A4' as const,
+  format: 'Letter' as const,  // Change to Letter for US standard
   printBackground: true,
   displayHeaderFooter: false,
   margin: {
     top: '0.75in',
     bottom: '0.75in',
     left: '0.75in',
-    right: '0.75in',
+    right: '1.25in',  // Increase right margin to prevent text cutoff
   },
   preferCSSPageSize: false,
   // Timeout for PDF generation
