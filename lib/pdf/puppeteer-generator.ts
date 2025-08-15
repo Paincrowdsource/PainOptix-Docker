@@ -206,7 +206,7 @@ export async function generatePdfV2(
       // Wrap DOI URLs in non-breaking spans
       contentAsHtml = contentAsHtml.replace(
         /<a[^>]*href="https:\/\/doi\.org\/[^"]*"[^>]*>([^<]*)<\/a>/g,
-        (match) => {
+        (match: string) => {
           return `<span style="white-space: nowrap; display: inline-block;">${match}</span>`;
         }
       );
@@ -214,7 +214,7 @@ export async function generatePdfV2(
       // Also handle plain text DOI URLs in bibliography
       contentAsHtml = contentAsHtml.replace(
         /(?<!<[^>]*)https:\/\/doi\.org\/[^\s<]+/g,
-        (match) => {
+        (match: string) => {
           return `<span style="white-space: nowrap;">${match}</span>`;
         }
       );
@@ -320,7 +320,7 @@ export async function generatePdfV2(
       // Step 4: Protect parenthetical expressions
       contentAsHtml = contentAsHtml.replace(
         /\(e\.g\.[^)]{1,40}\)/g,
-        (match) => `<span class="nowrap">${match}</span>`
+        (match: string) => `<span class="nowrap">${match}</span>`
       );
       
       // Step 5: Keep numbers with their units
@@ -810,7 +810,7 @@ export async function generatePdfFromContent(
       // Step 4: Protect parenthetical expressions
       contentAsHtml = contentAsHtml.replace(
         /\(e\.g\.[^)]{1,40}\)/g,
-        (match) => `<span class="nowrap">${match}</span>`
+        (match: string) => `<span class="nowrap">${match}</span>`
       );
       
       // Step 5: Keep numbers with their units
