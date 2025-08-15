@@ -16,6 +16,38 @@ marked.setOptions({
   gfm: true
 });
 
+// Helper function to normalize manual bullets to proper lists
+function normalizeBullets(markdown: string): string {
+  const lines = markdown.split('\n');
+  const out: string[] = [];
+  let inBulletBlock = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const s = raw.trim();
+
+    if (/^•\s*/.test(s)) {
+      // Convert leading "•" to "- " with a following space
+      const item = s.replace(/^•\s*/, '- ');
+      // If previous line was non-blank and not a bullet, insert a blank line BEFORE to start a list
+      if (!inBulletBlock && out.length && out[out.length - 1].trim() !== '') {
+        out.push('');
+      }
+      out.push(item);
+      inBulletBlock = true;
+    } else {
+      // If we exit a bullet block, ensure a blank line AFTER the list
+      if (inBulletBlock && s !== '' && !/^[-*+]\s+/.test(s)) {
+        out.push('');
+        inBulletBlock = false;
+      }
+      out.push(raw);
+    }
+  }
+
+  return out.join('\n');
+}
+
 // Helper function to get browser from pool
 async function getBrowser() {
   logger.info('Getting browser instance from pool...');
@@ -209,36 +241,37 @@ export async function generatePdfV2(
       // Fix word( patterns - ensure space before parenthesis
       cleanedContent = cleanedContent.replace(/(\w)\(/g, '$1 (');
       
-      // Normalize bibliography into clean numbered entries with spacing
+      // Rebuild Bibliography as real ordered list HTML
       const bibRx = /(##?\s*(Bibliography|References))[^\n]*\n([\s\S]*)$/m;
       cleanedContent = cleanedContent.replace(bibRx, (m, heading, _h2, tail) => {
-        // Stop at next heading if present
+        // Limit to the bibliography body (stop at next heading)
         const stop = tail.search(/\n#{1,6}\s/);
         const bibBody = stop >= 0 ? tail.slice(0, stop) : tail;
-        
-        // Remove https:// prefixes and END markers first
-        let cleanBody = bibBody.replace(/https:\/\//g, '').replace(/\bEND\b/g, '');
 
-        // Split on lines, rebuild entries that start with number + '.'
-        const lines = cleanBody.split('\n');
+        // Strip noise
+        const body = bibBody.replace(/\bEND\b/g, '');
+
+        // Reconstruct contiguous entries: 1. ... 2. ...
+        const lines = body.split('\n').map((l: string) => l.trim()).filter(Boolean);
         const entries: string[] = [];
         let cur = '';
-        for (const raw of lines) {
-          const line = raw.trim();
-          if (!line) continue;
+        for (const line of lines) {
           if (/^\d+\.\s?/.test(line)) {
             if (cur) entries.push(cur.trim());
-            cur = line.replace(/^(\d+)\.\s?/, '$1. '); // ensure "1. " spacing
+            cur = line.replace(/^(\d+)\.\s?/, ''); // drop the leading number; <ol> will number
           } else {
             cur += (cur ? ' ' : '') + line;
           }
         }
         if (cur) entries.push(cur.trim());
 
-        // Reassemble with clear blank lines between items
-        const rebuilt = entries.map((e: string) => `\n\n${e}`).join('');
-        return `${heading}${rebuilt}\n`;
+        // Emit explicit HTML ordered list to guarantee layout correctness
+        const lis = entries.map((e: string) => `<li>${e}</li>`).join('');
+        return `${heading}\n<ol class="bibliography">${lis}</ol>\n`;
       });
+      
+      // Normalize manual bullets to proper lists
+      cleanedContent = normalizeBullets(cleanedContent);
       
       console.log('[ENHANCED-V2] Clean markdown processing completed');
     }
@@ -511,8 +544,34 @@ export async function generatePdfV2(
         }
         
         /* Lists */
-        ul, ol { padding-left: 1.5em !important; margin: 0.25em 0 !important; }
-        li { margin: 0.1em 0 !important; break-inside: avoid; page-break-inside: avoid; }
+        ul, ol { 
+          padding-left: 1.5em !important; 
+          margin: 0.5em 0 !important;
+          list-style-position: outside !important;
+        }
+        li { 
+          margin: 0.25em 0 !important; 
+          break-inside: avoid; 
+          page-break-inside: avoid;
+          text-align: left !important;
+        }
+        
+        /* Bibliography specific styling */
+        ol.bibliography {
+          padding-left: 2em !important;
+        }
+        ol.bibliography li {
+          margin: 0.5em 0 !important;
+          text-indent: -1em !important;
+          padding-left: 1em !important;
+        }
+        
+        /* Ensure consistent left alignment and normal spacing */
+        p, li {
+          text-align: left !important;
+          text-justify: auto !important;
+          letter-spacing: normal !important;
+        }
         
         h2 { 
           font-size: 16pt !important;
@@ -1133,8 +1192,34 @@ export async function generatePdfFromContent(
         }
         
         /* Lists */
-        ul, ol { padding-left: 1.5em !important; margin: 0.25em 0 !important; }
-        li { margin: 0.1em 0 !important; break-inside: avoid; page-break-inside: avoid; }
+        ul, ol { 
+          padding-left: 1.5em !important; 
+          margin: 0.5em 0 !important;
+          list-style-position: outside !important;
+        }
+        li { 
+          margin: 0.25em 0 !important; 
+          break-inside: avoid; 
+          page-break-inside: avoid;
+          text-align: left !important;
+        }
+        
+        /* Bibliography specific styling */
+        ol.bibliography {
+          padding-left: 2em !important;
+        }
+        ol.bibliography li {
+          margin: 0.5em 0 !important;
+          text-indent: -1em !important;
+          padding-left: 1em !important;
+        }
+        
+        /* Ensure consistent left alignment and normal spacing */
+        p, li {
+          text-align: left !important;
+          text-justify: auto !important;
+          letter-spacing: normal !important;
+        }
         
         h2 { 
           font-size: 16pt !important;
