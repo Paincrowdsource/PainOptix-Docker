@@ -214,8 +214,8 @@ export async function generatePdfV2(
         let fixedContent = content.replace(/https:\/\//g, '').replace(/\bEND\b/g, '');
         
         // Parse entries more carefully
-        const lines = fixedContent.split('\n').filter(line => line.trim());
-        const entries = [];
+        const lines = fixedContent.split('\n').filter((line: string) => line.trim());
+        const entries: string[] = [];
         let currentEntry = '';
         
         for (const line of lines) {
@@ -676,9 +676,9 @@ export async function generatePdfV2(
       `,
       margin: {
         top: '0.75in',
-        right: '0.75in',  // Balanced margin to prevent cutoff
+        right: '1in',    // Increase right margin to match content padding
         bottom: '1in',
-        left: '0.75in'   // Balanced margin
+        left: '0.75in'
       },
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {
@@ -889,8 +889,8 @@ export async function generatePdfFromContent(
         
         // Split by numbers followed by period and reformat
         const entries = fixedContent.split(/(?=\d+\.)/g)
-          .filter(entry => entry.trim())
-          .map(entry => {
+          .filter((entry: string) => entry.trim())
+          .map((entry: string) => {
             // Ensure proper formatting with line break before each entry
             return entry.trim().replace(/^(\d+)\.\s*/, '\n$1. ');
           });
@@ -1287,9 +1287,9 @@ export async function generatePdfFromContent(
       `,
       margin: {
         top: '0.75in',
-        right: '0.75in',  // Balanced margin to prevent cutoff
+        right: '1in',    // Increase right margin to match content padding
         bottom: '1in',
-        left: '0.75in'   // Balanced margin
+        left: '0.75in'
       },
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {
