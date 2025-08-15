@@ -184,6 +184,25 @@ export async function generatePdfV2(
     // 4. Convert to HTML
     let contentAsHtml = await marked.parse(cleanedContent);
     console.log('HTML contains img tags?', contentAsHtml.includes('<img'));
+    
+    // Post-process HTML to fix bibliography DOI URLs for Enhanced V2
+    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+      // Wrap DOI URLs in non-breaking spans
+      contentAsHtml = contentAsHtml.replace(
+        /<a[^>]*href="https:\/\/doi\.org\/[^"]*"[^>]*>([^<]*)<\/a>/g,
+        (match) => {
+          return `<span style="white-space: nowrap; display: inline-block;">${match}</span>`;
+        }
+      );
+      
+      // Also handle plain text DOI URLs in bibliography
+      contentAsHtml = contentAsHtml.replace(
+        /(?<!<[^>]*)https:\/\/doi\.org\/[^\s<]+/g,
+        (match) => {
+          return `<span style="white-space: nowrap;">${match}</span>`;
+        }
+      );
+    }
     if (tier === 'monograph') {
       const imgCount = (contentAsHtml.match(/<img/g) || []).length;
       console.log(`Found ${imgCount} img tags in HTML`);
@@ -397,17 +416,35 @@ export async function generatePdfV2(
           break-after: avoid !important;
         }
         
-        /* Prevent URL breaking - improved handling */
+        /* Prevent URL breaking - Enhanced V2 specific */
         a {
           word-break: break-word;
           overflow-wrap: anywhere;
         }
         
-        /* Bibliography specific URL handling */
+        /* Bibliography specific URL handling - force DOIs to stay together */
         .bibliography a, 
-        .references a {
+        .references a,
+        a[href*="doi.org"] {
+          display: inline-block;
+          white-space: nowrap;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        
+        /* Allow wrapping at slashes for very long URLs */
+        .bibliography li,
+        .references li {
           word-break: break-word;
           overflow-wrap: anywhere;
+          hyphens: none;
+        }
+        
+        /* Ensure DOI spans don't break */
+        span[style*="nowrap"] {
+          display: inline-block !important;
+          white-space: nowrap !important;
         }
         
         @media print { 
@@ -823,17 +860,35 @@ export async function generatePdfFromContent(
           break-after: avoid !important;
         }
         
-        /* Prevent URL breaking - improved handling */
+        /* Prevent URL breaking - Enhanced V2 specific */
         a {
           word-break: break-word;
           overflow-wrap: anywhere;
         }
         
-        /* Bibliography specific URL handling */
+        /* Bibliography specific URL handling - force DOIs to stay together */
         .bibliography a, 
-        .references a {
+        .references a,
+        a[href*="doi.org"] {
+          display: inline-block;
+          white-space: nowrap;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        
+        /* Allow wrapping at slashes for very long URLs */
+        .bibliography li,
+        .references li {
           word-break: break-word;
           overflow-wrap: anywhere;
+          hyphens: none;
+        }
+        
+        /* Ensure DOI spans don't break */
+        span[style*="nowrap"] {
+          display: inline-block !important;
+          white-space: nowrap !important;
         }
         
         @media print { 
