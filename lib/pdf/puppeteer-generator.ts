@@ -116,9 +116,9 @@ export async function generatePdfV2(
       };
       const conditionName = conditionNames[condition] || condition.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
       
-      // Fix "Learn About" title to include condition name
+      // Fix "Learn About" title to include condition name with proper spacing
       // Handle various formats: with or without #, with partial text
-      cleanedContent = cleanedContent.replace(/^(#+\s*)?Learn About\s*.*$/m, `## Learn About ${conditionName}`);
+      cleanedContent = cleanedContent.replace(/^(#+\s*)?Learn About\s*.*$/m, `\n## Learn About ${conditionName}\n\n`);
       
       // Keep citations attached to their preceding text with non-breaking space
       // First, glue author name to year within citations to prevent [Weber, 1983] from splitting
@@ -127,6 +127,13 @@ export async function generatePdfV2(
       cleanedContent = cleanedContent.replace(/\[([A-Z][a-z]+),\s+/g, '[$1,\u00A0');
       // Then ensure the whole citation stays with preceding text
       cleanedContent = cleanedContent.replace(/(\S+)\s+(\[[^\]]+\])/g, '$1\u00A0$2');
+      
+      // Prevent DOI URLs from breaking mid-URL
+      // Use zero-width space after slashes to allow breaking at logical points
+      cleanedContent = cleanedContent.replace(
+        /(https:\/\/doi\.org\/[^\s\]]+)/g,
+        (match) => match.replace(/\//g, '/\u200B')
+      );
       
       // Clean up bullets - ensure consistent formatting
       cleanedContent = cleanedContent.replace(/^[•·]\s*/gm, '• ');
@@ -361,6 +368,19 @@ export async function generatePdfV2(
         h1, h2, h3, h4, h5, h6 {
           page-break-after: avoid !important;
           break-after: avoid !important;
+        }
+        
+        /* Prevent URL breaking - improved handling */
+        a {
+          word-break: break-word;
+          overflow-wrap: anywhere;
+        }
+        
+        /* Bibliography specific URL handling */
+        .bibliography a, 
+        .references a {
+          word-break: break-word;
+          overflow-wrap: anywhere;
         }
         
         @media print { 
@@ -774,6 +794,19 @@ export async function generatePdfFromContent(
         h1, h2, h3, h4, h5, h6 {
           page-break-after: avoid !important;
           break-after: avoid !important;
+        }
+        
+        /* Prevent URL breaking - improved handling */
+        a {
+          word-break: break-word;
+          overflow-wrap: anywhere;
+        }
+        
+        /* Bibliography specific URL handling */
+        .bibliography a, 
+        .references a {
+          word-break: break-word;
+          overflow-wrap: anywhere;
         }
         
         @media print { 
