@@ -59,6 +59,34 @@ export async function generatePdfV2(
     // 2. Parse frontmatter
     const { data: frontmatter, content: mainContent } = matter(markdownContent);
     
+    // DEBUG: Check frontmatter title
+    console.log('[DEBUG] Original frontmatter title:', frontmatter.title);
+    console.log('[DEBUG] Has "Learn About" in title?', frontmatter.title?.includes('Learn About'));
+    
+    // FIX: Remove "Learn About" from title if present
+    if (frontmatter.title && frontmatter.title.includes('Learn About')) {
+      frontmatter.title = frontmatter.title.replace('Learn About ', '').replace('Learn About', '').trim();
+      console.log('[DEBUG] Fixed frontmatter title:', frontmatter.title);
+    }
+    
+    // FIX: Ensure proper condition name for cover
+    if (frontmatter.title === 'Pain Assessment Guide') {
+      const conditionMap: Record<string, string> = {
+        'sciatica': 'Sciatica',
+        'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
+        'si_joint_dysfunction': 'SI Joint Dysfunction',
+        'canal_stenosis': 'Spinal Canal Stenosis',
+        'central_disc_bulge': 'Central Disc Bulge',
+        'facet_arthropathy': 'Facet Arthropathy',
+        'muscular_nslbp': 'Muscular Non-Specific Low Back Pain',
+        'lumbar_instability': 'Lumbar Instability',
+        'urgent_symptoms': 'Urgent Symptoms'
+      };
+      const condition = assessmentData.guide_type || assessmentData.guideType || '';
+      frontmatter.title = conditionMap[condition] || 'Pain Assessment Guide';
+      console.log('[DEBUG] Replaced generic title with:', frontmatter.title);
+    }
+    
     if (!mainContent) {
       logger.error('Main content is undefined after parsing frontmatter');
       throw new Error('Failed to parse markdown content');
@@ -128,21 +156,13 @@ export async function generatePdfV2(
       // Then ensure the whole citation stays with preceding text
       cleanedContent = cleanedContent.replace(/(\S+)\s+(\[[^\]]+\])/g, '$1\u00A0$2');
       
-      // Prevent DOI URLs from breaking mid-URL
-      // Use non-breaking spaces to keep DOI URLs together
-      cleanedContent = cleanedContent.replace(
-        /(https:\/\/doi\.org\/[^\s\]]+)/g,
-        (match) => {
-          // Replace forward slashes after doi.org with non-breaking slashes
-          // Keep the protocol slashes normal, only fix the DOI path
-          const parts = match.split('doi.org/');
-          if (parts.length === 2) {
-            // Keep protocol normal, make DOI path non-breaking
-            return parts[0] + 'doi.org/\u00A0' + parts[1].replace(/\//g, '/\u00A0');
-          }
-          return match;
-        }
-      );
+      // NUCLEAR OPTION: Shorten DOI URLs to prevent breaking
+      // Remove https:// prefix to make URLs shorter
+      cleanedContent = cleanedContent.replace(/https:\/\/doi\.org\//g, 'doi.org/');
+      
+      // DEBUG: Check for DOI URLs
+      const doiCount = (cleanedContent.match(/doi\.org/g) || []).length;
+      console.log('[DEBUG] DOI URLs found after shortening:', doiCount);
       
       // Clean up bullets - ensure consistent formatting
       cleanedContent = cleanedContent.replace(/^[•·]\s*/gm, '• ');
@@ -160,20 +180,16 @@ export async function generatePdfV2(
       // Fix word( patterns - ensure space before parenthesis
       cleanedContent = cleanedContent.replace(/(\w)\(/g, '$1 (');
       
-      // Process bibliography section specifically to prevent all URL breaks
+      // Process bibliography section specifically - NUCLEAR OPTION
       const bibliographyRegex = /^(##?\s*(?:Bibliography|References))$([\s\S]*?)(?=^##?\s|$)/gm;
       cleanedContent = cleanedContent.replace(bibliographyRegex, (match, title, content) => {
-        // Make all URLs in bibliography completely non-breaking
         let fixedContent = content;
         
-        // Handle all URLs in bibliography, not just DOIs
-        fixedContent = fixedContent.replace(
-          /(https?:\/\/[^\s\)]+)/g,
-          (urlMatch) => {
-            // Use non-breaking spaces after each slash to prevent any breaking
-            return urlMatch.replace(/\//g, '/\u00A0');
-          }
-        );
+        // Remove all https:// prefixes in bibliography to shorten URLs
+        fixedContent = fixedContent.replace(/https:\/\//g, '');
+        
+        // Log for debugging
+        console.log('[DEBUG] Processing bibliography section');
         
         return `${title}${fixedContent}`;
       });
@@ -633,6 +649,34 @@ export async function generatePdfFromContent(
     
     // 2. Parse frontmatter
     const { data: frontmatter, content: mainContent } = matter(markdownContent);
+    
+    // DEBUG: Check frontmatter title
+    console.log('[DEBUG] Original frontmatter title:', frontmatter.title);
+    console.log('[DEBUG] Has "Learn About" in title?', frontmatter.title?.includes('Learn About'));
+    
+    // FIX: Remove "Learn About" from title if present
+    if (frontmatter.title && frontmatter.title.includes('Learn About')) {
+      frontmatter.title = frontmatter.title.replace('Learn About ', '').replace('Learn About', '').trim();
+      console.log('[DEBUG] Fixed frontmatter title:', frontmatter.title);
+    }
+    
+    // FIX: Ensure proper condition name for cover
+    if (frontmatter.title === 'Pain Assessment Guide') {
+      const conditionMap: Record<string, string> = {
+        'sciatica': 'Sciatica',
+        'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
+        'si_joint_dysfunction': 'SI Joint Dysfunction',
+        'canal_stenosis': 'Spinal Canal Stenosis',
+        'central_disc_bulge': 'Central Disc Bulge',
+        'facet_arthropathy': 'Facet Arthropathy',
+        'muscular_nslbp': 'Muscular Non-Specific Low Back Pain',
+        'lumbar_instability': 'Lumbar Instability',
+        'urgent_symptoms': 'Urgent Symptoms'
+      };
+      const condition = assessmentData.guide_type || assessmentData.guideType || '';
+      frontmatter.title = conditionMap[condition] || 'Pain Assessment Guide';
+      console.log('[DEBUG] Replaced generic title with:', frontmatter.title);
+    }
     
     if (!mainContent) {
       logger.error('Main content is undefined after parsing frontmatter');

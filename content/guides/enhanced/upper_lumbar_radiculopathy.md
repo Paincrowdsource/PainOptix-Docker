@@ -1,5 +1,5 @@
 ---
-title: Pain Assessment Guide
+title: Upper Lumbar Radiculopathy
 subtitle: Enhanced Clinical Guide
 ---
 
@@ -9,7 +9,7 @@ subtitle: Enhanced Clinical Guide
 - **Next Step:** Medical evaluation to confirm diagnosis and rule out hip pathology
 >>END
 
-Learn About 
+## Learn About Upper Lumbar Radiculopathy 
 Thank you for using PainOptix™, developed by Dr. Carpentier at DrCPainMD, to explore back pain information. This guide provides general education about upper lumbar radiculopathy, a condition involving nerve irritation in the upper lumbar spine, based on your responses indicating symptoms like difficulty lifting your knee or pain in the groin or thigh. It aims to:
 - Explain upper lumbar radiculopathy symptoms and possible causes using trusted medical guidelines.
 - Share general strategies to discuss with a doctor for managing back and leg pain.
