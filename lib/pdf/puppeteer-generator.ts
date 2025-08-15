@@ -31,11 +31,17 @@ export async function generatePdfV2(
   let browser;
   let page;
   
-  // Debug V2 detection
-  console.log('[V2-DEBUG] Enhanced V2 Enabled:', options.enhancedV2Enabled);
-  console.log('[V2-DEBUG] Tier:', tier);
-  console.log('[V2-DEBUG] Should apply V2:', tier === 'enhanced' && options.enhancedV2Enabled);
-  console.log('[V2-DEBUG] ENHANCED_V2 env:', process.env.ENHANCED_V2);
+  // COMPREHENSIVE DEBUG LOGGING
+  console.log('=== PDF GENERATION DEBUG ===');
+  console.log('Function: generatePdfV2 (from file)');
+  console.log('Assessment ID:', assessmentData.id || 'N/A');
+  console.log('Guide Type:', assessmentData.guide_type || assessmentData.guideType || 'N/A');
+  console.log('Condition:', markdownFilePath.split('/').pop()?.replace('.md', '') || 'N/A');
+  console.log('Tier:', tier);
+  console.log('Enhanced V2 Enabled:', options.enhancedV2Enabled);
+  console.log('ENHANCED_V2 env:', process.env.ENHANCED_V2);
+  console.log('Markdown file:', markdownFilePath);
+  console.log('=========================');
   
   try {
     logger.info('Starting PDF generation', { 

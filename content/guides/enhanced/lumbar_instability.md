@@ -9,7 +9,7 @@ subtitle: Enhanced Clinical Guide
 - **Next Step:** Core strengthening exercises and activity modification
 >>END
 
-## Introduction
+## Learn About Lumbar Instability
 
 Thank you for using PainOptix™, developed by Dr. Carpentier at DrCPainMD, to explore back pain information. This guide provides general education about lumbar instability, a condition involving excessive movement in the lower spine, based on your responses indicating symptoms like pain worsened by getting up from sitting or bending, often worse in the morning. It aims to:
 

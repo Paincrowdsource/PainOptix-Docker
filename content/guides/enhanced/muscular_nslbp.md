@@ -9,6 +9,14 @@ subtitle: Enhanced Clinical Guide
 - **Next Step:** Remain active, gentle stretching, and gradual return to normal activities
 >>END
 
+## Learn About Muscular/Non-Specific Low Back Pain
+Thank you for using PainOptix™, developed by Dr. Carpentier at DrCPainMD, to explore back pain information. This guide provides general education about muscular or non-specific low back pain, the most common type of back pain, based on your responses. It aims to:
+- Explain muscular/NSLBP symptoms and possible causes using trusted medical guidelines.
+- Share general strategies to discuss with a doctor for managing back pain.
+- Encourage learning from others' experiences on PainCrowdsource.org.
+
+This guide is for educational purposes only and does not diagnose or treat your condition. Share it with a healthcare provider for a full evaluation and personalized advice.
+
 ## How Your Input Relates
 
 You indicated pain in your lower back, possibly worsened by sitting for too long, bending forward, or without a clear pattern, or pain in the buttock or outer thigh not extending past the knee. These symptoms are commonly associated with muscular or non-specific low back pain, so this guide focuses on helping you understand this condition to discuss with a doctor [Chou et al., 2007].
