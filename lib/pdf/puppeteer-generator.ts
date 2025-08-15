@@ -36,7 +36,10 @@ export async function generatePdfV2(
   console.log('Function: generatePdfV2 (from file)');
   console.log('Assessment ID:', assessmentData.id || 'N/A');
   console.log('Guide Type:', assessmentData.guide_type || assessmentData.guideType || 'N/A');
-  console.log('Condition:', markdownFilePath.split('/').pop()?.replace('.md', '') || 'N/A');
+  // Fix for Windows paths - handle both / and \
+  const pathSeparator = markdownFilePath.includes('\\') ? '\\' : '/';
+  const extractedCondition = markdownFilePath.split(pathSeparator).pop()?.replace('.md', '') || 'N/A';
+  console.log('Condition:', extractedCondition);
   console.log('Tier:', tier);
   console.log('Enhanced V2 Enabled:', options.enhancedV2Enabled);
   console.log('ENHANCED_V2 env:', process.env.ENHANCED_V2);
@@ -125,7 +128,9 @@ export async function generatePdfV2(
     }
     
     // Process markdown to add images for monographs
-    const pathParts = markdownFilePath.split("/");
+    // FIX: Handle both Windows (\) and Unix (/) path separators
+    const pathSeparator = markdownFilePath.includes('\\') ? '\\' : '/';
+    const pathParts = markdownFilePath.split(pathSeparator);
     const fileName = pathParts.pop() || "";
     const condition = fileName ? fileName.replace(".md", "") : "";
     console.log(`Before image processing - Tier: ${tier}, Condition: ${condition}`);
@@ -154,7 +159,17 @@ export async function generatePdfV2(
         'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
         'urgent_symptoms': 'Urgent Symptoms'
       };
-      const conditionName = conditionNames[condition] || condition.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      // DEBUG: Log what we're working with
+      console.log('[TITLE-DEBUG] condition from path:', condition);
+      console.log('[TITLE-DEBUG] assessmentData.guide_type:', assessmentData.guide_type);
+      console.log('[TITLE-DEBUG] assessmentData.guideType:', assessmentData.guideType);
+      
+      // Use guide_type from assessment data if available, fallback to extracted condition
+      const actualCondition = assessmentData.guide_type || assessmentData.guideType || condition;
+      const conditionName = conditionNames[actualCondition] || actualCondition.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      console.log('[TITLE-DEBUG] actualCondition:', actualCondition);
+      console.log('[TITLE-DEBUG] conditionName:', conditionName);
       
       // Fix "Learn About" title to include condition name with proper spacing
       // Handle various formats: with or without #, with partial text
@@ -192,22 +207,29 @@ export async function generatePdfV2(
       // Fix word( patterns - ensure space before parenthesis
       cleanedContent = cleanedContent.replace(/(\w)\(/g, '$1 (');
       
-      // Process bibliography section specifically - NUCLEAR OPTION
-      const bibliographyRegex = /^(##?\s*(?:Bibliography|References))$([\s\S]*?)(?=^##?\s|$)/gm;
+      // Process bibliography section with proper formatting
+      const bibliographyRegex = /^(##?\s*(?:Bibliography|References))$([\s\S]*?)$/m;
       cleanedContent = cleanedContent.replace(bibliographyRegex, (match, title, content) => {
         let fixedContent = content;
         
-        // Remove all https:// prefixes in bibliography to shorten URLs
+        // Remove https:// prefixes to shorten URLs
         fixedContent = fixedContent.replace(/https:\/\//g, '');
         
-        // Remove any lingering END markers in bibliography
+        // Remove END markers
         fixedContent = fixedContent.replace(/\bEND\b(?!\w)/g, '');
         fixedContent = fixedContent.replace(/^END$/gm, '');
         
-        // Log for debugging
+        // Split by numbers followed by period and reformat
+        const entries = fixedContent.split(/(?=\d+\.)/g)
+          .filter(entry => entry.trim())
+          .map(entry => {
+            // Ensure proper formatting with line break before each entry
+            return entry.trim().replace(/^(\d+)\.\s*/, '\n$1. ');
+          });
+        
         console.log('[DEBUG] Processing bibliography section');
         
-        return `${title}${fixedContent}`;
+        return `${title}\n${entries.join('\n')}`;
       });
       
       console.log('[ENHANCED-V2] Clean markdown processing completed');
@@ -429,14 +451,22 @@ export async function generatePdfV2(
       
       // Add clean print styles and prevent awkward breaks
       await page.addStyleTag({ content: `
-        /* Enhanced V2 Typography - Larger, more readable */
+        /* Enhanced V2 Typography - Optimized for readability */
         body {
-          font-size: 12pt !important;
-          line-height: 1.6 !important;
-          max-width: 6in !important;  /* Constrain width to prevent cutoff */
-          margin: 0 auto !important;
+          font-size: 11pt !important;  /* Slightly smaller to fit better */
+          line-height: 1.5 !important;
+          padding: 0;
+          margin: 0;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        
+        /* Content width constraints */
+        .content, p, li, div {
+          max-width: 7in !important;  /* Full usable width (8.5 - 0.75 - 0.75) */
           word-wrap: break-word !important;
           overflow-wrap: break-word !important;
+          hyphens: auto !important;  /* Allow hyphenation when needed */
         }
         
         h2 { 
@@ -605,9 +635,9 @@ export async function generatePdfV2(
       `,
       margin: {
         top: '0.75in',
-        right: '1.2in',  // INCREASED to prevent text cutoff
+        right: '0.75in',  // Balanced margin to prevent cutoff
         bottom: '1in',
-        left: '0.75in'   // Slightly increased for balance
+        left: '0.75in'   // Balanced margin
       },
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {
@@ -768,6 +798,11 @@ export async function generatePdfFromContent(
       cleanedContent = cleanedContent.replace(/<br\s*\/?>/gi, ' ');
       cleanedContent = cleanedContent.replace(/&lt;br\s*\/?&gt;/gi, ' ');
       
+      // DEBUG: Log what we're working with
+      console.log('[TITLE-DEBUG-FROM-CONTENT] guideType:', guideType);
+      console.log('[TITLE-DEBUG-FROM-CONTENT] assessmentData.guide_type:', assessmentData.guide_type);
+      console.log('[TITLE-DEBUG-FROM-CONTENT] assessmentData.guideType:', assessmentData.guideType);
+      
       // Get human-readable condition name
       const conditionNames: Record<string, string> = {
         'si_joint_dysfunction': 'Sacroiliac Joint Pain',
@@ -780,7 +815,13 @@ export async function generatePdfFromContent(
         'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
         'urgent_symptoms': 'Urgent Symptoms'
       };
-      const conditionName = conditionNames[guideType] || guideType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      // Use the proper guide type, not a file path
+      const actualCondition = assessmentData.guide_type || assessmentData.guideType || guideType;
+      const conditionName = conditionNames[actualCondition] || actualCondition.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      console.log('[TITLE-DEBUG-FROM-CONTENT] actualCondition:', actualCondition);
+      console.log('[TITLE-DEBUG-FROM-CONTENT] conditionName:', conditionName);
       
       // Fix "Learn About" title to include condition name with proper spacing
       cleanedContent = cleanedContent.replace(/^(#+\s*)?Learn About\s*.*$/m, `\n## Learn About ${conditionName}\n\n`);
@@ -793,14 +834,27 @@ export async function generatePdfFromContent(
       // Shorten DOI URLs
       cleanedContent = cleanedContent.replace(/https:\/\/doi\.org\//g, 'doi.org/');
       
-      // Process bibliography section
-      const bibliographyRegex = /^(##?\s*(?:Bibliography|References))$([\s\S]*?)(?=^##?\s|$)/gm;
+      // Process bibliography section with proper formatting
+      const bibliographyRegex = /^(##?\s*(?:Bibliography|References))$([\s\S]*?)$/m;
       cleanedContent = cleanedContent.replace(bibliographyRegex, (match, title, content) => {
         let fixedContent = content;
+        
+        // Remove https:// prefixes
         fixedContent = fixedContent.replace(/https:\/\//g, '');
+        
+        // Remove END markers
         fixedContent = fixedContent.replace(/\bEND\b(?!\w)/g, '');
         fixedContent = fixedContent.replace(/^END$/gm, '');
-        return `${title}${fixedContent}`;
+        
+        // Split by numbers followed by period and reformat
+        const entries = fixedContent.split(/(?=\d+\.)/g)
+          .filter(entry => entry.trim())
+          .map(entry => {
+            // Ensure proper formatting with line break before each entry
+            return entry.trim().replace(/^(\d+)\.\s*/, '\n$1. ');
+          });
+        
+        return `${title}\n${entries.join('\n')}`;
       });
     }
     
@@ -982,14 +1036,22 @@ export async function generatePdfFromContent(
       
       // Add clean print styles and prevent awkward breaks
       await page.addStyleTag({ content: `
-        /* Enhanced V2 Typography - Larger, more readable */
+        /* Enhanced V2 Typography - Optimized for readability */
         body {
-          font-size: 12pt !important;
-          line-height: 1.6 !important;
-          max-width: 6in !important;  /* Constrain width to prevent cutoff */
-          margin: 0 auto !important;
+          font-size: 11pt !important;  /* Slightly smaller to fit better */
+          line-height: 1.5 !important;
+          padding: 0;
+          margin: 0;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        
+        /* Content width constraints */
+        .content, p, li, div {
+          max-width: 7in !important;  /* Full usable width (8.5 - 0.75 - 0.75) */
           word-wrap: break-word !important;
           overflow-wrap: break-word !important;
+          hyphens: auto !important;  /* Allow hyphenation when needed */
         }
         
         h2 { 
@@ -1158,9 +1220,9 @@ export async function generatePdfFromContent(
       `,
       margin: {
         top: '0.75in',
-        right: '1.2in',  // INCREASED to prevent text cutoff
+        right: '0.75in',  // Balanced margin to prevent cutoff
         bottom: '1in',
-        left: '0.75in'   // Slightly increased for balance
+        left: '0.75in'   // Balanced margin
       },
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {
