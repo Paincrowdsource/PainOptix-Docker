@@ -11,7 +11,7 @@ subtitle: Comprehensive Monograph
 
 ## Section 1: Educational Introduction & Symptom Summary
 
-### Understanding of Sacroiliac Joint Discomfort: Information About Movement
+### Understanding Sacroiliac Joint Discomfort: Information About Movement
 
 You've taken a key step toward understanding your discomfort by completing the PainFinder™ quiz. Your responses suggest a pattern consistent with sacroiliac (SI) joint discomfort, which often involves low back or buttock discomfort that may extend to the groin, hip, or upper thigh, typically on one side. This monograph, crafted by Dr. Carpentier at DrCPainMD, aims to:
 

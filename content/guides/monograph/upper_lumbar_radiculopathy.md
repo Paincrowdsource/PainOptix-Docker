@@ -9,7 +9,7 @@ subtitle: Comprehensive Monograph
 
 ## Section 1: Understanding Lumbar Radiculopathy Symptoms and Next Steps
 
-### Understanding of Back and Leg Discomfort: Information About Movement
+### Understanding Back and Leg Discomfort: Information About Movement
 
 You've taken an important step toward improving your comfort by exploring how your symptoms align with common patterns. Based on your PainFinder™ quiz responses, your symptoms resemble those often linked to nerve-related discomfort in the upper lumbar spine (L2, L3, or L4), causing leg pain or issues with knee movement. This guide, crafted by Dr. Carpentier at DrCPainMD, aims to:
 - Explain what your symptoms might suggest.

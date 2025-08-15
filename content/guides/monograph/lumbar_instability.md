@@ -9,7 +9,7 @@ subtitle: Comprehensive Monograph
 
 ## Section 1: Understanding Your Symptoms and Next Steps
 
-### Understanding of Your Back and Leg Discomfort: Information About Movement
+### Understanding Your Back and Leg Discomfort: Information About Movement
 
 Thank you for taking a proactive step toward managing your discomfort by exploring how your symptoms align with common patterns. Based on your PainFinder™ quiz responses, your symptoms resemble those associated with lumbar instability—a condition where excessive movement or misalignment in the lower spine may contribute to low back discomfort, often with leg symptoms, triggered by activities like twisting or sudden movements. This guide, crafted by Dr. Carpentier at DrCPainMD, aims to:
 - Explain what your symptoms might suggest about your condition.

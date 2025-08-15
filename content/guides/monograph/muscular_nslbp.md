@@ -9,7 +9,7 @@ subtitle: Comprehensive Monograph
 
 ## Section 1: Understanding Your Symptoms and Next Steps
 
-### Understanding of Back Discomfort: Information About Movement
+### Understanding Back Discomfort: Information About Movement
 
 You've taken an important step toward improving your comfort by exploring how your symptoms align with common patterns. Based on your PainFinder™ quiz responses, your symptoms resemble those of non-specific low back pain (NSLBP), often linked to muscle strain, ligament sprain, or mechanical stress in the lower spine, typically triggered by bending, lifting, or prolonged postures. This guide, crafted by Dr. Carpentier at DrCPainMD, aims to:
 - Explain what your symptoms might suggest.

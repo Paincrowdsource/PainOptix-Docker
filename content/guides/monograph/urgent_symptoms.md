@@ -13,7 +13,7 @@ Price: $20
 
 ## Section 1: Understanding Urgent Back Pain Symptoms and Next Steps
 
-### Understanding of Serious Symptoms: A Path to Prompt Care
+### Understanding Serious Symptoms: A Path to Prompt Care
 
 You've taken a critical step by exploring how your symptoms align with patterns that may require urgent medical attention. Based on your PainFinder™ quiz responses, your symptoms—such as difficulty controlling bladder or bowels, numbness in {{numbLocation}}, new or worsening leg weakness, or concerns like fever, unexplained weight loss, or a history of cancer—resemble those linked to potentially serious conditions like cauda equina syndrome, spinal infection, or fracture. This guide, crafted by Dr. Carpentier at DrCPainMD, aims to:
 - Explain what your symptoms might suggest and why they're urgent.

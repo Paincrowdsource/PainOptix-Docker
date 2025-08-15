@@ -9,7 +9,7 @@ subtitle: Comprehensive Monograph
 
 ## Section 1: Understanding Your Symptoms and Next Steps
 
-### Understanding of Back Discomfort: Information About Movement
+### Understanding Back Discomfort: Information About Movement
 
 You've taken a proactive step toward improving your comfort by exploring how your symptoms align with common patterns. Based on your PainFinder™ quiz responses, your symptoms resemble those associated with facet arthropathy—a condition involving irritation or wear in the lumbar facet joints, often causing low back discomfort that may radiate to the buttock or thigh, typically triggered by standing or arching backward. This guide, crafted by Dr. Carpentier at DrCPainMD, aims to:
 - Explain what your symptoms might suggest about your condition.

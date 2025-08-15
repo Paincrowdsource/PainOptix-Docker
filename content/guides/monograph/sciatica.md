@@ -11,7 +11,7 @@ subtitle: Comprehensive Monograph
 
 ## Section 1: Understanding Your Symptoms and Next Steps
 
-### Understanding of Back and Leg Discomfort: Information About Movement
+### Understanding Back and Leg Discomfort: Information About Movement
 
 You've taken an important step toward improving your comfort by exploring how your symptoms align with common patterns. Based on your PainFinder™ quiz responses, your symptoms resemble those often linked to sciatica, a condition involving nerve-related discomfort in the lower spine (often L5 or S1), causing leg pain below the knee, sometimes with numbness or tingling. This guide, crafted by Dr. Carpentier at DrCPainMD, aims to:
 

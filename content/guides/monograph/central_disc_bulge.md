@@ -9,7 +9,7 @@ subtitle: Comprehensive Monograph
 
 ## Section 1: Introduction & Symptom Summary
 
-### Understanding of Central Disc Bulge Symptoms: Information About Movement
+### Understanding Central Disc Bulge Symptoms: Information About Movement
 
 You've taken a key step toward understanding your symptoms by completing the PainFinder™ quiz. Your responses suggest a pattern consistent with Central Disc Bulge, which often involves low back and bilateral leg pain that worsens with sitting. This monograph, crafted by Dr. Carpentier at DrCPainMD.com, aims to:
 - Explain what your symptoms might indicate.
