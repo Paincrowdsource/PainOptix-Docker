@@ -234,10 +234,10 @@ Discuss with a healthcare provider before use:
 
 ### Supplements
 
-- **Turmeric:** 500–1000 mg daily with piperine [Daily 2016].
-- **Magnesium:** 200–400 mg daily.
-- **Omega-3:** 1–2 g daily.
-- **Vitamin D:** 2000–4000 IU if deficient.
+- **Turmeric:** Consult with healthcare provider for dosage [Daily 2016].
+- **Magnesium:** Consult with healthcare provider for dosage.
+- **Omega-3:** Consult with healthcare provider for dosage.
+- **Vitamin D:** Consult with healthcare provider for dosage if deficient.
 
 Track outcomes on PainCrowdsource.org.
 
