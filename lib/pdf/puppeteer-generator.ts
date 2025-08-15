@@ -183,11 +183,7 @@ export async function generatePdfV2(
       // Then ensure the whole citation stays with preceding text
       cleanedContent = cleanedContent.replace(/(\S+)\s+(\[[^\]]+\])/g, '$1\u00A0$2');
       
-      // Add strategic break points for commonly cut-off words
-      cleanedContent = cleanedContent.replace(/malignancy/g, 'malig\u00ADnancy');  // Add soft hyphen
-      cleanedContent = cleanedContent.replace(/Carpentier/g, 'Carpen\u00ADtier');  // Add soft hyphen
-      cleanedContent = cleanedContent.replace(/radiculopathy/g, 'radiculo\u00ADpathy');  // Add soft hyphen
-      cleanedContent = cleanedContent.replace(/inflammatory/g, 'inflam\u00ADmatory');  // Add soft hyphen
+      // No manual hyphenation - let CSS handle it naturally
       
       // NUCLEAR OPTION: Shorten DOI URLs to prevent breaking
       // Remove https:// prefix to make URLs shorter
@@ -213,44 +209,35 @@ export async function generatePdfV2(
       // Fix word( patterns - ensure space before parenthesis
       cleanedContent = cleanedContent.replace(/(\w)\(/g, '$1 (');
       
-      // Process bibliography section with better formatting
-      const bibliographyRegex = /^(##?\s*(?:Bibliography|References))$([\s\S]*?)$/m;
-      cleanedContent = cleanedContent.replace(bibliographyRegex, (match, title, content) => {
+      // Normalize bibliography into clean numbered entries with spacing
+      const bibRx = /(##?\s*(Bibliography|References))[^\n]*\n([\s\S]*)$/m;
+      cleanedContent = cleanedContent.replace(bibRx, (m, heading, _h2, tail) => {
+        // Stop at next heading if present
+        const stop = tail.search(/\n#{1,6}\s/);
+        const bibBody = stop >= 0 ? tail.slice(0, stop) : tail;
+        
         // Remove https:// prefixes and END markers first
-        let fixedContent = content.replace(/https:\/\//g, '').replace(/\bEND\b/g, '');
-        
-        // Parse entries more carefully
-        const lines = fixedContent.split('\n').filter((line: string) => line.trim());
+        let cleanBody = bibBody.replace(/https:\/\//g, '').replace(/\bEND\b/g, '');
+
+        // Split on lines, rebuild entries that start with number + '.'
+        const lines = cleanBody.split('\n');
         const entries: string[] = [];
-        let currentEntry = '';
-        
-        for (const line of lines) {
-          if (/^\d+\./.test(line.trim())) {
-            // New entry starts
-            if (currentEntry) {
-              entries.push(currentEntry.trim());
-            }
-            currentEntry = line;
-          } else if (currentEntry) {
-            // Continuation of current entry
-            currentEntry += ' ' + line.trim();
+        let cur = '';
+        for (const raw of lines) {
+          const line = raw.trim();
+          if (!line) continue;
+          if (/^\d+\.\s?/.test(line)) {
+            if (cur) entries.push(cur.trim());
+            cur = line.replace(/^(\d+)\.\s?/, '$1. '); // ensure "1. " spacing
+          } else {
+            cur += (cur ? ' ' : '') + line;
           }
         }
-        
-        // Add last entry
-        if (currentEntry) {
-          entries.push(currentEntry.trim());
-        }
-        
-        // Format with proper spacing - double line break between entries
-        const formattedEntries = entries.map(entry => {
-          // Ensure proper number formatting with spacing
-          return entry.replace(/^(\d+)\.\s*/, '\n\n$1. ');
-        });
-        
-        console.log('[DEBUG] Bibliography: found', entries.length, 'entries');
-        
-        return `${title}\n${formattedEntries.join('')}`;
+        if (cur) entries.push(cur.trim());
+
+        // Reassemble with clear blank lines between items
+        const rebuilt = entries.map((e: string) => `\n\n${e}`).join('');
+        return `${heading}${rebuilt}\n`;
       });
       
       console.log('[ENHANCED-V2] Clean markdown processing completed');
@@ -492,45 +479,40 @@ export async function generatePdfV2(
       
       // Add clean print styles and prevent awkward breaks
       await page.addStyleTag({ content: `
-        /* Professional readable formatting */
-        * {
-          box-sizing: border-box !important;
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;           /* ← no body padding; margins come from Puppeteer */
+          width: 100% !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
         
         body {
-          font-size: 12pt !important;  /* Keep readable 12pt */
-          line-height: 1.6 !important;  /* Comfortable line height */
-          margin: 0 !important;
-          padding: 0.75in !important;  /* Match PDF margins */
-          width: 100% !important;
+          font-size: 12pt !important;
+          line-height: 1.55 !important;
+          box-sizing: border-box !important;
         }
         
-        /* Use full available width */
-        .content, article, main, body > div {
-          width: 100% !important;  /* Use full width */
-          max-width: 100% !important;
-          margin: 0 !important;
+        /* The printable text column = page width minus Puppeteer margins (1" + 1") */
+        body > * {
+          max-width: calc(8.5in - 2in) !important;
+          margin: 0 auto !important;
           padding: 0 !important;
+          box-sizing: border-box !important;
         }
         
-        /* Smart word wrapping - break long words only when necessary */
-        p, li, div, span, td, th {
-          word-wrap: break-word !important;  /* Break long words */
+        /* Natural wrapping; no clipping; no hard break-all */
+        p, li, div, span, td, th, h1, h2, h3, h4 {
+          white-space: normal !important;
           overflow-wrap: break-word !important;
-          hyphens: manual !important;  /* Only break at hyphens we add */
-          white-space: normal !important;  /* Allow normal wrapping */
+          word-break: normal !important;
+          hyphens: auto !important;   /* allow normal hyphenation when needed */
+          max-width: 100% !important;
         }
         
-        /* Ensure bullets and lists use full width */
-        ul, ol {
-          width: 100% !important;
-          padding-left: 1.5em !important;
-        }
-        
-        li {
-          width: calc(100% - 1.5em) !important;
-          word-wrap: break-word !important;
-        }
+        /* Lists */
+        ul, ol { padding-left: 1.5em !important; margin: 0.25em 0 !important; }
+        li { margin: 0.1em 0 !important; break-inside: avoid; page-break-inside: avoid; }
         
         h2 { 
           font-size: 16pt !important;
@@ -697,13 +679,11 @@ export async function generatePdfV2(
         </div>
       `,
       margin: {
-        top: '0.75in',
-        right: '0.85in',  // Slightly less to give more width
-        bottom: '0.75in',
-        left: '0.75in'
+        top: '1in',
+        right: '1in',
+        bottom: '1in',
+        left: '1in'
       },
-      scale: 0.95,  // Slightly scale down to ensure fit (95% = still very readable)
-      preferCSSPageSize: false,  // Don't override our settings
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {
         scale: 0.9,  // Slightly reduce scale to decrease file size
@@ -1121,45 +1101,40 @@ export async function generatePdfFromContent(
       
       // Add clean print styles and prevent awkward breaks
       await page.addStyleTag({ content: `
-        /* Professional readable formatting */
-        * {
-          box-sizing: border-box !important;
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;           /* ← no body padding; margins come from Puppeteer */
+          width: 100% !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
         
         body {
-          font-size: 12pt !important;  /* Keep readable 12pt */
-          line-height: 1.6 !important;  /* Comfortable line height */
-          margin: 0 !important;
-          padding: 0.75in !important;  /* Match PDF margins */
-          width: 100% !important;
+          font-size: 12pt !important;
+          line-height: 1.55 !important;
+          box-sizing: border-box !important;
         }
         
-        /* Use full available width */
-        .content, article, main, body > div {
-          width: 100% !important;  /* Use full width */
-          max-width: 100% !important;
-          margin: 0 !important;
+        /* The printable text column = page width minus Puppeteer margins (1" + 1") */
+        body > * {
+          max-width: calc(8.5in - 2in) !important;
+          margin: 0 auto !important;
           padding: 0 !important;
+          box-sizing: border-box !important;
         }
         
-        /* Smart word wrapping - break long words only when necessary */
-        p, li, div, span, td, th {
-          word-wrap: break-word !important;  /* Break long words */
+        /* Natural wrapping; no clipping; no hard break-all */
+        p, li, div, span, td, th, h1, h2, h3, h4 {
+          white-space: normal !important;
           overflow-wrap: break-word !important;
-          hyphens: manual !important;  /* Only break at hyphens we add */
-          white-space: normal !important;  /* Allow normal wrapping */
+          word-break: normal !important;
+          hyphens: auto !important;   /* allow normal hyphenation when needed */
+          max-width: 100% !important;
         }
         
-        /* Ensure bullets and lists use full width */
-        ul, ol {
-          width: 100% !important;
-          padding-left: 1.5em !important;
-        }
-        
-        li {
-          width: calc(100% - 1.5em) !important;
-          word-wrap: break-word !important;
-        }
+        /* Lists */
+        ul, ol { padding-left: 1.5em !important; margin: 0.25em 0 !important; }
+        li { margin: 0.1em 0 !important; break-inside: avoid; page-break-inside: avoid; }
         
         h2 { 
           font-size: 16pt !important;
@@ -1326,13 +1301,11 @@ export async function generatePdfFromContent(
         </div>
       `,
       margin: {
-        top: '0.75in',
-        right: '0.85in',  // Slightly less to give more width
-        bottom: '0.75in',
-        left: '0.75in'
+        top: '1in',
+        right: '1in',
+        bottom: '1in',
+        left: '1in'
       },
-      scale: 0.95,  // Slightly scale down to ensure fit (95% = still very readable)
-      preferCSSPageSize: false,  // Don't override our settings
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {
         scale: 0.9,  // Slightly reduce scale to decrease file size
