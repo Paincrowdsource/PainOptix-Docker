@@ -183,6 +183,12 @@ export async function generatePdfV2(
       // Then ensure the whole citation stays with preceding text
       cleanedContent = cleanedContent.replace(/(\S+)\s+(\[[^\]]+\])/g, '$1\u00A0$2');
       
+      // Add strategic break points for commonly cut-off words
+      cleanedContent = cleanedContent.replace(/malignancy/g, 'malig\u00ADnancy');  // Add soft hyphen
+      cleanedContent = cleanedContent.replace(/Carpentier/g, 'Carpen\u00ADtier');  // Add soft hyphen
+      cleanedContent = cleanedContent.replace(/radiculopathy/g, 'radiculo\u00ADpathy');  // Add soft hyphen
+      cleanedContent = cleanedContent.replace(/inflammatory/g, 'inflam\u00ADmatory');  // Add soft hyphen
+      
       // NUCLEAR OPTION: Shorten DOI URLs to prevent breaking
       // Remove https:// prefix to make URLs shorter
       cleanedContent = cleanedContent.replace(/https:\/\/doi\.org\//g, 'doi.org/');
@@ -486,28 +492,44 @@ export async function generatePdfV2(
       
       // Add clean print styles and prevent awkward breaks
       await page.addStyleTag({ content: `
-        /* Use more of the available page width */
+        /* Professional readable formatting */
+        * {
+          box-sizing: border-box !important;
+        }
+        
         body {
-          font-size: 12pt !important;  /* Increase back to 12pt */
-          line-height: 1.6 !important;
+          font-size: 12pt !important;  /* Keep readable 12pt */
+          line-height: 1.6 !important;  /* Comfortable line height */
+          margin: 0 !important;
+          padding: 0.75in !important;  /* Match PDF margins */
+          width: 100% !important;
+        }
+        
+        /* Use full available width */
+        .content, article, main, body > div {
+          width: 100% !important;  /* Use full width */
+          max-width: 100% !important;
           margin: 0 !important;
           padding: 0 !important;
+        }
+        
+        /* Smart word wrapping - break long words only when necessary */
+        p, li, div, span, td, th {
+          word-wrap: break-word !important;  /* Break long words */
+          overflow-wrap: break-word !important;
+          hyphens: manual !important;  /* Only break at hyphens we add */
+          white-space: normal !important;  /* Allow normal wrapping */
+        }
+        
+        /* Ensure bullets and lists use full width */
+        ul, ol {
           width: 100% !important;
-          box-sizing: border-box;
+          padding-left: 1.5em !important;
         }
         
-        /* Content should use most of the page */
-        .content, article, main, div.wrapper, body > div {
-          max-width: 6.5in !important;  /* Use more width (8.5 - 1 - 1 margins) */
-          margin: 0 auto !important;
-          padding: 0 0.5in !important;
-        }
-        
-        /* Force text to wrap properly without breaking words */
-        p, li, div, span {
-          word-break: normal !important;  /* Don't break words unnecessarily */
-          overflow-wrap: break-word !important;  /* Only break long words */
-          hyphens: none !important;  /* No auto-hyphenation */
+        li {
+          width: calc(100% - 1.5em) !important;
+          word-wrap: break-word !important;
         }
         
         h2 { 
@@ -664,7 +686,7 @@ export async function generatePdfV2(
     }
     
     const pdfBuffer = await page.pdf({
-      format: 'A4',
+      format: 'Letter',  // US Letter, not A4!
       printBackground: true,
       displayHeaderFooter: true,
       headerTemplate: '<div></div>',
@@ -676,10 +698,12 @@ export async function generatePdfV2(
       `,
       margin: {
         top: '0.75in',
-        right: '1in',    // Increase right margin to match content padding
-        bottom: '1in',
+        right: '0.85in',  // Slightly less to give more width
+        bottom: '0.75in',
         left: '0.75in'
       },
+      scale: 0.95,  // Slightly scale down to ensure fit (95% = still very readable)
+      preferCSSPageSize: false,  // Don't override our settings
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {
         scale: 0.9,  // Slightly reduce scale to decrease file size
@@ -1097,28 +1121,44 @@ export async function generatePdfFromContent(
       
       // Add clean print styles and prevent awkward breaks
       await page.addStyleTag({ content: `
-        /* Use more of the available page width */
+        /* Professional readable formatting */
+        * {
+          box-sizing: border-box !important;
+        }
+        
         body {
-          font-size: 12pt !important;  /* Increase back to 12pt */
-          line-height: 1.6 !important;
+          font-size: 12pt !important;  /* Keep readable 12pt */
+          line-height: 1.6 !important;  /* Comfortable line height */
+          margin: 0 !important;
+          padding: 0.75in !important;  /* Match PDF margins */
+          width: 100% !important;
+        }
+        
+        /* Use full available width */
+        .content, article, main, body > div {
+          width: 100% !important;  /* Use full width */
+          max-width: 100% !important;
           margin: 0 !important;
           padding: 0 !important;
+        }
+        
+        /* Smart word wrapping - break long words only when necessary */
+        p, li, div, span, td, th {
+          word-wrap: break-word !important;  /* Break long words */
+          overflow-wrap: break-word !important;
+          hyphens: manual !important;  /* Only break at hyphens we add */
+          white-space: normal !important;  /* Allow normal wrapping */
+        }
+        
+        /* Ensure bullets and lists use full width */
+        ul, ol {
           width: 100% !important;
-          box-sizing: border-box;
+          padding-left: 1.5em !important;
         }
         
-        /* Content should use most of the page */
-        .content, article, main, div.wrapper, body > div {
-          max-width: 6.5in !important;  /* Use more width (8.5 - 1 - 1 margins) */
-          margin: 0 auto !important;
-          padding: 0 0.5in !important;
-        }
-        
-        /* Force text to wrap properly without breaking words */
-        p, li, div, span {
-          word-break: normal !important;  /* Don't break words unnecessarily */
-          overflow-wrap: break-word !important;  /* Only break long words */
-          hyphens: none !important;  /* No auto-hyphenation */
+        li {
+          width: calc(100% - 1.5em) !important;
+          word-wrap: break-word !important;
         }
         
         h2 { 
@@ -1275,7 +1315,7 @@ export async function generatePdfFromContent(
     }
     
     const pdfBuffer = await page.pdf({
-      format: 'A4',
+      format: 'Letter',  // US Letter, not A4!
       printBackground: true,
       displayHeaderFooter: true,
       headerTemplate: '<div></div>',
@@ -1287,10 +1327,12 @@ export async function generatePdfFromContent(
       `,
       margin: {
         top: '0.75in',
-        right: '1in',    // Increase right margin to match content padding
-        bottom: '1in',
+        right: '0.85in',  // Slightly less to give more width
+        bottom: '0.75in',
         left: '0.75in'
       },
+      scale: 0.95,  // Slightly scale down to ensure fit (95% = still very readable)
+      preferCSSPageSize: false,  // Don't override our settings
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {
         scale: 0.9,  // Slightly reduce scale to decrease file size
