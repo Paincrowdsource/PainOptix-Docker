@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Upper Lumbar Radiculopathy
-subtitle: Comprehensive Monograph
+subtitle:
 ---
 
 # PainOptix™ Upper Lumbar Radiculopathy Monograph

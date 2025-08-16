@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Canal Stenosis
-subtitle: Comprehensive Monograph
+subtitle:
 ---
 
 # PainOptix™ Canal Stenosis Monograph

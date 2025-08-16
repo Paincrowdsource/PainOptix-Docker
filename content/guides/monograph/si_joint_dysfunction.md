@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Sacroiliac Joint Dysfunction
-subtitle: Comprehensive Monograph
+subtitle:
 ---
 
 # PainOptix™ Sacroiliac Joint Dysfunction Monograph

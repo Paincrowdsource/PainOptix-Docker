@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Central Disc Bulge
-subtitle: Comprehensive Monograph
+subtitle:
 ---
 
 # PainOptix™ Central Disc Bulge Monograph

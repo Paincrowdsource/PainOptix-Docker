@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Lumbar Instability
-subtitle: Comprehensive Monograph
+subtitle:
 ---
 
 # PainOptix™ Lumbar Instability Monograph

@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Urgent Symptoms Education  (Long-Form)
-subtitle: Comprehensive Monograph
+subtitle:
 ---
 
 # PainOptix™ Urgent Symptoms Education Guide (Long-Form)

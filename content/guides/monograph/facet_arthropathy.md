@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Facet Arthropathy
-subtitle: Comprehensive Monograph
+subtitle:
 ---
 
 # PainOptix™ Facet Arthropathy Monograph

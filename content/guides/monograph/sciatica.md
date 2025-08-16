@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Sciatica
-subtitle: Comprehensive Monograph
+subtitle:
 ---
 
 # PainOptix™ Sciatica Monograph

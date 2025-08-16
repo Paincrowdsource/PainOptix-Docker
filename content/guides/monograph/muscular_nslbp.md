@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Muscular/Non-Specific Low Back Pain
-subtitle: Comprehensive Monograph
+subtitle:
 ---
 
 # PainOptix™ Muscular/Non-Specific Low Back Pain Monograph
