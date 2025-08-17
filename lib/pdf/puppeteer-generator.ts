@@ -12,11 +12,12 @@ import { normalizeEnhancedBibliography } from './normalize-bibliography';
 import * as fsSync from 'node:fs';
 
 // Helper function for optional HTML dumps
-function bibDump(name: string, html: string, id: string) {
+function bibDump(name: string, html: string) {
   if (process.env.BIB_DEBUG === '1') {
     try {
-      fsSync.writeFileSync(`/tmp/${id}-${name}.html`, html);
-      console.error('[BIB-DUMP] wrote', `/tmp/${id}-${name}.html`, 'len=', html.length);
+      const stamp = Date.now();
+      fsSync.writeFileSync(`/tmp/bib-${name}-${stamp}.html`, html);
+      console.error('[BIB-DUMP] wrote', `/tmp/bib-${name}-${stamp}.html`, 'len=', html.length);
     } catch {}
   }
 }
@@ -335,7 +336,7 @@ export async function generatePdfV2(
     // Apply bibliography normalization for enhanced tier ONLY
     if (tier === 'enhanced') {
       console.error('[BIB] normalizer call (pre) len=', contentAsHtml.length);
-      bibDump('before', contentAsHtml, assessmentId || 'unknown');
+      bibDump('before', contentAsHtml);
 
       contentAsHtml = normalizeEnhancedBibliography(contentAsHtml);
 
@@ -343,7 +344,7 @@ export async function generatePdfV2(
       const hasOl = /<ol class="bibliography">/.test(contentAsHtml);
       console.error('[BIB] normalizer call (post) hasOl=', hasOl, 'liCount=', liCount, 'len=', contentAsHtml.length);
 
-      bibDump('after', contentAsHtml, assessmentId || 'unknown');
+      bibDump('after', contentAsHtml);
     }
     
     // Apply bibliography processing for monographs too (ensure proper list formatting)
@@ -1104,7 +1105,7 @@ export async function generatePdfFromContent(
     // Apply bibliography normalization for enhanced tier ONLY
     if (tier === 'enhanced') {
       console.error('[BIB] normalizer call (pre) len=', contentAsHtml.length);
-      bibDump('before', contentAsHtml, assessmentId || 'unknown');
+      bibDump('before', contentAsHtml);
 
       contentAsHtml = normalizeEnhancedBibliography(contentAsHtml);
 
@@ -1112,7 +1113,7 @@ export async function generatePdfFromContent(
       const hasOl = /<ol class="bibliography">/.test(contentAsHtml);
       console.error('[BIB] normalizer call (post) hasOl=', hasOl, 'liCount=', liCount, 'len=', contentAsHtml.length);
 
-      bibDump('after', contentAsHtml, assessmentId || 'unknown');
+      bibDump('after', contentAsHtml);
     }
     
     // Apply bibliography processing for monographs too (ensure proper list formatting)
