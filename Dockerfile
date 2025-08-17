@@ -1,4 +1,4 @@
-# Multi-stage build for optimized Next.js 15.4.2 with Puppeteer
+# Multi-stage build for optimized Next.js 14.2.5 with Puppeteer
 # Stage 1: Dependencies
 FROM node:20-slim AS deps
 
@@ -49,11 +49,12 @@ RUN echo '{ \
     "lucide-react": "^0.525.0", \
     "mammoth": "^1.9.1", \
     "marked": "^16.1.1", \
-    "next": "^15.4.2", \
+    "next": "14.2.5", \
     "pdf-parse": "^1.1.1", \
-    "puppeteer": "^23.11.1", \
-    "react": "^19.1.0", \
-    "react-dom": "^19.1.0", \
+    "puppeteer-core": "^24.15.0", \
+    "puppeteer": "^24.15.0", \
+    "react": "18.3.1", \
+    "react-dom": "18.3.1", \
     "react-hook-form": "^7.60.0", \
     "react-hot-toast": "^2.5.2", \
     "react-markdown": "^10.1.0", \
@@ -61,14 +62,13 @@ RUN echo '{ \
     "tailwind-merge": "^3.3.1", \
     "twilio": "^5.7.3", \
     "winston": "^3.17.0", \
-    "ws": "^8.18.0", \
     "zod": "^4.0.10", \
     "cheerio": "^1.1.2" \
   }, \
   "devDependencies": { \
     "@types/node": "^24.0.15", \
-    "@types/react": "^19.1.8", \
-    "@types/react-dom": "^19.1.6", \
+    "@types/react": "^18.3.0", \
+    "@types/react-dom": "^18.3.0", \
     "autoprefixer": "^10.4.21", \
     "eslint": "^9.31.0", \
     "eslint-config-next": "^15.4.2", \
@@ -135,11 +135,12 @@ RUN echo '{ \
     "lucide-react": "^0.525.0", \
     "mammoth": "^1.9.1", \
     "marked": "^16.1.1", \
-    "next": "^15.4.2", \
+    "next": "14.2.5", \
     "pdf-parse": "^1.1.1", \
-    "puppeteer": "^23.11.1", \
-    "react": "^19.1.0", \
-    "react-dom": "^19.1.0", \
+    "puppeteer-core": "^24.15.0", \
+    "puppeteer": "^24.15.0", \
+    "react": "18.3.1", \
+    "react-dom": "18.3.1", \
     "react-hook-form": "^7.60.0", \
     "react-hot-toast": "^2.5.2", \
     "react-markdown": "^10.1.0", \
@@ -147,14 +148,13 @@ RUN echo '{ \
     "tailwind-merge": "^3.3.1", \
     "twilio": "^5.7.3", \
     "winston": "^3.17.0", \
-    "ws": "^8.18.0", \
     "zod": "^4.0.10", \
     "cheerio": "^1.1.2" \
   }, \
   "devDependencies": { \
     "@types/node": "^24.0.15", \
-    "@types/react": "^19.1.8", \
-    "@types/react-dom": "^19.1.6", \
+    "@types/react": "^18.3.0", \
+    "@types/react-dom": "^18.3.0", \
     "autoprefixer": "^10.4.21", \
     "eslint": "^9.31.0", \
     "eslint-config-next": "^15.4.2", \
@@ -283,7 +283,7 @@ USER app
 
 # install puppeteer (downloads bundled Chromium)
 RUN npm set fund false && npm set audit false \
- && npm install puppeteer@23.11.1 --no-save
+ && npm install puppeteer@24.15.0 --no-save
 
 # sanity: print path puppeteer thinks it will use (path only, not a secret)
 RUN node -e "console.log('pupp executable:', require('puppeteer').executablePath())"
