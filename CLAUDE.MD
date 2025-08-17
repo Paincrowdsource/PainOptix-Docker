@@ -13,10 +13,11 @@
 - Contains only tested, production-ready code
 
 ## Critical Differences from Parent
-- This repo uses parent's `package.json` (no local package.json)
-- No `enhanced-dom-glue-ship.ts` file (removed for build)
+- This repo NOW HAS its own `package.json` (required for DigitalOcean build)
+- Contains `enhanced-dom-glue-ship.ts` (added for bibliography fix)
 - All supabaseAdmin() calls fixed for proper scope
 - Contains production environment configurations
+- Must keep package.json in sync with parent repo
 
 ## Deployment Process
 1. Make changes here (docker-repo)
