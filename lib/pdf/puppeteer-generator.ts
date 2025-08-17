@@ -8,7 +8,7 @@ import fs from 'fs/promises';
 import { getGuideContent } from './content-loader';
 import { replacePlaceholders } from '@/lib/pdf-helpers';
 import { processMarkdownWithImages } from './image-processor';
-// import { enhancedDomGlueShipScript } from './enhanced-dom-glue-ship'; // Removed - file not in docker-repo
+import { normalizeEnhancedBibliography } from './normalize-bibliography';
 
 // Configure marked to handle our markdown properly
 marked.setOptions({
@@ -320,6 +320,11 @@ export async function generatePdfV2(
     
     // HTML failsafe: Remove any residual "END" node that slipped through as its own paragraph/span
     contentAsHtml = contentAsHtml.replace(/>\s*(\[?END\]?|>>END)\s*</g, '><');
+    
+    // Apply bibliography normalization for enhanced tier ONLY
+    if (tier === 'enhanced') {
+      contentAsHtml = normalizeEnhancedBibliography(contentAsHtml);
+    }
     
     // Apply bibliography processing for monographs too (ensure proper list formatting)
     if (tier === 'monograph') {
@@ -1075,6 +1080,11 @@ export async function generatePdfFromContent(
     
     // HTML failsafe: Remove any residual "END" node that slipped through as its own paragraph/span
     contentAsHtml = contentAsHtml.replace(/>\s*(\[?END\]?|>>END)\s*</g, '><');
+    
+    // Apply bibliography normalization for enhanced tier ONLY
+    if (tier === 'enhanced') {
+      contentAsHtml = normalizeEnhancedBibliography(contentAsHtml);
+    }
     
     // Apply bibliography processing for monographs too (ensure proper list formatting)
     if (tier === 'monograph') {

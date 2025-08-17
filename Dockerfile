@@ -62,7 +62,8 @@ RUN echo '{ \
     "twilio": "^5.7.3", \
     "winston": "^3.17.0", \
     "ws": "^8.18.0", \
-    "zod": "^4.0.10" \
+    "zod": "^4.0.10", \
+    "cheerio": "^1.0.0" \
   }, \
   "devDependencies": { \
     "@types/node": "^24.0.15", \
@@ -147,7 +148,8 @@ RUN echo '{ \
     "twilio": "^5.7.3", \
     "winston": "^3.17.0", \
     "ws": "^8.18.0", \
-    "zod": "^4.0.10" \
+    "zod": "^4.0.10", \
+    "cheerio": "^1.0.0" \
   }, \
   "devDependencies": { \
     "@types/node": "^24.0.15", \
