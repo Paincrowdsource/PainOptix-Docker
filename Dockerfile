@@ -33,8 +33,7 @@ RUN echo '{ \
     "@sendgrid/mail": "^8.1.5", \
     "@sparticuz/chromium": "^119.0.2", \
     "@stripe/stripe-js": "^7.5.0", \
-    "@supabase/auth-helpers-nextjs": "^0.10.0", \
-    "@supabase/ssr": "^0.6.1", \
+    "@supabase/ssr": "^0.5.0", \
     "@supabase/supabase-js": "^2.52.0", \
     "@types/js-yaml": "^4.0.9", \
     "@types/jspdf": "^1.3.3", \
@@ -119,8 +118,7 @@ RUN echo '{ \
     "@sendgrid/mail": "^8.1.5", \
     "@sparticuz/chromium": "^119.0.2", \
     "@stripe/stripe-js": "^7.5.0", \
-    "@supabase/auth-helpers-nextjs": "^0.10.0", \
-    "@supabase/ssr": "^0.6.1", \
+    "@supabase/ssr": "^0.5.0", \
     "@supabase/supabase-js": "^2.52.0", \
     "@types/js-yaml": "^4.0.9", \
     "@types/jspdf": "^1.3.3", \
@@ -281,9 +279,9 @@ RUN mkdir -p /home/app/.cache/puppeteer && chown -R app:app /home/app
 # switch to app user BEFORE installing puppeteer so chromium lands in /home/app
 USER app
 
-# install puppeteer (downloads bundled Chromium)
-RUN npm set fund false && npm set audit false \
- && npm install puppeteer@24.15.0 --no-save
+# Install puppeteer with all dependencies
+RUN npm install puppeteer@24.15.0 --no-save --unsafe-perm=true --allow-root || \
+    (npm cache clean --force && npm install puppeteer@24.15.0 --no-save --unsafe-perm=true --allow-root)
 
 # sanity: print path puppeteer thinks it will use (path only, not a secret)
 RUN node -e "console.log('pupp executable:', require('puppeteer').executablePath())"

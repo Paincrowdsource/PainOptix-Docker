@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { generatePdfV2, generatePdfFromContent } from '@/lib/pdf/puppeteer-generator';

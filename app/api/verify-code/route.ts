@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * Verification Code Validation API Endpoint
  * 
