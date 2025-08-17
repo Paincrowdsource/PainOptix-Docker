@@ -324,6 +324,11 @@ export async function generatePdfV2(
     // Apply bibliography normalization for enhanced tier ONLY
     if (tier === 'enhanced') {
       contentAsHtml = normalizeEnhancedBibliography(contentAsHtml);
+      console.log('[BIB-NORMALIZE] enhanced entries:',
+        (contentAsHtml.match(/<ol class="bibliography">/g) || []).length,
+        'with li count:',
+        (contentAsHtml.match(/<li>/g) || []).length
+      );
     }
     
     // Apply bibliography processing for monographs too (ensure proper list formatting)
@@ -1084,6 +1089,11 @@ export async function generatePdfFromContent(
     // Apply bibliography normalization for enhanced tier ONLY
     if (tier === 'enhanced') {
       contentAsHtml = normalizeEnhancedBibliography(contentAsHtml);
+      console.log('[BIB-NORMALIZE] enhanced entries:',
+        (contentAsHtml.match(/<ol class="bibliography">/g) || []).length,
+        'with li count:',
+        (contentAsHtml.match(/<li>/g) || []).length
+      );
     }
     
     // Apply bibliography processing for monographs too (ensure proper list formatting)
