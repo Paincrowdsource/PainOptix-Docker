@@ -3,24 +3,24 @@ import * as cheerio from 'cheerio';
 
 const LOG = (...a: any[]) => console.error('[BIB-NORMALIZE]', ...a);
 
-// Split rules used everywhere
+// Split a big blob of bibliography text into entries
 function splitIntoEntries(raw: string): string[] {
   if (!raw) return [];
   let t = raw
-    .replace(/\u00A0/g, ' ')       // NBSP -> space
+    .replace(/\u00A0/g, ' ')                 // NBSP → space
     .replace(/\s+/g, ' ')
+    // Normalize any DOI tokenization first so downstream splits are stable
     .replace(/\[\[DOI\|[^\]]+\]\]/gi, '[DOI]')
-    .replace(/\[DOI\|[^\]]+\]/gi, '[DOI]')
+    .replace(/\[DOI\|[^\]]+\]/gi,  '[DOI]')
     .trim();
 
   const out: string[] = [];
 
-  // STRONGEST: split on "(YYYY)." followed by start of a new author (Capital letter)
-  // Note: this works for 1983, 2020, and 2020a etc.
+  // Strongest: split on "(YYYY). " followed by a new author (capital)
   let parts = t.split(/(?<=\(\d{4}[a-z]?\)\.)\s+(?=[A-Z])/g);
   if (parts.length > 1) out.push(...parts);
 
-  // If still fused, split on "[DOI]. " when followed by a new author pattern "Surname, I."
+  // If still fused, split on "[DOI]. " when followed by "Surname, I."
   if (!out.length) {
     parts = t.split(/(?<=\[DOI\]\.?)\s+(?=[A-Z][A-Za-z'`\-]+,\s*[A-Z]\.)/g);
     if (parts.length > 1) out.push(...parts);
@@ -32,106 +32,108 @@ function splitIntoEntries(raw: string): string[] {
     if (numbered) out.push(...numbered.map(s => s.replace(/^\d+\.\s*/, '').trim()));
   }
 
-  // Author boundary fallback
+  // Author-boundary fallback
   if (!out.length) {
     parts = t.split(/(?=[A-Z][a-z]+,\s*[A-Z]\.)/g);
     if (parts.length > 1) out.push(...parts);
   }
 
-  // If still nothing, return the whole thing
   if (!out.length) out.push(t);
-
-  // Weed out tiny fragments
   return out.map(s => s.trim()).filter(s => s.length > 30);
 }
 
-export function normalizeEnhancedBibliography(html: string): string {
-  LOG('function called; input length=', html?.length || 0);
-  try {
-    const $ = cheerio.load(html); // no decodeEntities to avoid type/compat headaches
+// Make one entry safe for PDF layout
+function normalizeEntryText(txt: string): string {
+  let s = txt
+    .replace(/^\s*\d+\.\s*/, '') // strip any leading "n. "
+    .replace(/\s+/g, ' ')
+    // Replace all DOI forms with [DOI] to avoid slash breaks
+    // Matches: doi: 10..., DOI:10..., http(s)://doi.org/..., doi.org/...
+    .replace(/\bdoi:\s*\S+/gi, '[DOI]')
+    .replace(/\bDOI:\s*\S+/g,  '[DOI]')
+    .replace(/https?:\/\/doi\.org\/\S+/gi, '[DOI]')
+    .replace(/\bdoi\.org\/\S+/gi, '[DOI]')
+    // Keep page ranges on one line
+    .replace(/(\d{1,4})\s*[-–—]\s*(\d{1,4})/g, '<span class="norun">$1&#8209;$2</span>')
+    .trim();
 
-    // Find "Bibliography"/"References" as: h1–h6, OR <p><strong|b>Bibliography</strong|b></p>, OR plain <p>Bibliography</p>
+  if (!/[.?!]$/.test(s)) s += '.';
+  return s;
+}
+
+export function normalizeEnhancedBibliography(html: string): string {
+  LOG('function called; input len=', html?.length || 0);
+  try {
+    const $ = cheerio.load(html);
+
+    // Find "Bibliography/References" in h1–h6 or <p><strong>…</strong></p> or plain <p>
     const isTitle = (txt: string) => /^\s*(bibliography|references)\s*$/i.test(txt || '');
-    let bib = $('h1,h2,h3,h4,h5,h6,p').filter((_, el) => {
+    const bib = $('h1,h2,h3,h4,h5,h6,p').filter((_, el) => {
       const node = $(el);
       const text = node.text().trim();
       if (isTitle(text)) return true;
       const strong = node.children('strong,b').first();
-      if (strong.length && isTitle(strong.text().trim())) return true;
-      return false;
+      return !!(strong.length && isTitle(strong.text().trim()));
     }).first();
 
     LOG('heading found?', !!bib.length, 'tag=', bib[0]?.tagName, 'text=', bib.text().trim());
+    if (!bib.length) return html;
 
-    if (!bib.length) {
-      LOG('NO heading; returning original');
-      return html;
-    }
+    const entries: string[] = [];
 
-    // Case A: already an <ol> after the heading → split any fused <li>s
-    const next = bib.next();
-    if (next.is('ol')) {
-      LOG('found existing <ol>, splitting any fused <li> entries');
-      const rebuilt: string[] = [];
-      next.find('li').each((_, li) => {
+    // Case A: there's already an <ol> — clean its <li> *and* scoop up any following stray content
+    const ol = bib.next('ol');
+    if (ol.length) {
+      LOG('found existing <ol> — splitting fused <li> and collecting trailing nodes');
+      ol.find('li').each((_, li) => {
         const txt = $(li).text().replace(/\u00A0/g, ' ');
-        rebuilt.push(...splitIntoEntries(txt));
+        entries.push(...splitIntoEntries(txt));
       });
 
-      next.empty();
-      rebuilt.forEach(e => {
-        let clean = e
-          .replace(/(\d+)\s*[-–—]\s*(\d+)/g, '<span class="norun">$1&#8209;$2</span>')
-          .replace(/\s*\[DOI\]\s*/g, ' [DOI]')
-          .replace(/\s{2,}/g, ' ')
-          .trim();
-        if (!/[.?!]$/.test(clean)) clean += '.';
-        next.append(`<li>${clean}</li>`);
-      });
+      // Collect ANY siblings *after* the <ol> until next heading (this is what the screenshot shows)
+      let cur = ol.next();
+      const extras: any[] = [];
+      while (cur.length && !/^h[1-6]$/i.test(cur[0]?.tagName || '')) {
+        extras.push(cur);
+        cur = cur.next();
+      }
+      if (extras.length) {
+        const raw = extras.map(n => $(n).text().replace(/\u00A0/g, ' ')).join(' ').replace(/\s+/g, ' ').trim();
+        const extraEntries = splitIntoEntries(raw);
+        if (extraEntries.length) {
+          LOG('collected trailing extras =', extraEntries.length);
+          entries.push(...extraEntries);
+          extras.forEach(n => n.remove());
+        }
+      }
 
-      LOG('rebuilt <ol> count=', rebuilt.length);
+      // Rebuild <ol> with ALL entries
+      ol.empty();
+      entries.forEach(e => ol.append(`<li>${normalizeEntryText(e)}</li>`));
+      LOG('rebuilt existing <ol> with entries=', entries.length);
       return $.html();
     }
 
-    // Case B: not an <ol> → collect nodes until next heading and rebuild from plain text
-    LOG('no <ol> found; rebuilding from text between heading and next heading');
-    const block: any[] = [];
+    // Case B: no <ol> — rebuild from all nodes after heading until next heading
+    LOG('no <ol> — rebuilding from text between heading and next heading');
     let cur = bib.next();
+    const block: any[] = [];
     while (cur.length && !/^h[1-6]$/i.test(cur[0]?.tagName || '')) {
       block.push(cur);
       cur = cur.next();
     }
-    if (!block.length) {
-      LOG('no content after heading; returning original');
-      return html;
-    }
+    if (!block.length) return html;
 
-    const raw = block
-      .map(n => $(n).text().replace(/\u00A0/g, ' '))
-      .join(' ')
-      .replace(/\s+/g, ' ')
-      .replace(/\[\[DOI\|[^\]]+\]\]/gi, '[DOI]')
-      .replace(/\[DOI\|[^\]]+\]/gi, '[DOI]')
-      .trim();
-
-    const entries = splitIntoEntries(raw);
-    LOG('entries from raw split=', entries.length);
+    const raw = block.map(n => $(n).text().replace(/\u00A0/g, ' ')).join(' ').replace(/\s+/g, ' ').trim();
+    const parts = splitIntoEntries(raw);
+    if (!parts.length) return html;
 
     block.forEach(n => n.remove());
 
     const $ol = $('<ol class="bibliography"></ol>');
-    entries.forEach(e => {
-      let clean = e
-        .replace(/(\d+)\s*[-–—]\s*(\d+)/g, '<span class="norun">$1&#8209;$2</span>')
-        .replace(/\s*\[DOI\]\s*/g, ' [DOI]')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
-      if (!/[.?!]$/.test(clean)) clean += '.';
-      $ol.append(`<li>${clean}</li>`);
-    });
-
+    parts.forEach(e => $ol.append(`<li>${normalizeEntryText(e)}</li>`));
     bib.after($ol);
-    LOG('created <ol> with li count=', entries.length);
+    LOG('created <ol> with entries=', parts.length);
     return $.html();
   } catch (e: any) {
     LOG('ERROR', e?.message || e);
