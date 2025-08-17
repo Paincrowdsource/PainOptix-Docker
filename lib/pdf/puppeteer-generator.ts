@@ -9,6 +9,17 @@ import { getGuideContent } from './content-loader';
 import { replacePlaceholders } from '@/lib/pdf-helpers';
 import { processMarkdownWithImages } from './image-processor';
 import { normalizeEnhancedBibliography } from './normalize-bibliography';
+import * as fsSync from 'node:fs';
+
+// Helper function for optional HTML dumps
+function bibDump(name: string, html: string, id: string) {
+  if (process.env.BIB_DEBUG === '1') {
+    try {
+      fsSync.writeFileSync(`/tmp/${id}-${name}.html`, html);
+      console.error('[BIB-DUMP] wrote', `/tmp/${id}-${name}.html`, 'len=', html.length);
+    } catch {}
+  }
+}
 
 // Configure marked to handle our markdown properly
 marked.setOptions({
@@ -323,12 +334,16 @@ export async function generatePdfV2(
     
     // Apply bibliography normalization for enhanced tier ONLY
     if (tier === 'enhanced') {
+      console.error('[BIB] normalizer call (pre) len=', contentAsHtml.length);
+      bibDump('before', contentAsHtml, assessmentId || 'unknown');
+
       contentAsHtml = normalizeEnhancedBibliography(contentAsHtml);
-      console.log('[BIB-NORMALIZE] enhanced entries:',
-        (contentAsHtml.match(/<ol class="bibliography">/g) || []).length,
-        'with li count:',
-        (contentAsHtml.match(/<li>/g) || []).length
-      );
+
+      const liCount = (contentAsHtml.match(/<li>/g) || []).length;
+      const hasOl = /<ol class="bibliography">/.test(contentAsHtml);
+      console.error('[BIB] normalizer call (post) hasOl=', hasOl, 'liCount=', liCount, 'len=', contentAsHtml.length);
+
+      bibDump('after', contentAsHtml, assessmentId || 'unknown');
     }
     
     // Apply bibliography processing for monographs too (ensure proper list formatting)
@@ -1088,12 +1103,16 @@ export async function generatePdfFromContent(
     
     // Apply bibliography normalization for enhanced tier ONLY
     if (tier === 'enhanced') {
+      console.error('[BIB] normalizer call (pre) len=', contentAsHtml.length);
+      bibDump('before', contentAsHtml, assessmentId || 'unknown');
+
       contentAsHtml = normalizeEnhancedBibliography(contentAsHtml);
-      console.log('[BIB-NORMALIZE] enhanced entries:',
-        (contentAsHtml.match(/<ol class="bibliography">/g) || []).length,
-        'with li count:',
-        (contentAsHtml.match(/<li>/g) || []).length
-      );
+
+      const liCount = (contentAsHtml.match(/<li>/g) || []).length;
+      const hasOl = /<ol class="bibliography">/.test(contentAsHtml);
+      console.error('[BIB] normalizer call (post) hasOl=', hasOl, 'liCount=', liCount, 'len=', contentAsHtml.length);
+
+      bibDump('after', contentAsHtml, assessmentId || 'unknown');
     }
     
     // Apply bibliography processing for monographs too (ensure proper list formatting)
