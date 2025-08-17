@@ -110,9 +110,14 @@ export async function POST(req: NextRequest) {
     // Generate PDF
     let pdfBuffer: Buffer;
     
+    console.error('🚨🚨🚨 ENHANCED V2 FLAG:', enhancedV2Enabled);
+    console.error('🚨🚨🚨 NODE_ENV:', process.env.NODE_ENV);
+    console.error('🚨🚨🚨 NETLIFY:', process.env.NETLIFY);
+    
     try {
       if (process.env.NODE_ENV === 'production' || process.env.NETLIFY) {
         // Production: Use pre-loaded content
+        console.error('🚨🚨🚨 CALLING: generatePdfFromContent');
         logger.info(`Generating PDF from pre-loaded content`, {
           tier: puppeteerTier,
           guideType: guideType,
@@ -123,6 +128,7 @@ export async function POST(req: NextRequest) {
         pdfBuffer = await generatePdfFromContent(guideType, assessmentData, puppeteerTier, { enhancedV2Enabled });
       } else {
         // Development: Use file system
+        console.error('🚨🚨🚨 CALLING: generatePdfV2');
         const filePath = path.join(process.cwd(), 'content/guides', contentDir, `${guideType}.md`);
         
         logger.info(`Generating PDF from file system`, {

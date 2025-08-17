@@ -24,7 +24,30 @@
 3. Commit and push to main
 4. DigitalOcean auto-rebuilds and deploys
 
-## Current Features (as of commit 51c631e)
+## ⚠️ CRITICAL: BIBLIOGRAPHY FORMATTING - NEVER MODIFY WITHOUT READING
+
+### The Great Bibliography War (January 2025)
+**Time Lost: 12+ hours over multiple days**
+**Problem: Enhanced PDF bibliographies were completely broken**
+
+### DO NOT EVER:
+1. ❌ Let both server AND client format the bibliography (they will fight)
+2. ❌ Try to keep full DOI URLs unbroken in PDFs (Puppeteer WILL break at "/")
+3. ❌ Add sentinel tokens without removing them at EVERY stage
+4. ❌ Modify enhanced-dom-glue-ship.ts bibliography section without testing ALL guides
+
+### ALWAYS DO:
+1. ✅ Server formatting is authoritative (normalizeEnhancedBibliography)
+2. ✅ Use [DOI] markers instead of full URLs
+3. ✅ Check for `ol.bibliography` before client-side manipulation
+4. ✅ Test with BOTH facet_arthropathy AND sciatica
+
+### Key Files:
+- `lib/pdf/puppeteer-generator.ts` - Server-side bibliography normalization (CRITICAL)
+- `lib/pdf/enhanced-dom-glue-ship.ts` - Client-side DOM manipulation (BE CAREFUL!)
+- `lib/pdf/master-template.ts` - CSS styles for bibliography
+
+## Current Features (as of January 2025 - post bibliography fix)
 
 ### Enhanced V2 PDF System
 - **Feature Flag**: `ENHANCED_V2=1` (env) or `x-po-enhanced-v2: 1` (header)
