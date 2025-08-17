@@ -54,7 +54,7 @@ function normalizeEntryText(txt: string): string {
     .replace(/https?:\/\/doi\.org\/\S+/gi, '[DOI]')
     .replace(/\bdoi\.org\/\S+/gi, '[DOI]')
     // Keep page ranges on one line
-    .replace(/(\d{1,4})\s*[-–—]\s*(\d{1,4})/g, '<span class="norun">$1&#8209;$2</span>')
+    .replace(/(\d{1,4})\s*[-–—]\s*(\d{1,4})/g, '$1&#8209;$2')
     .trim();
 
   if (!/[.?!]$/.test(s)) s += '.';
