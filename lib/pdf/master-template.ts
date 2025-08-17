@@ -16,6 +16,13 @@ export function getPdfHtmlTemplate(
     @page {
       size: A4;
       margin: 1in;
+      @bottom-center {
+        content: "PainOptix™ is for general educational use only and is not a substitute for professional medical advice. Always seek the guidance of a qualified healthcare provider regarding any medical condition.";
+        font-size: 8pt;
+        color: #666;
+        max-width: 90%;
+        text-align: center;
+      }
     }
 
     body {

@@ -85,7 +85,3 @@ Understanding lumbar instability can help you discuss symptoms with a doctor. Br
 5. Rasmussen-Barr, E., et al. (2009). Non-surgical treatment in low back pain: A systematic review. Physical Therapy Reviews, 14(3), 169–179. https://doi.org/10.1179/174328809X405374
 6. Todd, N. V. (2005). Cauda equina syndrome: The timing of surgery probably does influence outcome. British Journal of Neurosurgery, 19(4), 301–306. https://doi.org/10.1080/02688690500305324
 >>END
-
->>DISCLAIMER
-This educational guide is for informational purposes only and does not constitute medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider.
->>END

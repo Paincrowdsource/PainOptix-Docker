@@ -117,9 +117,7 @@ export function getFreeTemplate(htmlContent: string, assessment: any) {
     <p>Upgrade to our Enhanced Report or Comprehensive Monograph for personalized strategies, exercise programs, and recovery tracking tools.</p>
   </div>
 
-  <div class="footer">
-    <p>This educational guide is for informational purposes only. Always consult with a healthcare provider for medical advice.</p>
-  </div>
+  <!-- Disclaimer moved to page footer via CSS @page rule -->
 </body>
 </html>
   `;
