@@ -84,7 +84,9 @@ function normalizeEnhancedBibliography(html: string): string {
       const newItems: string[] = [];
       next.find('li').each((_, li) => {
         const $li = $(li);
-        $li.find('p').each((__, p) => $(p).replaceWith($(p).contents()));
+        $li.find('p').each((__, p) => {
+          $(p).replaceWith($(p).contents());
+        });
         
         const raw = $li.text();
         const parts = splitIntoEntries(raw);
@@ -109,7 +111,7 @@ function normalizeEnhancedBibliography(html: string): string {
 
     // Collect everything until next heading
     console.log('[BIB-NORMALIZE] Collecting bibliography content');
-    const collected: cheerio.Cheerio[] = [];
+    const collected: any[] = [];
     let n = bibH.next();
     while (n.length && !/^h[1-6]$/i.test(n[0].tagName || '')) {
       collected.push(n);

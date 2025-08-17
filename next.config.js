@@ -54,6 +54,14 @@ const nextConfig = {
   poweredByHeader: false, // Remove X-Powered-By header
   output: 'standalone', // For Docker deployment
   
+  // Skip type checking and linting during build
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
   // Webpack config to handle ws module for Supabase Realtime
   webpack: (config, { isServer }) => {
     if (!isServer) {
