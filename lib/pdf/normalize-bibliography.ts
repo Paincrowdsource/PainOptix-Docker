@@ -94,6 +94,11 @@ export function normalizeEnhancedBibliography(html: string): string {
       let cur = ol.next();
       const extras: any[] = [];
       while (cur.length && !/^h[1-6]$/i.test(cur[0]?.tagName || '')) {
+        // Stop if we hit the disclaimer
+        const text = cur.text().trim();
+        if (text.includes('DISCLAIMER') || text.includes('educational guide') || text.includes('medical advice')) {
+          break;
+        }
         extras.push(cur);
         cur = cur.next();
       }
@@ -119,6 +124,11 @@ export function normalizeEnhancedBibliography(html: string): string {
     let cur = bib.next();
     const block: any[] = [];
     while (cur.length && !/^h[1-6]$/i.test(cur[0]?.tagName || '')) {
+      // Stop if we hit the disclaimer
+      const text = cur.text().trim();
+      if (text.includes('DISCLAIMER') || text.includes('educational guide') || text.includes('medical advice')) {
+        break;
+      }
       block.push(cur);
       cur = cur.next();
     }
