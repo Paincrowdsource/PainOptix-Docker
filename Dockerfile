@@ -276,12 +276,16 @@ WORKDIR /app
 ENV PUPPETEER_CACHE_DIR=/home/app/.cache/puppeteer
 RUN mkdir -p /home/app/.cache/puppeteer && chown -R app:app /home/app
 
-# switch to app user BEFORE installing puppeteer so chromium lands in /home/app
-USER app
+# Install puppeteer as root first, then change ownership
+USER root
+RUN npm install puppeteer@24.15.0 --no-save --unsafe-perm=true || \
+    (npm cache clean --force && npm install puppeteer@24.15.0 --no-save --unsafe-perm=true)
 
-# Install puppeteer with all dependencies
-RUN npm install puppeteer@24.15.0 --no-save --unsafe-perm=true --allow-root || \
-    (npm cache clean --force && npm install puppeteer@24.15.0 --no-save --unsafe-perm=true --allow-root)
+# Change ownership to app user
+RUN chown -R app:app /app/node_modules /home/app
+
+# switch to app user for runtime
+USER app
 
 # sanity: print path puppeteer thinks it will use (path only, not a secret)
 RUN node -e "console.log('pupp executable:', require('puppeteer').executablePath())"
