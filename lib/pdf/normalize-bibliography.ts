@@ -67,7 +67,7 @@ export function normalizeEnhancedBibliography(html: string): string {
     }
 
     // Collect everything until next heading and rebuild fresh
-    const block: cheerio.Cheerio<cheerio.Element>[] = [];
+    const block: any[] = [];
     let cur = bibH.next();
     while (cur.length && !/^h[1-6]$/i.test(cur[0]?.tagName || '')) {
       block.push(cur);
