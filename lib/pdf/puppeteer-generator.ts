@@ -22,7 +22,6 @@ console.log('[ENHANCED-MD] marked configured with breaks=false to prevent <br> t
 // Function to normalize Enhanced bibliography - robust version that rebuilds structure
 function normalizeEnhancedBibliography(html: string): string {
   try {
-    const cheerio = require('cheerio');
     const $ = cheerio.load(html, { decodeEntities: false });
 
     // Find "Bibliography" or "References" at any heading level
