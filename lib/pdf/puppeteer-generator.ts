@@ -841,9 +841,8 @@ export async function generatePdfV2(
       displayHeaderFooter: true,
       headerTemplate: '<div></div>',
       footerTemplate: `
-        <div style="width: 100%; font-size: 10px; padding: 5px 0; text-align: center;">
-          <span>© PainOptix™ Educational Content</span>
-          <span style="float: right; margin-right: 20px;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+        <div style="width: 100%; font-size: 10px; padding: 5px 0; text-align: right;">
+          <span style="margin-right: 20px;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
         </div>
       `,
       margin: {
@@ -1561,9 +1560,8 @@ export async function generatePdfFromContent(
       displayHeaderFooter: true,
       headerTemplate: '<div></div>',
       footerTemplate: `
-        <div style="width: 100%; font-size: 10px; padding: 5px 0; text-align: center;">
-          <span>© PainOptix™ Educational Content</span>
-          <span style="float: right; margin-right: 20px;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+        <div style="width: 100%; font-size: 10px; padding: 5px 0; text-align: right;">
+          <span style="margin-right: 20px;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
         </div>
       `,
       margin: {
