@@ -2,7 +2,7 @@ import * as cheerio from 'cheerio';
 
 export function normalizeEnhancedBibliography(html: string): string {
   try {
-    const $ = cheerio.load(html, { decodeEntities: false });
+    const $ = cheerio.load(html);
 
     // Find "Bibliography" / "References"
     const bibH = $('h1,h2,h3,h4,h5,h6')
@@ -48,7 +48,7 @@ export function normalizeEnhancedBibliography(html: string): string {
 
       const collected: string[] = [];
       next.find('li').each((_, li) => {
-        const text = $(li).text();
+        const text = $(li).text().replace(/\u00A0/g, ' ');
         collected.push(...splitIntoEntries(text));
       });
 
@@ -67,7 +67,7 @@ export function normalizeEnhancedBibliography(html: string): string {
     }
 
     // Collect everything until next heading and rebuild fresh
-    const block: cheerio.Cheerio[] = [];
+    const block: cheerio.Cheerio<cheerio.Element>[] = [];
     let cur = bibH.next();
     while (cur.length && !/^h[1-6]$/i.test(cur[0]?.tagName || '')) {
       block.push(cur);
@@ -75,7 +75,7 @@ export function normalizeEnhancedBibliography(html: string): string {
     }
     if (!block.length) return html;
 
-    const raw = block.map(n => $(n).text()).join(' ')
+    const raw = block.map(n => $(n).text().replace(/\u00A0/g, ' ')).join(' ')
       .replace(/\s+/g, ' ')
       .replace(/\[\[DOI\|[^\]]+\]\]/gi, '[DOI]')
       .replace(/\[DOI\|[^\]]+\]/gi, '[DOI]')
