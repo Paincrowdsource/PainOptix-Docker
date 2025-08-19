@@ -1,8 +1,8 @@
 import Stripe from 'stripe'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-07-30.basil',
-})
+// Do NOT pin apiVersion. We rely on the Stripe account default.
+// See DONT_TOUCH_THESE.md
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {})
 
 // Price IDs for different tiers
 export const PRICES = {
