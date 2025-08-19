@@ -1,85 +1,14 @@
-# Multi-stage build for optimized Next.js 15.4.2 with Puppeteer
+# Multi-stage build for optimized Next.js with Puppeteer
 # Stage 1: Dependencies
 FROM node:20-slim AS deps
 
 WORKDIR /app
 
-# Create package.json directly in the Docker image (no package.json at repo root!)
-RUN echo '{ \
-  "name": "painoptix-app", \
-  "version": "1.0.0", \
-  "main": "index.js", \
-  "engines": { \
-    "node": "20.x", \
-    "npm": "10.x" \
-  }, \
-  "scripts": { \
-    "dev": "next dev -p 3000", \
-    "build": "next build", \
-    "start": "next start", \
-    "lint": "next lint", \
-    "typecheck": "tsc --noEmit" \
-  }, \
-  "dependencies": { \
-    "@hookform/resolvers": "^5.1.1", \
-    "@radix-ui/react-checkbox": "^1.3.2", \
-    "@radix-ui/react-label": "^2.1.7", \
-    "@radix-ui/react-progress": "^1.1.7", \
-    "@radix-ui/react-radio-group": "^1.3.7", \
-    "@radix-ui/react-slider": "^1.3.5", \
-    "@radix-ui/react-slot": "^1.2.3", \
-    "@react-pdf/font": "^4.0.2", \
-    "@react-pdf/renderer": "^4.3.0", \
-    "@sendgrid/mail": "^8.1.5", \
-    "@sparticuz/chromium": "^119.0.2", \
-    "@stripe/stripe-js": "^7.5.0", \
-    "@supabase/auth-helpers-nextjs": "^0.10.0", \
-    "@supabase/ssr": "^0.6.1", \
-    "@supabase/supabase-js": "^2.52.0", \
-    "@types/js-yaml": "^4.0.9", \
-    "@types/jspdf": "^1.3.3", \
-    "class-variance-authority": "^0.7.1", \
-    "clsx": "^2.1.1", \
-    "date-fns": "^4.1.0", \
-    "dotenv": "^17.2.0", \
-    "gray-matter": "^4.0.3", \
-    "js-yaml": "^4.1.0", \
-    "jspdf": "^3.0.1", \
-    "jspdf-autotable": "^5.0.2", \
-    "lucide-react": "^0.525.0", \
-    "mammoth": "^1.9.1", \
-    "marked": "^16.1.1", \
-    "next": "^15.4.2", \
-    "pdf-parse": "^1.1.1", \
-    "puppeteer": "^23.11.1", \
-    "react": "^19.1.0", \
-    "react-dom": "^19.1.0", \
-    "react-hook-form": "^7.60.0", \
-    "react-hot-toast": "^2.5.2", \
-    "react-markdown": "^10.1.0", \
-    "stripe": "^18.3.0", \
-    "tailwind-merge": "^3.3.1", \
-    "twilio": "^5.7.3", \
-    "winston": "^3.17.0", \
-    "ws": "^8.18.0", \
-    "zod": "^4.0.10", \
-    "cheerio": "^1.0.0" \
-  }, \
-  "devDependencies": { \
-    "@types/node": "^24.0.15", \
-    "@types/react": "^19.1.8", \
-    "@types/react-dom": "^19.1.6", \
-    "autoprefixer": "^10.4.21", \
-    "eslint": "^9.31.0", \
-    "eslint-config-next": "^15.4.2", \
-    "postcss": "^8.5.6", \
-    "tailwindcss": "^3.4.17", \
-    "typescript": "^5.8.3" \
-  } \
-}' > package.json
+# Copy package files
+COPY package.json package-lock.json ./
 
 # Install dependencies with increased network timeout
-RUN npm install --production --network-timeout=600000
+RUN npm ci --production --network-timeout=600000
 
 # Stage 2: Builder
 FROM node:20-slim AS builder
@@ -93,80 +22,11 @@ RUN apt-get update && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Create package.json again for builder stage
-RUN echo '{ \
-  "name": "painoptix-app", \
-  "version": "1.0.0", \
-  "main": "index.js", \
-  "engines": { \
-    "node": "20.x", \
-    "npm": "10.x" \
-  }, \
-  "scripts": { \
-    "build": "next build", \
-    "start": "next start" \
-  }, \
-  "dependencies": { \
-    "@hookform/resolvers": "^5.1.1", \
-    "@radix-ui/react-checkbox": "^1.3.2", \
-    "@radix-ui/react-label": "^2.1.7", \
-    "@radix-ui/react-progress": "^1.1.7", \
-    "@radix-ui/react-radio-group": "^1.3.7", \
-    "@radix-ui/react-slider": "^1.3.5", \
-    "@radix-ui/react-slot": "^1.2.3", \
-    "@react-pdf/font": "^4.0.2", \
-    "@react-pdf/renderer": "^4.3.0", \
-    "@sendgrid/mail": "^8.1.5", \
-    "@sparticuz/chromium": "^119.0.2", \
-    "@stripe/stripe-js": "^7.5.0", \
-    "@supabase/auth-helpers-nextjs": "^0.10.0", \
-    "@supabase/ssr": "^0.6.1", \
-    "@supabase/supabase-js": "^2.52.0", \
-    "@types/js-yaml": "^4.0.9", \
-    "@types/jspdf": "^1.3.3", \
-    "class-variance-authority": "^0.7.1", \
-    "clsx": "^2.1.1", \
-    "date-fns": "^4.1.0", \
-    "dotenv": "^17.2.0", \
-    "gray-matter": "^4.0.3", \
-    "js-yaml": "^4.1.0", \
-    "jspdf": "^3.0.1", \
-    "jspdf-autotable": "^5.0.2", \
-    "lucide-react": "^0.525.0", \
-    "mammoth": "^1.9.1", \
-    "marked": "^16.1.1", \
-    "next": "^15.4.2", \
-    "pdf-parse": "^1.1.1", \
-    "puppeteer": "^23.11.1", \
-    "react": "^19.1.0", \
-    "react-dom": "^19.1.0", \
-    "react-hook-form": "^7.60.0", \
-    "react-hot-toast": "^2.5.2", \
-    "react-markdown": "^10.1.0", \
-    "stripe": "^18.3.0", \
-    "tailwind-merge": "^3.3.1", \
-    "twilio": "^5.7.3", \
-    "winston": "^3.17.0", \
-    "ws": "^8.18.0", \
-    "zod": "^4.0.10", \
-    "cheerio": "^1.0.0" \
-  }, \
-  "devDependencies": { \
-    "@types/node": "^24.0.15", \
-    "@types/react": "^19.1.8", \
-    "@types/react-dom": "^19.1.6", \
-    "autoprefixer": "^10.4.21", \
-    "eslint": "^9.31.0", \
-    "eslint-config-next": "^15.4.2", \
-    "postcss": "^8.5.6", \
-    "tailwindcss": "^3.4.17", \
-    "typescript": "^5.8.3" \
-  } \
-}' > package.json
+# Copy package files and install all dependencies (including dev)
+COPY package.json package-lock.json ./
+RUN npm ci --network-timeout=600000
 
-RUN npm install --network-timeout=600000
-
-# Copy application code (everything except package.json which we created)
+# Copy application code
 COPY . .
 
 # Make DO's RUN_AND_BUILD_TIME envs visible as build args
@@ -196,7 +56,7 @@ ENV NODE_ENV=production
 # More heap for Next build
 ENV NODE_OPTIONS=--max_old_space_size=2048
 
-# Optional: sanity (do NOT print secrets)
+# Optional: sanity check (do NOT print secrets)
 RUN node -e "console.log('has URL?',!!process.env.NEXT_PUBLIC_SUPABASE_URL,'has SRK?',!!process.env.SUPABASE_SERVICE_ROLE_KEY)"
 
 RUN npm run build
@@ -268,32 +128,20 @@ COPY --from=builder --chown=app:app /app/.next/static ./.next/static
 COPY --from=builder --chown=app:app /app/public ./public
 
 # Copy content directory for PDF generation
-# Using glob pattern to handle missing directory gracefully
-COPY --from=builder --chown=app:app /app/content* ./
+COPY --from=builder --chown=app:app /app/content ./content
 
-# ensure we're in /app and owned by app
-WORKDIR /app
+# Copy node_modules with puppeteer from builder
+COPY --from=builder --chown=app:app /app/node_modules ./node_modules
 
-# create cache dir for puppeteer under the app user and make sure it exists
+# Create cache dir for puppeteer
 ENV PUPPETEER_CACHE_DIR=/home/app/.cache/puppeteer
 RUN mkdir -p /home/app/.cache/puppeteer && chown -R app:app /home/app
 
-# switch to app user BEFORE installing puppeteer so chromium lands in /home/app
-USER app
-
-# install puppeteer (downloads bundled Chromium)
-RUN npm set fund false && npm set audit false \
- && npm install puppeteer@23.11.1 --no-save
-
-# sanity: print path puppeteer thinks it will use (path only, not a secret)
-RUN node -e "console.log('pupp executable:', require('puppeteer').executablePath())"
-
 # Create temp directory for Chromium with proper permissions
-USER root
 RUN mkdir -p /tmp/.chromium \
     && chown -R app:app /tmp/.chromium
 
-# Switch back to non-root user
+# Switch to non-root user
 USER app
 
 # Health check for DigitalOcean
