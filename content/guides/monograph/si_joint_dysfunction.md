@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Sacroiliac Joint Dysfunction
-subtitle:
+subtitle: Comprehensive Monograph
 ---
 
 # PainOptix™ Sacroiliac Joint Dysfunction Monograph
@@ -11,7 +11,7 @@ subtitle:
 
 ## Section 1: Educational Introduction & Symptom Summary
 
-### Understanding Sacroiliac Joint Discomfort: Information About Movement
+### Understanding of Sacroiliac Joint Discomfort: Information About Movement
 
 You've taken a key step toward understanding your discomfort by completing the PainFinder™ quiz. Your responses suggest a pattern consistent with sacroiliac (SI) joint discomfort, which often involves low back or buttock discomfort that may extend to the groin, hip, or upper thigh, typically on one side. This monograph, crafted by Dr. Carpentier at DrCPainMD, aims to:
 
@@ -234,10 +234,10 @@ Discuss with a healthcare provider before use:
 
 ### Supplements
 
-- **Turmeric:** Consult with healthcare provider for dosage [Daily 2016].
-- **Magnesium:** Consult with healthcare provider for dosage.
-- **Omega-3:** Consult with healthcare provider for dosage.
-- **Vitamin D:** Consult with healthcare provider for dosage if deficient.
+- **Turmeric:** 500–1000 mg daily with piperine [Daily 2016].
+- **Magnesium:** 200–400 mg daily.
+- **Omega-3:** 1–2 g daily.
+- **Vitamin D:** 2000–4000 IU if deficient.
 
 Track outcomes on PainCrowdsource.org.
 

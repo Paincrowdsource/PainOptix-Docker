@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getServiceSupabase, supabase } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
 import { stripe } from '@/lib/stripe';
 import { headers } from 'next/headers';
@@ -14,6 +14,13 @@ interface HealthCheckResult {
     email: ComponentHealth;
     sms: ComponentHealth;
     storage: ComponentHealth;
+  };
+  email_provider: 'ok' | 'missing';
+  scheduler?: {
+    lastRunAt?: string;
+  };
+  stripe_webhook?: {
+    lastSuccessAt?: string;
   };
   environment: string;
   version: string;
@@ -148,6 +155,31 @@ async function checkStorage(): Promise<ComponentHealth> {
   }
 }
 
+async function getHealthTimestamps() {
+  try {
+    const serviceSupabase = getServiceSupabase();
+    const { data: healthData } = await serviceSupabase
+      .from('kv_health')
+      .select('key, value')
+      .in('key', ['scheduler_last_run', 'stripe_webhook_last_success']);
+    
+    const timestamps: Record<string, any> = {};
+    
+    healthData?.forEach(row => {
+      if (row.key === 'scheduler_last_run') {
+        timestamps.scheduler = { lastRunAt: row.value?.timestamp };
+      } else if (row.key === 'stripe_webhook_last_success') {
+        timestamps.stripe_webhook = { lastSuccessAt: row.value?.timestamp };
+      }
+    });
+    
+    return timestamps;
+  } catch (error) {
+    logger.error('Failed to get health timestamps', error as Error);
+    return {};
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const headersList = await headers();
@@ -161,12 +193,13 @@ export async function GET(request: Request) {
     }
 
     // Perform health checks in parallel
-    const [database, stripeCheck, email, sms, storage] = await Promise.all([
+    const [database, stripeCheck, email, sms, storage, timestamps] = await Promise.all([
       checkDatabase(),
       checkStripe(),
       checkEmailService(),
       checkSmsService(),
-      checkStorage()
+      checkStorage(),
+      getHealthTimestamps()
     ]);
 
     // Calculate overall status
@@ -180,11 +213,17 @@ export async function GET(request: Request) {
       overallStatus = 'degraded';
     }
 
+    // Determine email provider status
+    const emailProviderStatus = process.env.SENDGRID_API_KEY ? 'ok' : 'missing';
+
     const healthResult: HealthCheckResult = {
       status: overallStatus,
       timestamp: new Date().toISOString(),
       uptime: Date.now() - startTime,
       checks,
+      email_provider: emailProviderStatus,
+      scheduler: timestamps.scheduler,
+      stripe_webhook: timestamps.stripe_webhook,
       environment: process.env.NODE_ENV || 'development',
       version: process.env.APP_VERSION || '1.2.0'
     };

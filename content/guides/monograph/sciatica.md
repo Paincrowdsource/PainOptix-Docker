@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Sciatica
-subtitle:
+subtitle: Comprehensive Monograph
 ---
 
 # PainOptix™ Sciatica Monograph
@@ -11,7 +11,7 @@ subtitle:
 
 ## Section 1: Understanding Your Symptoms and Next Steps
 
-### Understanding Back and Leg Discomfort: Information About Movement
+### Understanding of Back and Leg Discomfort: Information About Movement
 
 You've taken an important step toward improving your comfort by exploring how your symptoms align with common patterns. Based on your PainFinder™ quiz responses, your symptoms resemble those often linked to sciatica, a condition involving nerve-related discomfort in the lower spine (often L5 or S1), causing leg pain below the knee, sometimes with numbness or tingling. This guide, crafted by Dr. Carpentier at DrCPainMD, aims to:
 
@@ -249,10 +249,10 @@ Discuss with a healthcare provider before use:
 
 ### Supplements
 
-- **Turmeric:** Consult with healthcare provider for dosage [Daily et al., 2016].
-- **Magnesium:** Consult with healthcare provider for dosage.
-- **Omega-3:** Consult with healthcare provider for dosage.
-- **Vitamin D:** Consult with healthcare provider for dosage if deficient.
+- **Turmeric:** 500–1000 mg daily with piperine [Daily et al., 2016].
+- **Magnesium:** 200–400 mg daily.
+- **Omega-3:** 1–2 g daily.
+- **Vitamin D:** 2000–4000 IU if deficient.
 
 Track outcomes on PainCrowdsource.org.
 

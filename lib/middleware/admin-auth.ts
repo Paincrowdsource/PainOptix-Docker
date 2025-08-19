@@ -45,7 +45,7 @@ export async function verifyAdmin(req: NextRequest): Promise<AdminUser | null> {
     // If we have a session, verify admin role
     if (session) {
       // Check if user has admin role in profiles table
-      const { data: profile, error: profileError } = await supabaseAdmin()
+      const { data: profile, error: profileError } = await supabaseAdmin
         .from('profiles')
         .select('id, user_role, email')
         .eq('id', session.user.id)
@@ -104,7 +104,7 @@ export async function logAdminAction(
       auditData.user_agent = req.headers.get('user-agent') || 'unknown';
     }
 
-    const { error } = await supabaseAdmin()
+    const { error } = await supabaseAdmin
       .from('admin_audit_logs')
       .insert(auditData);
 

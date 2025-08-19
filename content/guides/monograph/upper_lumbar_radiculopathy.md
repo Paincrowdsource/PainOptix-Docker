@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Upper Lumbar Radiculopathy
-subtitle:
+subtitle: Comprehensive Monograph
 ---
 
 # PainOptix™ Upper Lumbar Radiculopathy Monograph
@@ -9,7 +9,7 @@ subtitle:
 
 ## Section 1: Understanding Lumbar Radiculopathy Symptoms and Next Steps
 
-### Understanding Back and Leg Discomfort: Information About Movement
+### Understanding of Back and Leg Discomfort: Information About Movement
 
 You've taken an important step toward improving your comfort by exploring how your symptoms align with common patterns. Based on your PainFinder™ quiz responses, your symptoms resemble those often linked to nerve-related discomfort in the upper lumbar spine (L2, L3, or L4), causing leg pain or issues with knee movement. This guide, crafted by Dr. Carpentier at DrCPainMD, aims to:
 - Explain what your symptoms might suggest.
@@ -169,11 +169,7 @@ This program addresses the unique needs of upper lumbar radiculopathy, focusing 
 
 - Goals: Increase nerve tolerance, begin strengthening.
 - Prone Knee Bends: Lying face down, slowly bend knee. 10 reps each, 2x daily.
-
-![Prone Knee Bend Exercise](https://painoptix-clean-9n639.ondigitalocean.app/medical-illustrations/exercises/prone_knee_bend.png)
 - Standing Hip Flexion: Gentle marching. 15 reps each, 2x daily.
-
-![Standing Hip Flexion Exercise](https://painoptix-clean-9n639.ondigitalocean.app/medical-illustrations/exercises/Straight_leg_raise.png)
 - Bridges: Focus on gluteal activation. 12 reps, 2 sets, 2x daily.
 - Walking: Increase to 15 minutes, 2x daily.
 
@@ -181,8 +177,6 @@ This program addresses the unique needs of upper lumbar radiculopathy, focusing 
 
 - Goals: Address muscle weakness, improve function.
 - Straight Leg Raises: Lying, lift leg 6-8 inches. 10 reps each, 2 sets, 2x daily.
-
-![Straight Leg Raise Exercise](https://painoptix-clean-9n639.ondigitalocean.app/medical-illustrations/exercises/Straight_leg_raise.png)
 - Wall Sits: Start with 10-15 seconds. 5 reps, 2x daily.
 - Step-Ups: Low step, focus on control. 8 reps each, 2x daily.
 - Walking: 20-25 minutes daily, include gentle inclines.
@@ -191,11 +185,7 @@ This program addresses the unique needs of upper lumbar radiculopathy, focusing 
 
 - Goals: Return to normal activities, prevent recurrence.
 - Mini Squats: Quarter depth, good form. 15 reps, 2 sets, 2x daily.
-
-![Mini Squat Exercise](https://painoptix-clean-9n639.ondigitalocean.app/medical-illustrations/exercises/mini_squat.png)
 - Standing Balance: Single leg, 30 seconds each, 2x daily.
-
-![Standing Hip Flexion Exercise](https://painoptix-clean-9n639.ondigitalocean.app/medical-illustrations/exercises/Straight_leg_raise.png)
 - Stair Practice: Controlled ascent/descent, use rail initially.
 - Activity-Specific Training: Practice problematic movements.
 

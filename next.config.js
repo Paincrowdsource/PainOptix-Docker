@@ -54,15 +54,6 @@ const nextConfig = {
   poweredByHeader: false, // Remove X-Powered-By header
   output: 'standalone', // For Docker deployment
   
-  // Webpack config to handle ws module for Supabase Realtime
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // Don't bundle ws on client side
-      config.resolve.fallback = { ...config.resolve.fallback, ws: false };
-    }
-    return config;
-  },
-  
   async headers() {
     return [
       {

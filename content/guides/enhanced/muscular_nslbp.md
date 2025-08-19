@@ -9,14 +9,6 @@ subtitle: Enhanced Clinical Guide
 - **Next Step:** Remain active, gentle stretching, and gradual return to normal activities
 >>END
 
-## Learn About Muscular/Non-Specific Low Back Pain
-Thank you for using PainOptix™, developed by Dr. Carpentier at DrCPainMD, to explore back pain information. This guide provides general education about muscular or non-specific low back pain, the most common type of back pain, based on your responses. It aims to:
-- Explain muscular/NSLBP symptoms and possible causes using trusted medical guidelines.
-- Share general strategies to discuss with a doctor for managing back pain.
-- Encourage learning from others' experiences on PainCrowdsource.org.
-
-This guide is for educational purposes only and does not diagnose or treat your condition. Share it with a healthcare provider for a full evaluation and personalized advice.
-
 ## How Your Input Relates
 
 You indicated pain in your lower back, possibly worsened by sitting for too long, bending forward, or without a clear pattern, or pain in the buttock or outer thigh not extending past the knee. These symptoms are commonly associated with muscular or non-specific low back pain, so this guide focuses on helping you understand this condition to discuss with a doctor [Chou et al., 2007].
@@ -73,10 +65,4 @@ Understanding muscular or non-specific low back pain can help you discuss sympto
 
 ## Bibliography
 
-1. Brosseau, L., et al. (2003). Thermotherapy for treatment of osteoarthritis. Cochrane Database of Systematic Reviews, (4), CD004522. https://doi.org/10.1002/14651858.CD004522
-2. Chou, R., et al. (2007). Diagnosis and treatment of low back pain: A joint clinical guideline. Annals of Internal Medicine, 147(7), 478-491. https://doi.org/10.7326/0003-4819-147-7-200710020-00006
-3. Downie, A., et al. (2013). Red flags to screen for malignancy and fracture in patients with low back pain: Systematic review. BMJ, 347, f7095. https://doi.org/10.1136/bmj.f7095
-4. Pengel, L. H., et al. (2003). Acute low back pain: Systematic review of its prognosis. BMJ, 327(7410), 323. https://doi.org/10.1136/bmj.327.7410.323
-5. Qaseem, A., et al. (2017). Noninvasive treatments for acute, subacute, and chronic low back pain. Annals of Internal Medicine, 166(7), 514-530. https://doi.org/10.7326/M16-2367
-6. Todd, N. V. (2005). Cauda equina syndrome: The timing of surgery probably does influence outcome. British Journal of Neurosurgery, 19(4), 301-306. https://doi.org/10.1080/02688690500305324
-7. van Tulder, M. W., et al. (1997). Spinal radiographic findings and nonspecific low back pain: A systematic review of observational studies. Spine, 22(4), 427-434. https://doi.org/10.1097/00007632-199702150-00015
+1. Brosseau, L., et al. (2003). Thermotherapy for treatment of osteoarthritis. Cochrane Database of Systematic Reviews, (4), CD004522. [[DOI|10.1002/14651858.CD0045222.]] Chou, R., et al. (2007). Diagnosis and treatment of low back pain: A joint clinical guideline. Annals of Internal Medicine, 147(7), [[RANGE|478-491]]. [[DOI|10.7326/[[RANGE|0003-4819]]-[[RANGE|147-7]]-[[RANGE|200710020-000063]].]] Downie, A., et al. (2013). Red flags to screen for malignancy and fracture in patients with low back pain: Systematic review. BMJ, 347, f7095. [[DOI|10.1136/bmj.f70954.]] Pengel, L. H., et al. (2003). Acute low back pain: Systematic review of its prognosis. BMJ, 327(7410), 323. [[DOI|10.1136/bmj.327.7410.3235.]] Qaseem, A., et al. (2017). Noninvasive treatments for acute, subacute, and chronic low back pain. Annals of Internal Medicine, 166(7), [[RANGE|514-530]]. [[DOI|10.7326/M[[RANGE|16-23676]].]] Todd, N. V. (2005). Cauda equina syndrome: The timing of surgery probably does influence outcome. British Journal of Neurosurgery, 19(4), [[RANGE|301-306]]. [[DOI|10.1080/026886905003053247.vanTulder]], M. W., et al. (1997). Spinal radiographic findings and nonspecific low back pain: A systematic review of observational studies. Spine, 22(4), [[RANGE|427-434]]. [[DOI|10.1097/[[RANGE|00007632-199702150]]-00015]]

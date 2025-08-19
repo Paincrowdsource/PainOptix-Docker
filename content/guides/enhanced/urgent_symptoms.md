@@ -30,7 +30,7 @@ buttocks) may suggest nerve compression [Gardner et al., 2011].
 - Leg Weakness: New or worsening difficulty walking, lifting the foot (foot drop), or performing tasks
 like heel/toe walking may point to nerve or spinal issues [Downie et al., 2013].
 - Other Signs: Fever, unexplained weight loss, or back pain with a history of cancer may indicate
-infection (prevalence ~0.01%) or malignancy (post-test probability 7–33% with cancer history) [Chou et al., 2007; Downie et al., 2013].
+infection (prevalence ~0.01%) or malignancy (post-test probability 7-33% with cancer history) [Chou et al., 2007; Downie et al., 2013].
 
 These symptoms are rare but critical, as delayed care can lead to serious outcomes like paralysis or loss of bladder function [Todd, 2005].
 ## How Doctors Evaluate Urgent Symptoms
@@ -80,18 +80,5 @@ Understanding urgent back pain symptoms can help you discuss concerns with a doc
 -The PainOptix Team
 
 ## Bibliography
-1. Chou, R., et al. (2007). Diagnosis and treatment of low back pain: A joint clinical guideline. Annals of
-Internal Medicine, 147(7), 478–491. https://doi.org/10.7326/0003-4819-147-7-200710020-00006
-2. Downie, A., et al. (2013). Red flags to screen for malignancy and fracture in patients with low back
-pain: Systematic review. BMJ, 347, f7095. https://doi.org/10.1136/bmj.f7095
-3. Gardner, A., et al. (2011). Cauda equina syndrome: A review of the current clinical and medico-legal
-position. European Spine Journal, 20(5), 690–697. https://doi.org/10.1007/s00586-010-1668-3
-4. George, S. Z., et al. (2021). Interventions for the management of acute and chronic low back pain:
-Revision 2021. Journal of Orthopaedic & Sports Physical Therapy, 51(11), CPG1–CPG60.
-https://doi.org/10.2519/jospt.2021.0304
-5. Qaseem, A., et al. (2017). Noninvasive treatments for acute, subacute, and chronic low back pain.
 
-Annals of Internal Medicine, 166(7), 514–530. https://doi.org/10.7326/M16-2367
-6. Todd, N. V. (2005). Cauda equina syndrome: The timing of surgery probably does influence
-outcome. British Journal of Neurosurgery, 19(4), 301–306.
-https://doi.org/10.1080/02688690500305324
+1. Chou, R., et al. (2007). Diagnosis and treatment of low back pain: A joint clinical guideline. Annals of Internal Medicine, 147(7), [[RANGE|478-491]]. [[DOI|10.7326/[[RANGE|0003-4819]]-[[RANGE|147-7]]-[[RANGE|200710020-000062]].]] Downie, A., et al. (2013). Red flags to screen for malignancy and fracture in patients with low back pain: Systematic review. BMJ, 347, f7095. [[DOI|10.1136/bmj.f70953.]] Gardner, A., et al. (2011). Cauda equina syndrome: A review of the current clinical and medico-legal position. European Spine Journal, 20(5), [[RANGE|690-697]]. [[DOI|10.1007/s[[RANGE|00586-010]]-[[RANGE|1668-34]].]] George, S. Z., et al. (2021). Interventions for the management of acute and chronic low back pain: Revision 2021. Journal of Orthopaedic & Sports Physical Therapy, 51(11), CPG1-CPG60. [[DOI|10.2519/jospt.2021.03045.]] Qaseem, A., et al. (2017). Noninvasive treatments for acute, subacute, and chronic low back pain.

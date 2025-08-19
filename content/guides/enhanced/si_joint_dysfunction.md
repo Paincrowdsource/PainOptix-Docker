@@ -21,7 +21,7 @@ You indicated pain in your lower back, groin, or front/side of the thigh, withou
 2007].
 ## What Is SI Joint Dysfunction?
 
-Sacroiliac joint dysfunction involves pain from the sacroiliac joints, which connect the lower spine to the pelvis, often due to inflammation or abnormal motion [Cohen & Raja, 2020]. It affects approximately 10–
+Sacroiliac joint dysfunction involves pain from the sacroiliac joints, which connect the lower spine to the pelvis, often due to inflammation or abnormal motion [Cohen & Raja, 2020]. It affects approximately 10-
 25% of people with low back pain [Cohen & Raja, 2020]. Common features include:
 - Symptoms: Pain in the lower back, groin, or front/side of the thigh, often one-sided, sometimes
 spreading to the buttock. Pain may worsen with prolonged sitting, standing, or twisting movements [Chou et al., 2007].
@@ -30,14 +30,14 @@ spreading to the buttock. Pain may worsen with prolonged sitting, standing, or t
 - Other Signs: Typically no significant weakness or numbness, unlike nerve-related conditions
 [Vroomen et al., 1999].
 
-Causes may include injury, pregnancy, arthritis, or repetitive stress. Most cases improve with conservative care within 6–12 weeks [Qaseem et al., 2017].
+Causes may include injury, pregnancy, arthritis, or repetitive stress. Most cases improve with conservative care within 6-12 weeks [Qaseem et al., 2017].
 ## How Doctors Evaluate SI Joint Dysfunction
 Healthcare providers assess SI joint dysfunction through:
 - Physical Exam: Performing tests like the FABER (flexion, abduction, external rotation) test or
 palpating the SI joint to assess pain or mobility [Chou et al., 2007].
 - Medical History: Asking about pain location (e.g., groin, thigh), triggers, or activities like sitting to
 identify patterns [Cohen & Raja, 2020].
-- Tests: Imaging (e.g., X-ray, MRI) is rarely needed unless pain persists over 6–8 weeks; diagnostic
+- Tests: Imaging (e.g., X-ray, MRI) is rarely needed unless pain persists over 6-8 weeks; diagnostic
 injections may confirm SI joint involvement [Chou et al., 2007].
 
 A doctor’s evaluation is essential to confirm SI joint dysfunction and rule out other causes, like hip problems or nerve issues.
@@ -52,9 +52,9 @@ may help ease discomfort for some people [Brosseau et al., 2003].
 - Track Symptom Details: Note when pain occurs (e.g., with sitting or twisting) to help your doctor
 assess your condition.
 ## When to Seek Help
-Most SI joint pain improves within 6–12 weeks, but contact a doctor promptly if you notice [Chou et al.,
+Most SI joint pain improves within 6-12 weeks, but contact a doctor promptly if you notice [Chou et al.,
 2007; Downie et al., 2013]:
-- Persistent Pain: Pain in the back, groin, or thigh lasting over 6–8 weeks despite rest or self-care.
+- Persistent Pain: Pain in the back, groin, or thigh lasting over 6-8 weeks despite rest or self-care.
 - Urgent Symptoms: Bladder or bowel changes, groin numbness, or severe leg weakness, which may
 need immediate care (e.g., within hours for cauda equina syndrome, prevalence ~0.04%) [Chou et al., 2007; Todd, 2005].
 - Other Concerns: Fever, unexplained weight loss, or pain with a history of cancer, requiring urgent
@@ -77,19 +77,5 @@ Understanding SI joint dysfunction can help you discuss symptoms with a doctor. 
 -The PainOptix Team
 
 ## Bibliography
-1. Brosseau, L., et al. (2003). Thermotherapy for treatment of osteoarthritis. Cochrane Database of
-Systematic Reviews, (4), CD004522. https://doi.org/10.1002/14651858.CD004522
-2. Chou, R., et al. (2007). Diagnosis and treatment of low back pain: A joint clinical guideline. Annals of
-Internal Medicine, 147(7), 478–491. https://doi.org/10.7326/0003-4819-147-7-200710020-00006
-3. Cohen, S. P., & Raja, S. N. (2020). Pathogenesis, diagnosis, and treatment of lumbar zygapophyseal
-(facet) joint pain. Anesthesiology, 132(4), 852–873.  https://doi.org/10.1097/ALN.0000000000002669
-4. Downie, A., et al. (2013). Red flags to screen for malignancy and fracture in patients with low back
-pain: Systematic review. BMJ, 347, f7095. https://doi.org/10.1136/bmj.f7095
-5. Qaseem, A., et al. (2017). Noninvasive treatments for acute, subacute, and chronic low back pain.
 
-Annals of Internal Medicine, 166(7), 514–530. https://doi.org/10.7326/M16-2367
-6. Todd, N. V. (2005). Cauda equina syndrome: The timing of surgery probably does influence
-outcome. British Journal of Neurosurgery, 19(4), 301–306.  https://doi.org/10.1080/02688690500305324
-7. Vroomen, P. C., et al. (1999). Diagnostic value of history and physical examination in patients
-suspected of sciatica due to disc herniation: A systematic review. Journal of Neurology, 246, 899–
-906. https://doi.org/10.1007/s004150050473
+1. Brosseau, L., et al. (2003). Thermotherapy for treatment of osteoarthritis. Cochrane Database of Systematic Reviews, (4), CD004522. [[DOI|10.1002/14651858.CD0045222.]] Chou, R., et al. (2007). Diagnosis and treatment of low back pain: A joint clinical guideline. Annals of Internal Medicine, 147(7), [[RANGE|478-491]]. [[DOI|10.7326/[[RANGE|0003-4819]]-[[RANGE|147-7]]-[[RANGE|200710020-000063]].]] Cohen, S. P., & Raja, S. N. (2020). Pathogenesis, diagnosis, and treatment of lumbar zygapophyseal (facet) joint pain. Anesthesiology, 132(4), [[RANGE|852-873]]. [[DOI|10.1097/ALN.00000000000026694.]] Downie, A., et al. (2013). Red flags to screen for malignancy and fracture in patients with low back pain: Systematic review. BMJ, 347, f7095. [[DOI|10.1136/bmj.f70955.]] Qaseem, A., et al. (2017). Noninvasive treatments for acute, subacute, and chronic low back pain.

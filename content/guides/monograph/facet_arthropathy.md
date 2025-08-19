@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Facet Arthropathy
-subtitle:
+subtitle: Comprehensive Monograph
 ---
 
 # PainOptix™ Facet Arthropathy Monograph
@@ -9,7 +9,7 @@ subtitle:
 
 ## Section 1: Understanding Your Symptoms and Next Steps
 
-### Understanding Back Discomfort: Information About Movement
+### Understanding of Back Discomfort: Information About Movement
 
 You've taken a proactive step toward improving your comfort by exploring how your symptoms align with common patterns. Based on your PainFinder™ quiz responses, your symptoms resemble those associated with facet arthropathy—a condition involving irritation or wear in the lumbar facet joints, often causing low back discomfort that may radiate to the buttock or thigh, typically triggered by standing or arching backward. This guide, crafted by Dr. Carpentier at DrCPainMD, aims to:
 - Explain what your symptoms might suggest about your condition.
@@ -249,10 +249,10 @@ Consult a healthcare provider before use, especially for older adults (>75 years
 
 ### Supplements
 
-- Turmeric: Consult with healthcare provider for dosage [Daily et al., 2016].
-- Magnesium: Consult with healthcare provider for dosage.
-- Omega-3: Consult with healthcare provider for dosage.
-- Vitamin D: Consult with healthcare provider for dosage if deficient.
+- Turmeric: 500–1000 mg daily with piperine [Daily et al., 2016].
+- Magnesium: 200–400 mg daily.
+- Omega-3: 1–2 g daily.
+- Vitamin D: 2000–4000 IU if deficient.
 
 Track outcomes on PainCrowdsource.org.
 

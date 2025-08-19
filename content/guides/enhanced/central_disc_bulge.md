@@ -20,7 +20,7 @@ This guide is for educational purposes only and does not diagnose or treat your 
 You indicated that your pain affects your lower back and both legs, is constant or worsens with sitting or bending forward, and does not improve with sitting or bending forward. These symptoms are commonly associated with a central disc bulge, so this guide focuses on helping you understand this condition to discuss with a doctor [Chou et al., 2007].
 ## What Is a Central Disc Bulge?
 
-A central disc bulge occurs when a spinal disc protrudes backward into the spinal canal, potentially pressing on nerves or the spinal cord, often at the L4–S1 levels [Chou et al., 2007]. It affects about 1–
+A central disc bulge occurs when a spinal disc protrudes backward into the spinal canal, potentially pressing on nerves or the spinal cord, often at the L4-S1 levels [Chou et al., 2007]. It affects about 1-
 2% of people with back pain [Weber, 1983]. Common features include:
 - Symptoms: Constant pain in the lower back and both legs, or pain worsened by sitting or bending
 forward. May include numbness or tingling in both legs [Chou et al., 2007].
@@ -31,14 +31,14 @@ some cases [Vroomen et al., 1999].
 
 Causes include disc degeneration, injury, or repetitive stress. Most cases improve with conservative care
 
-within 4–6 weeks, though some may require further evaluation [Weber, 1983].
+within 4-6 weeks, though some may require further evaluation [Weber, 1983].
 ## How Doctors Evaluate Central Disc Bulge
 Healthcare providers assess central disc bulge through:
 - Physical Exam: Testing leg strength (e.g., walking on heels or toes), reflexes, or sensation to check
 for nerve compression [Chou et al., 2007].
 - Medical History: Asking about pain patterns (e.g., constant or with bending forward) and duration to
 identify disc issues [Cohen & Raja, 2020].
-- Tests: MRI or CT may be used for persistent pain (over 4–6 weeks) to confirm disc protrusion or
+- Tests: MRI or CT may be used for persistent pain (over 4-6 weeks) to confirm disc protrusion or
 nerve compression, though imaging is often unnecessary early on [Chou et al., 2007].
 
 A doctor’s evaluation is essential to confirm a central disc bulge and rule out other causes, like spinal stenosis or infections.
@@ -53,8 +53,8 @@ help ease discomfort for some people [Brosseau et al., 2003].
 - Track Symptom Details: Note when pain occurs (e.g., with sitting or bending) or any changes in
 strength to help your doctor assess your condition.
 ## When to Seek Help
-Most disc-related pain improves within 4–6 weeks, but contact a doctor promptly if you notice [Chou et al., 2007; Downie et al., 2013]:
-- Persistent Pain: Back or leg pain lasting over 4–6 weeks despite rest or self-care.
+Most disc-related pain improves within 4-6 weeks, but contact a doctor promptly if you notice [Chou et al., 2007; Downie et al., 2013]:
+- Persistent Pain: Back or leg pain lasting over 4-6 weeks despite rest or self-care.
 - Urgent Symptoms: Bladder or bowel changes, groin numbness, or severe leg weakness, which may
 need immediate care (e.g., within hours for cauda equina syndrome, prevalence ~0.04%) [Chou et al., 2007; Todd, 2005].
 - Other Concerns: Fever, unexplained weight loss, or pain with a history of cancer, requiring urgent
@@ -78,21 +78,5 @@ Understanding central disc bulge can help you discuss symptoms with a doctor. Br
 -The PainOptix Team
 
 ## Bibliography
-1. Brosseau, L., et al. (2003). Thermotherapy for treatment of osteoarthritis. Cochrane Database of
-Systematic Reviews, (4), CD004522. https://doi.org/10.1002/14651858.CD004522
-2. Chou, R., et al. (2007). Diagnosis and treatment of low back pain: A joint clinical guideline. Annals of
-Internal Medicine, 147(7), 478–491. https://doi.org/10.7326/0003-4819-147-7-200710020-00006
-3. Cohen, S. P., & Raja, S. N. (2020). Pathogenesis, diagnosis, and treatment of lumbar zygapophyseal
-(facet) joint pain. Anesthesiology, 132(4), 852–873.  https://doi.org/10.1097/ALN.0000000000002669
-4. Downie, A., et al. (2013). Red flags to screen for malignancy and fracture in patients with low back
-pain: Systematic review. BMJ, 347, f7095. https://doi.org/10.1136/bmj.f7095
-5. Qaseem, A., et al. (2017). Noninvasive treatments for acute, subacute, and chronic low back pain.
 
-Annals of Internal Medicine, 166(7), 514–530. https://doi.org/10.7326/M16-2367
-6. Todd, N. V. (2005). Cauda equina syndrome: The timing of surgery probably does influence
-outcome. British Journal of Neurosurgery, 19(4), 301–306.  https://doi.org/10.1080/02688690500305324
-7. Vroomen, P. C., et al. (1999). Diagnostic value of history and physical examination in patients
-suspected of sciatica due to disc herniation: A systematic review. Journal of Neurology, 246, 899–
-906. https://doi.org/10.1007/s004150050473
-8. Weber, H. (1983). Lumbar disc herniation. A controlled, prospective study with ten years of
-observation. Spine, 8(2), 131–140. https://doi.org/10.1097/00007632-198303000-00003
+1. Brosseau, L., et al. (2003). Thermotherapy for treatment of osteoarthritis. Cochrane Database of Systematic Reviews, (4), CD004522. [[DOI|10.1002/14651858.CD0045222.]] Chou, R., et al. (2007). Diagnosis and treatment of low back pain: A joint clinical guideline. Annals of Internal Medicine, 147(7), [[RANGE|478-491]]. [[DOI|10.7326/[[RANGE|0003-4819]]-[[RANGE|147-7]]-[[RANGE|200710020-000063]].]] Cohen, S. P., & Raja, S. N. (2020). Pathogenesis, diagnosis, and treatment of lumbar zygapophyseal (facet) joint pain. Anesthesiology, 132(4), [[RANGE|852-873]]. [[DOI|10.1097/ALN.00000000000026694.]] Downie, A., et al. (2013). Red flags to screen for malignancy and fracture in patients with low back pain: Systematic review. BMJ, 347, f7095. [[DOI|10.1136/bmj.f70955.]] Qaseem, A., et al. (2017). Noninvasive treatments for acute, subacute, and chronic low back pain.

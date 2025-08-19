@@ -36,7 +36,7 @@ Healthcare providers assess canal stenosis through:
 using a treadmill test to assess walking-related symptoms (positive likelihood ratio ~3.1 for downhill walking) [de Graaf et al., 2006].
 - Medical History: Asking about pain triggers (e.g., standing, walking) and relief patterns (e.g., sitting)
 to identify stenosis [Chou et al., 2007].
-- Tests: MRI (preferred) or CT may be used for persistent symptoms (over 4–6 weeks) to confirm
+- Tests: MRI (preferred) or CT may be used for persistent symptoms (over 4-6 weeks) to confirm
 spinal canal narrowing, though imaging is often unnecessary early on [Chou et al., 2007].
 
 A doctor’s evaluation is essential to confirm canal stenosis and rule out other causes, like disc issues or vascular problems.
@@ -52,7 +52,7 @@ or exercises, which may help ease discomfort for some people [Qaseem et al., 201
 (e.g., sitting) to help your doctor assess your condition.
 ## When to Seek Help
 Most canal stenosis symptoms improve or stabilize with time, but contact a doctor promptly if you notice [Chou et al., 2007; Downie et al., 2013]:
-- Persistent Pain: Leg or back pain lasting over 4–6 weeks despite rest or self-care.
+- Persistent Pain: Leg or back pain lasting over 4-6 weeks despite rest or self-care.
 - Urgent Symptoms: Bladder or bowel changes, groin numbness, or severe leg weakness, which may
 need immediate care (e.g., within hours for cauda equina syndrome, prevalence ~0.04%) [Chou et al., 2007; Todd, 2005].
 - Other Concerns: Fever, unexplained weight loss, or pain with a history of cancer, requiring urgent
@@ -75,15 +75,5 @@ Understanding canal stenosis can help you discuss symptoms with a doctor. Bring 
 -The PainOptix Team
 
 ## Bibliography
-1. Chou, R., et al. (2007). Diagnosis and treatment of low back pain: A joint clinical guideline. Annals of
-Internal Medicine, 147(7), 478–491. https://doi.org/10.7326/0003-4819-147-7-200710020-00006
-2. de Graaf, I., et al. (2006). Diagnosis of lumbar spinal stenosis: A systematic review of the accuracy
-of diagnostic tests. Spine, 31(10), 1168–1176. https://doi.org/10.1097/01.brs.0000216463.32136.7b
-3. Downie, A., et al. (2013). Red flags to screen for malignancy and fracture in patients with low back
-pain: Systematic review. BMJ, 347, f7095. https://doi.org/10.1136/bmj.f7095
-4. Qaseem, A., et al. (2017). Noninvasive treatments for acute, subacute, and chronic low back pain.
 
-Annals of Internal Medicine, 166(7), 514–530. https://doi.org/10.7326/M16-2367
-5. Todd, N. V. (2005). Cauda equina syndrome: The timing of surgery probably does influence
-outcome. British Journal of Neurosurgery, 19(4), 301–306.
-https://doi.org/10.1080/0268869050030
+1. Chou, R., et al. (2007). Diagnosis and treatment of low back pain: A joint clinical guideline. Annals of Internal Medicine, 147(7), [[RANGE|478-491]]. [[DOI|10.7326/[[RANGE|0003-4819]]-[[RANGE|147-7]]-[[RANGE|200710020-000062]].deGraaf]], I., et al. (2006). Diagnosis of lumbar spinal stenosis: A systematic review of the accuracy of diagnostic tests. Spine, 31(10), [[RANGE|1168-1176]]. [[DOI|10.1097/01.brs.0000216463.32136.7b3.]] Downie, A., et al. (2013). Red flags to screen for malignancy and fracture in patients with low back pain: Systematic review. BMJ, 347, f7095. [[DOI|10.1136/bmj.f70954.]] Qaseem, A., et al. (2017). Noninvasive treatments for acute, subacute, and chronic low back pain.

@@ -7,8 +7,6 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = supabaseAdmin();
-  
   try {
     // Verify admin authentication
     const admin = await requireAdminAuth(req);
@@ -23,7 +21,7 @@ export async function DELETE(
     }
 
     // Get assessment details before deletion for audit log
-    const { data: assessment, error: fetchError } = await supabase
+    const { data: assessment, error: fetchError } = await supabaseAdmin
       .from('assessments')
       .select('email, phone_number, guide_type')
       .eq('id', assessmentId)
@@ -42,7 +40,7 @@ export async function DELETE(
     }
 
     // Delete the assessment (cascade will handle related records)
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await supabaseAdmin
       .from('assessments')
       .delete()
       .eq('id', assessmentId);

@@ -8,7 +8,6 @@ import { z } from 'zod'
 import { logger, logHelpers } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
-  const supabase = supabaseAdmin();
   // Assessment submission received
   
   try {
@@ -130,7 +129,6 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const supabase = supabaseAdmin();
   try {
     const body = await req.json()
     
@@ -146,8 +144,7 @@ export async function PATCH(req: NextRequest) {
     }
     
     // Use admin client to bypass RLS
-    // Removed duplicate: // Duplicate removed: const supabase = supabaseAdmin();
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('assessments')
       .update(updates)
       .eq('id', id)

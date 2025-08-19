@@ -1,7 +1,6 @@
 "use client"
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Lock, Activity, ArrowRight, Shield, Award, CheckCircle, Clock } from 'lucide-react'
@@ -199,8 +198,8 @@ export default function LandingPage() {
                 <div className="flex-grow">
                   <h3 className="text-xl font-medium text-gray-900 mb-2">Complete Assessment</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Answer 16 medically reviewed questions about your symptoms, pain patterns, and medical history. 
-                    Our process follows proven medical guidelines developed by experienced healthcare professionals.
+                    Answer 16 clinically-validated questions about your symptoms, pain patterns, and medical history. 
+                    Our assessment uses evidence-based protocols developed by medical professionals.
                   </p>
                 </div>
               </div>
@@ -220,7 +219,7 @@ export default function LandingPage() {
                 <div className="flex-grow">
                   <h3 className="text-xl font-medium text-gray-900 mb-2">Receive Your Guide</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Get an educational guide matched to your symptoms. 
+                    Get a personalized educational guide based on your specific condition. 
                     Choose from basic (free), enhanced ($5), or comprehensive ($20) options.
                   </p>
                 </div>
@@ -241,8 +240,8 @@ export default function LandingPage() {
                 <div className="flex-grow">
                   <h3 className="text-xl font-medium text-gray-900 mb-2">Take Informed Action</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Use your guide&apos;s evidence-based information to better understand your condition, 
-                    explore self-care strategies, and discuss next steps with your healthcare provider.
+                    Use your guide&apos;s evidence-based recommendations to make informed decisions 
+                    about your care and discuss options with your healthcare provider.
                   </p>
                 </div>
               </div>
@@ -263,18 +262,12 @@ export default function LandingPage() {
             <div className="text-center">
               {/* Clean professional presentation */}
               <div className="mb-8">
-                <div className="w-32 h-32 rounded-full bg-gray-100 mx-auto mb-6 flex items-center justify-center overflow-hidden">
-                  <Image 
-                    src="/images/dr-carpentier-headshot.jpg" 
-                    alt="Dr. Bradley W. Carpentier, MD"
-                    width={128}
-                    height={128}
-                    className="rounded-full object-cover w-full h-full"
-                  />
+                <div className="w-32 h-32 rounded-full bg-gray-100 mx-auto mb-6 flex items-center justify-center">
+                  <span className="text-4xl font-light text-gray-600">BC</span>
                 </div>
                 
                 <h3 className="text-2xl font-medium text-gray-900 mb-2">Bradley W. Carpentier, MD</h3>
-                <p className="text-gray-600 mb-6">Board-Certified Pain Medicine Specialist</p>
+                <p className="text-gray-600 mb-6">Board Certified Physician</p>
                 
                 {/* Professional credentials - clean text */}
                 <div className="flex flex-wrap gap-6 justify-center text-sm text-gray-600">
@@ -289,8 +282,9 @@ export default function LandingPage() {
               {/* Professional quote */}
               <div className="max-w-3xl mx-auto">
                 <blockquote className="text-lg text-gray-700 italic leading-relaxed">
-                  &quot;Real medical expertise—clear, proven guidance so you can 
-                  understand your pain and take the right next step.&quot;
+                  &quot;With extensive experience in treating musculoskeletal conditions, 
+                  Dr. Carpentier developed PainOptix to bridge the gap between 
+                  clinical expertise and patient education.&quot;
                 </blockquote>
               </div>
             </div>
@@ -364,17 +358,11 @@ export default function LandingPage() {
               <div className="flex gap-6">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Shield className="w-4 h-4 text-gray-400" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">FDA Alignment</span>
-                    <span className="text-[10px]">Developed in Alignment with FDA Educational Content Guidelines</span>
-                  </div>
+                  <span>FDA Compliant</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Lock className="w-4 h-4 text-gray-400" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">HIPAA</span>
-                    <span className="text-[10px]">Data Protected Under HIPAA Privacy & Security Standards</span>
-                  </div>
+                  <span>HIPAA Secure</span>
                 </div>
               </div>
             </div>

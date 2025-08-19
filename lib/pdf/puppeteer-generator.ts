@@ -8,71 +8,222 @@ import fs from 'fs/promises';
 import { getGuideContent } from './content-loader';
 import { replacePlaceholders } from '@/lib/pdf-helpers';
 import { processMarkdownWithImages } from './image-processor';
-import { normalizeEnhancedBibliography } from './normalize-bibliography';
-import * as fsSync from 'node:fs';
-
-// Helper function for optional HTML dumps
-function bibDump(name: string, html: string) {
-  if (process.env.BIB_DEBUG === '1') {
-    try {
-      const stamp = Date.now();
-      fsSync.writeFileSync(`/tmp/bib-${name}-${stamp}.html`, html);
-      console.error('[BIB-DUMP] wrote', `/tmp/bib-${name}-${stamp}.html`, 'len=', html.length);
-    } catch {}
-  }
-}
+import { enhancedDomGlueShipScript } from './enhanced-dom-glue-ship';
+import * as cheerio from 'cheerio';
 
 // Configure marked to handle our markdown properly
+// NOTE: breaks:false for Enhanced tier to prevent <br> tags in bibliography
 marked.setOptions({
-  breaks: true,
+  breaks: false, // CRITICAL: Disable <br> on single newlines for Enhanced
   gfm: true
 });
+console.log('[ENHANCED-MD] marked configured with breaks=false to prevent <br> tags');
 
-// Helper function to normalize manual bullets to proper lists
-function normalizeBullets(markdown: string): string {
-  const lines = markdown.split('\n');
-  const out: string[] = [];
-  let inBulletBlock = false;
+// Function to normalize Enhanced bibliography - robust version that rebuilds structure
+function normalizeEnhancedBibliography(html: string): string {
+  try {
+    const $ = cheerio.load(html);
 
-  for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
-    const s = raw.trim();
-
-    if (/^•\s*/.test(s)) {
-      // Convert leading "•" to "- " with a following space
-      const item = s.replace(/^•\s*/, '- ');
-      // If previous line was non-blank and not a bullet, insert a blank line BEFORE to start a list
-      if (!inBulletBlock && out.length && out[out.length - 1].trim() !== '') {
-        out.push('');
-      }
-      out.push(item);
-      inBulletBlock = true;
-    } else {
-      // If we exit a bullet block, ensure a blank line AFTER the list
-      if (inBulletBlock && s !== '' && !/^[-*+]\s+/.test(s)) {
-        out.push('');
-        inBulletBlock = false;
-      }
-      out.push(raw);
+    // Find "Bibliography" or "References" at any heading level
+    const bibH = $('h1,h2,h3,h4,h5,h6')
+      .filter((_, el) => /^(bibliography|references)$/i.test($(el).text().trim()))
+      .first();
+    if (!bibH.length) {
+      console.log('[BIB-NORMALIZE] No bibliography heading found');
+      return html;
     }
-  }
 
-  return out.join('\n');
+    // If already an <ol>, split any multi-entry items
+    const next = bibH.next();
+    if (next.is('ol')) {
+      console.log('[BIB-NORMALIZE] Found existing <ol>, splitting multi-entry items');
+      next.addClass('bibliography');
+      
+      // Helper: split text containing multiple citations
+      const splitIntoEntries = (s: string): string[] => {
+        let t = s
+          .replace(/\[\[DOI\|[^\]]+\]\]/gi, '[DOI]')
+          .replace(/\[DOI\|[^\]]+\]/gi, '[DOI]')
+          .replace(/\s*\[\s*DOI\s*\]\s*/gi, ' [DOI]')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
+        
+        // Split after year pattern like "(1983)." or "(2020)."
+        const byYear = t.split(
+          /(?<=\(\d{4}[a-z]?\)\.?)\s+(?=[A-Z][A-Za-z''`\-]+,\s*[A-Z])/g
+        );
+        
+        // Also split after [DOI] when followed by new author
+        const out: string[] = [];
+        byYear.forEach(chunk => {
+          const parts = chunk.split(
+            /(?<=\[DOI\]\.?)\s+(?=[A-Z][A-Za-z''`\-]+,\s*[A-Z])/g
+          );
+          out.push(...parts);
+        });
+        
+        // Clean up numbering if present
+        return out
+          .map(x => x.replace(/^\s*\d+\.\s*/, '').trim())
+          .filter(x => x.length > 20); // Must be substantial
+      };
+      
+      // Format one entry properly
+      const formatEntry = (txt: string): string => {
+        let clean = txt
+          .replace(/(\d+)\s*[-–—]\s*(\d+)/g, '<span class="norun">$1&#8209;$2</span>')
+          .replace(/\s*\[DOI\]\s*/g, ' [DOI]')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
+        // Add period if missing
+        if (!/[.?!]\s*$/.test(clean)) clean += '.';
+        return clean;
+      };
+      
+      // Process each li - split if contains multiple entries
+      const newItems: string[] = [];
+      next.find('li').each((_, li) => {
+        const $li = $(li);
+        $li.find('p').each((__, p) => {
+          $(p).replaceWith($(p).contents());
+        });
+        
+        const raw = $li.text();
+        const parts = splitIntoEntries(raw);
+        
+        // Each part becomes its own entry
+        parts.forEach(part => {
+          if (part.trim()) {
+            newItems.push(formatEntry(part));
+          }
+        });
+      });
+      
+      // Rebuild the list with separated entries
+      next.empty();
+      newItems.forEach(item => {
+        next.append(`<li>${item}</li>`);
+      });
+      
+      console.log('[BIB-NORMALIZE] Split into', newItems.length, 'separate entries');
+      return $.html();
+    }
+
+    // Collect everything until next heading
+    console.log('[BIB-NORMALIZE] Collecting bibliography content');
+    const collected: any[] = [];
+    let n = bibH.next();
+    while (n.length && !/^h[1-6]$/i.test(n[0].tagName || '')) {
+      collected.push(n);
+      n = n.next();
+    }
+
+    // Convert to plain text
+    const raw = collected.map(node => $.html(node)).join('\n');
+    let text = raw
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\[\[DOI\|[^\]]+\]\]/gi, '[DOI]')
+      .replace(/\[DOI\|[^\]]+\]/gi, '[DOI]')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    console.log('[BIB-NORMALIZE] Raw text length:', text.length);
+
+    // Extract entries using ALL strategies combined
+    const entries: string[] = [];
+
+    // First split by YEAR pattern (strongest boundary)
+    const yearSplit = text.split(
+      /(?<=\(\d{4}[a-z]?\)\.?)\s+(?=[A-Z][A-Za-z''`\-]+,\s*[A-Z])/g
+    );
+    
+    console.log('[BIB-NORMALIZE] Year split found', yearSplit.length, 'chunks');
+
+    yearSplit.forEach(chunk => {
+      // Within each year-split chunk, check for numbered entries
+      const numbered = chunk.match(/\d+\.\s+[A-Z][^]*?(?=\d+\.\s|$)/g);
+      if (numbered && numbered.length > 0) {
+        numbered.forEach(e => {
+          const cleaned = e.replace(/^\s*\d+\.\s*/, '').trim();
+          if (cleaned.length > 20) entries.push(cleaned);
+        });
+      } else {
+        // No numbers, check if this chunk can be split after [DOI]
+        const doiSplit = chunk.split(/(?<=\[DOI\]\.?)\s+(?=[A-Z][A-Za-z''`\-]+,\s*[A-Z])/g);
+        if (doiSplit.length > 1) {
+          doiSplit.forEach(e => {
+            const cleaned = e.trim();
+            if (cleaned.length > 20) entries.push(cleaned);
+          });
+        } else {
+          // Use the whole chunk if it's substantial
+          const cleaned = chunk.trim();
+          if (cleaned.length > 20) entries.push(cleaned);
+        }
+      }
+    });
+    
+    console.log('[BIB-NORMALIZE] Total entries extracted:', entries.length);
+
+    if (!entries.length) {
+      console.log('[BIB-NORMALIZE] No entries found, returning original');
+      return html;
+    }
+
+    // Remove old content
+    collected.forEach(el => el.remove());
+
+    // Build proper list
+    const $ol = $('<ol class="bibliography"></ol>');
+    for (const e of entries) {
+      let cleaned = e
+        .replace(/^\s*\d+\.\s*/, '')
+        .replace(/(\d+)\s*[-–—]\s*(\d+)/g, '<span class="norun">$1&#8209;$2</span>')
+        .replace(/\s*\[DOI\]\s*/g, ' [DOI]')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+      if (!/[.?!]\s*$/.test(cleaned)) cleaned += '.';
+      $ol.append(`<li>${cleaned}</li>`);
+    }
+    
+    // Insert the new list after the heading
+    bibH.after($ol);
+    console.log('[BIB-NORMALIZE] Created <ol> with', entries.length, 'entries');
+    return $.html();
+    
+  } catch (e) {
+    console.error('[BIB-NORMALIZE] Error:', e);
+    return html; // Return original on error
+  }
 }
 
-// Helper function to strip END markers from content (all tiers)
-function stripEndMarkers(md: string): string {
-  // Remove lines that are exactly "END", "[END]", ">>END" or surrounded by whitespace (case-sensitive, sentinel form)
-  md = md.replace(/(^|\n)\s*(\[?END\]?|>>END)\s*(?=\n|$)/g, '\n');
-
-  // Extra guard: if " END " leaked inline inside bibliography lines, drop the token
-  // Example: "1. Chou ... END\n2. Cohen ..." → remove the orphan "END"
-  md = md.replace(/(\n\d+\.\s.*?)(\s+END\s*)(?=\n)/g, '$1');
-
-  // Convert >>BIBLIOGRAPHY to proper markdown heading
-  md = md.replace(/^\s*>>\s*BIBLIOGRAPHY\s*$/gmi, '## Bibliography');
-
-  return md;
+// Final cleanup function to remove ALL sentinels
+function finalDeSentinelize(html: string): string {
+  // NUCLEAR OPTION - remove ALL sentinels right before PDF generation
+  // This is the last line of defense against sentinels appearing in PDFs
+  return html
+    // Remove complete DOI sentinels
+    .replace(/\[\[DOI\|[^\]]+\]\]/gi, '[DOI]')
+    // Remove partial DOI sentinels (missing closing brackets)
+    .replace(/\[\[DOI\|[^\]]+\]/gi, '[DOI]')
+    .replace(/\[DOI\|[^\]]+\]\]/gi, '[DOI]')
+    .replace(/\[DOI\|[^\]]+\]/gi, '[DOI]')
+    // Remove complete RANGE sentinels
+    .replace(/\[\[RANGE\|(\d+)-(\d+)\]\]/gi, '$1-$2')
+    // Remove partial RANGE sentinels (missing brackets)
+    .replace(/\[\[RANGE\|(\d+)-(\d+)\]/gi, '$1-$2')
+    .replace(/\[RANGE\|(\d+)-(\d+)\]\]/gi, '$1-$2')
+    .replace(/\[RANGE\|(\d+)-(\d+)\]/gi, '$1-$2')
+    // Clean up any stray sentinel markers
+    .replace(/\[\[DOI\|/gi, '[DOI]')
+    .replace(/\[DOI\|/gi, '[DOI]')
+    .replace(/\[\[RANGE\|/gi, '')
+    .replace(/\[RANGE\|/gi, '')
+    // Final cleanup of any remaining brackets
+    .replace(/\[\[/g, '')
+    .replace(/\]\]/g, '');
 }
 
 // Helper function to get browser from pool
@@ -89,30 +240,13 @@ export async function generatePdfV2(
 ): Promise<Buffer> {
   let browser;
   let page;
-  
-  // COMPREHENSIVE DEBUG LOGGING
-  console.log('=== PDF GENERATION DEBUG ===');
-  console.log('Function: generatePdfV2 (from file)');
-  console.log('Assessment ID:', assessmentData.id || 'N/A');
-  console.log('Guide Type:', assessmentData.guide_type || assessmentData.guideType || 'N/A');
-  // Fix for Windows paths - handle both / and \
-  const pathSeparator = markdownFilePath.includes('\\') ? '\\' : '/';
-  const extractedCondition = markdownFilePath.split(pathSeparator).pop()?.replace('.md', '') || 'N/A';
-  console.log('Condition:', extractedCondition);
-  console.log('Tier:', tier);
-  console.log('Enhanced V2 Enabled:', options.enhancedV2Enabled);
-  console.log('ENHANCED_V2 env:', process.env.ENHANCED_V2);
-  console.log('Markdown file:', markdownFilePath);
-  console.log('=========================');
-  
   try {
     logger.info('Starting PDF generation', { 
       filePath: markdownFilePath, 
       tier, 
       assessmentId: assessmentData.id,
       environment: process.env.NODE_ENV,
-      netlify: process.env.NETLIFY,
-      enhancedV2Enabled: options.enhancedV2Enabled
+      netlify: process.env.NETLIFY
     });
 
     // 1. Read the markdown content
@@ -127,34 +261,6 @@ export async function generatePdfV2(
     // 2. Parse frontmatter
     const { data: frontmatter, content: mainContent } = matter(markdownContent);
     
-    // DEBUG: Check frontmatter title
-    console.log('[DEBUG] Original frontmatter title:', frontmatter.title);
-    console.log('[DEBUG] Has "Learn About" in title?', frontmatter.title?.includes('Learn About'));
-    
-    // FIX: Remove "Learn About" from title if present
-    if (frontmatter.title && frontmatter.title.includes('Learn About')) {
-      frontmatter.title = frontmatter.title.replace('Learn About ', '').replace('Learn About', '').trim();
-      console.log('[DEBUG] Fixed frontmatter title:', frontmatter.title);
-    }
-    
-    // FIX: Ensure proper condition name for cover
-    if (frontmatter.title === 'Pain Assessment Guide') {
-      const conditionMap: Record<string, string> = {
-        'sciatica': 'Sciatica',
-        'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
-        'si_joint_dysfunction': 'SI Joint Dysfunction',
-        'canal_stenosis': 'Spinal Canal Stenosis',
-        'central_disc_bulge': 'Central Disc Bulge',
-        'facet_arthropathy': 'Facet Arthropathy',
-        'muscular_nslbp': 'Muscular Non-Specific Low Back Pain',
-        'lumbar_instability': 'Lumbar Instability',
-        'urgent_symptoms': 'Urgent Symptoms'
-      };
-      const condition = assessmentData.guide_type || assessmentData.guideType || '';
-      frontmatter.title = conditionMap[condition] || 'Pain Assessment Guide';
-      console.log('[DEBUG] Replaced generic title with:', frontmatter.title);
-    }
-    
     if (!mainContent) {
       logger.error('Main content is undefined after parsing frontmatter');
       throw new Error('Failed to parse markdown content');
@@ -166,22 +272,7 @@ export async function generatePdfV2(
       cleanedContent = cleanedContent
         .replace(/>>EXECUTIVE_SUMMARY[\s\S]*?>>END/g, '')
         .replace(/>>KEY_POINTS[\s\S]*?>>END/g, '')
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .replace(/^END$/gm, '')  // Remove standalone END lines
-        .replace(/^DISCLAIMER$/gm, '## Disclaimer');  // Convert DISCLAIMER to heading
-    }
-    
-    // Strip END markers for all tiers (monograph protection)
-    if (tier === 'monograph') {
-      console.log('[MONO-END] before-strip count:',
-        (cleanedContent.match(/(^|\n)\s*(\[?END\]?|>>END)\s*(?=\n|$)/g) || []).length);
-    }
-    
-    cleanedContent = stripEndMarkers(cleanedContent);
-    
-    if (tier === 'monograph') {
-      console.log('[MONO-END] after-strip count:',
-        (cleanedContent.match(/(^|\n)\s*(\[?END\]?|>>END)\s*(?=\n|$)/g) || []).length);
+        .replace(/<!--[\s\S]*?-->/g, '');
     }
     
     // Replace static placeholders
@@ -200,9 +291,7 @@ export async function generatePdfV2(
     }
     
     // Process markdown to add images for monographs
-    // FIX: Handle both Windows (\) and Unix (/) path separators
-    const pathSeparator = markdownFilePath.includes('\\') ? '\\' : '/';
-    const pathParts = markdownFilePath.split(pathSeparator);
+    const pathParts = markdownFilePath.split("/");
     const fileName = pathParts.pop() || "";
     const condition = fileName ? fileName.replace(".md", "") : "";
     console.log(`Before image processing - Tier: ${tier}, Condition: ${condition}`);
@@ -210,195 +299,41 @@ export async function generatePdfV2(
     console.log('After image processing, content includes <img>?', cleanedContent.includes('<img'));
     console.log('After image processing, content includes ![?', cleanedContent.includes('!['));
     
-    // Enhanced V2: Clean markdown processing
-    console.log('[V2-CHECK] About to check V2 conditions. Tier:', tier, 'V2 Enabled:', options.enhancedV2Enabled);
-    if (tier === 'enhanced' && options.enhancedV2Enabled) {
-      console.log('[ENHANCED-V2] Applying clean markdown processing - V2 IS ACTIVE');
-      
-      // AGGRESSIVE HTML CLEANUP - Remove all br tags before markdown processing
-      cleanedContent = cleanedContent.replace(/<br\s*\/?>/gi, ' ');
-      cleanedContent = cleanedContent.replace(/&lt;br\s*\/?&gt;/gi, ' ');
-      
-      // Get human-readable condition name
-      const conditionNames: Record<string, string> = {
-        'si_joint_dysfunction': 'Sacroiliac Joint Pain',
-        'sciatica': 'Sciatica',
-        'facet_arthropathy': 'Facet Joint Arthropathy',
-        'muscular_nslbp': 'Muscular Lower Back Pain',
-        'central_disc_bulge': 'Central Disc Bulge',
-        'canal_stenosis': 'Spinal Canal Stenosis',
-        'lumbar_instability': 'Lumbar Instability',
-        'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
-        'urgent_symptoms': 'Urgent Symptoms'
-      };
-      // DEBUG: Log what we're working with
-      console.log('[TITLE-DEBUG] condition from path:', condition);
-      console.log('[TITLE-DEBUG] assessmentData.guide_type:', assessmentData.guide_type);
-      console.log('[TITLE-DEBUG] assessmentData.guideType:', assessmentData.guideType);
-      
-      // Use guide_type from assessment data if available, fallback to extracted condition
-      const actualCondition = assessmentData.guide_type || assessmentData.guideType || condition;
-      const conditionName = conditionNames[actualCondition] || actualCondition.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
-      
-      console.log('[TITLE-DEBUG] actualCondition:', actualCondition);
-      console.log('[TITLE-DEBUG] conditionName:', conditionName);
-      
-      // Fix "Learn About" title to include condition name with proper spacing
-      // Handle various formats: with or without #, with partial text
-      cleanedContent = cleanedContent.replace(/^(#+\s*)?Learn About\s*.*$/m, `\n## Learn About ${conditionName}\n\n`);
-      
-      // Keep citations attached to their preceding text with non-breaking space
-      // First, glue author name to year within citations to prevent [Weber, 1983] from splitting
-      cleanedContent = cleanedContent.replace(/\[([^,]+),\s+(\d{4})\]/g, '[$1,\u00A0$2]');
-      // Also handle other citation formats with commas
-      cleanedContent = cleanedContent.replace(/\[([A-Z][a-z]+),\s+/g, '[$1,\u00A0');
-      // Then ensure the whole citation stays with preceding text
-      cleanedContent = cleanedContent.replace(/(\S+)\s+(\[[^\]]+\])/g, '$1\u00A0$2');
-      
-      // No manual hyphenation - let CSS handle it naturally
-      
-      // NUCLEAR OPTION: Shorten DOI URLs to prevent breaking
-      // Remove https:// prefix to make URLs shorter
-      cleanedContent = cleanedContent.replace(/https:\/\/doi\.org\//g, 'doi.org/');
-      
-      // DEBUG: Check for DOI URLs
-      const doiCount = (cleanedContent.match(/doi\.org/g) || []).length;
-      console.log('[DEBUG] DOI URLs found after shortening:', doiCount);
-      
-      // DEBUG: count bullet lines and references before Markdown render
-      const bulletLinesBefore = (cleanedContent.match(/(^|\n)[ \t]*[•◦▪‣·][ \t]*/g) || []).length;
-      const dashListBefore = (cleanedContent.match(/(^|\n)[ \t]*[-*+][ \t]+/g) || []).length;
-      console.log('[ENHANCED-DIAG] bullets-before:', bulletLinesBefore, 'dashlists-before:', dashListBefore);
-      
-      // Clean up bullets - ensure consistent formatting
-      cleanedContent = cleanedContent.replace(/^[•·]\s*/gm, '• ');
-      cleanedContent = cleanedContent.replace(/^\*\s+/gm, '• ');
-      
-      // Fix quotes and special characters
-      cleanedContent = cleanedContent.replace(/[""]/g, '"');
-      cleanedContent = cleanedContent.replace(/['']/g, "'");
-      cleanedContent = cleanedContent.replace(/–/g, '-');
-      cleanedContent = cleanedContent.replace(/—/g, '-');
-      
-      // Ensure proper spacing around citations
-      cleanedContent = cleanedContent.replace(/\s*(\[[^\]]+\])/g, ' $1');
-      
-      // Fix word( patterns - ensure space before parenthesis
-      cleanedContent = cleanedContent.replace(/(\w)\(/g, '$1 (');
-      
-      // Rebuild Bibliography as real ordered list HTML
-      const bibRx = /(##?\s*(Bibliography|References))[^\n]*\n([\s\S]*)$/m;
-      cleanedContent = cleanedContent.replace(bibRx, (m, heading, _h2, tail) => {
-        // Limit to the bibliography body (stop at next heading)
-        const stop = tail.search(/\n#{1,6}\s/);
-        const bibBody = stop >= 0 ? tail.slice(0, stop) : tail;
-
-        // Strip noise
-        const body = bibBody.replace(/\bEND\b/g, '');
-
-        // Reconstruct contiguous entries: 1. ... 2. ...
-        const lines = body.split('\n').map((l: string) => l.trim()).filter(Boolean);
-        const entries: string[] = [];
-        let cur = '';
-        for (const line of lines) {
-          if (/^\d+\.\s?/.test(line)) {
-            if (cur) entries.push(cur.trim());
-            cur = line.replace(/^(\d+)\.\s?/, ''); // drop the leading number; <ol> will number
-          } else {
-            cur += (cur ? ' ' : '') + line;
-          }
+    // Add defensive tokenization BEFORE marked.parse() for Enhanced tier
+    if (tier === 'enhanced') {
+      console.error('[SENTINEL-DEBUG-1] About to parse markdown, tier:', tier);
+      // Ensure sentinels are present (defensive in case markdown wasn't pre-processed)
+      const bibIndex = cleanedContent.indexOf('## Bibliography');
+      if (bibIndex !== -1) {
+        console.log('[BIBLIOGRAPHY] Applying defensive sentinel tokenization...');
+        const beforeBib = cleanedContent.substring(0, bibIndex);
+        let bibSection = cleanedContent.substring(bibIndex);
+        
+        // Apply sentinel tokenization (defensive - may already be done)
+        if (!bibSection.includes('[[DOI|')) {
+          bibSection = bibSection.replace(
+            /DOI:\s*(10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+)/gi,
+            (_match, doi) => `[[DOI|${doi}]]`
+          );
         }
-        if (cur) entries.push(cur.trim());
-
-        // Emit explicit HTML ordered list to guarantee layout correctness
-        const lis = entries.map((e: string) => `<li>${e}</li>`).join('');
-        return `${heading}\n<ol class="bibliography">${lis}</ol>\n`;
-      });
-      
-      // Normalize manual bullets to proper lists
-      cleanedContent = normalizeBullets(cleanedContent);
-      
-      // DEBUG: count after normalization
-      const bulletLinesAfter = (cleanedContent.match(/(^|\n)[ \t]*[•◦▪‣·][ \t]*/g) || []).length;
-      const dashListAfter = (cleanedContent.match(/(^|\n)[ \t]*[-*+][ \t]+/g) || []).length;
-      console.log('[ENHANCED-DIAG] bullets-after:', bulletLinesAfter, 'dashlists-after:', dashListAfter);
-      
-      console.log('[ENHANCED-V2] Clean markdown processing completed');
+        
+        if (!bibSection.includes('[[RANGE|')) {
+          bibSection = bibSection.replace(
+            /(\d+)\s*[-–—]\s*(\d+)(?!\d)/g,
+            (_match, start, end) => `[[RANGE|${start}-${end}]]`
+          );
+        }
+        
+        cleanedContent = beforeBib + bibSection;
+        console.error('[SENTINEL-DEBUG-2] Content has sentinels?', cleanedContent.includes('[[DOI'));
+      }
     }
     
     // 4. Convert to HTML
     let contentAsHtml = await marked.parse(cleanedContent);
+    console.error('[SENTINEL-DEBUG-3] After marked, HTML has sentinels?', contentAsHtml.includes('[[DOI'));
+    console.error('[SENTINEL-DEBUG-3b] HTML has encoded sentinels?', contentAsHtml.includes('&#91;'));
     console.log('HTML contains img tags?', contentAsHtml.includes('<img'));
-    
-    // HTML failsafe: Remove any residual "END" node that slipped through as its own paragraph/span
-    contentAsHtml = contentAsHtml.replace(/>\s*(\[?END\]?|>>END)\s*</g, '><');
-    
-    // Apply bibliography normalization for enhanced tier ONLY
-    if (tier === 'enhanced') {
-      console.error('[BIB] normalizer call (pre) len=', contentAsHtml.length);
-      bibDump('before', contentAsHtml);
-
-      contentAsHtml = normalizeEnhancedBibliography(contentAsHtml);
-
-      const liCount = (contentAsHtml.match(/<li>/g) || []).length;
-      const hasOl = /<ol class="bibliography">/.test(contentAsHtml);
-      console.error('[BIB] normalizer call (post) hasOl=', hasOl, 'liCount=', liCount, 'len=', contentAsHtml.length);
-
-      bibDump('after', contentAsHtml);
-    }
-    
-    // Apply bibliography processing for monographs too (ensure proper list formatting)
-    if (tier === 'monograph') {
-      // Process >>BIBLIOGRAPHY sections for monographs
-      const monoBibRx = />>\s*BIBLIOGRAPHY\s*<\/p>([\s\S]*?)(?=<h|$)/i;
-      contentAsHtml = contentAsHtml.replace(monoBibRx, (match, bibContent) => {
-        // Parse the bibliography content and create proper list
-        const lines = bibContent.split('\n').map((l: string) => l.trim()).filter(Boolean);
-        const entries: string[] = [];
-        let cur = '';
-        
-        for (const line of lines) {
-          // Remove any paragraph tags and extract text
-          const cleanLine = line.replace(/<\/?p[^>]*>/g, '').trim();
-          if (/^\d+\.\s?/.test(cleanLine)) {
-            if (cur) entries.push(cur.trim());
-            cur = cleanLine.replace(/^(\d+)\.\s?/, '');
-          } else if (cleanLine && !cleanLine.includes('>>END')) {
-            cur += (cur ? ' ' : '') + cleanLine;
-          }
-        }
-        if (cur) entries.push(cur.trim());
-        
-        const lis = entries.map((e: string) => `<li>${e}</li>`).join('');
-        return `<h2>Bibliography</h2>\n<ol class="bibliography">${lis}</ol>`;
-      });
-    }
-    
-    // Post-HTML cleanup for any remaining artifacts
-    if (tier === 'enhanced' && options.enhancedV2Enabled) {
-      // Final cleanup of any HTML br tags that might have been generated
-      contentAsHtml = contentAsHtml.replace(/<br\s*\/?>/gi, ' ');
-      contentAsHtml = contentAsHtml.replace(/&lt;br\s*\/?&gt;/gi, ' ');
-    }
-    
-    // Post-process HTML to fix bibliography DOI URLs for Enhanced V2
-    if (tier === 'enhanced' && options.enhancedV2Enabled) {
-      // Wrap DOI URLs in non-breaking spans
-      contentAsHtml = contentAsHtml.replace(
-        /<a[^>]*href="https:\/\/doi\.org\/[^"]*"[^>]*>([^<]*)<\/a>/g,
-        (match: string) => {
-          return `<span style="white-space: nowrap; display: inline-block;">${match}</span>`;
-        }
-      );
-      
-      // Also handle plain text DOI URLs in bibliography
-      contentAsHtml = contentAsHtml.replace(
-        /(?<!<[^>]*)https:\/\/doi\.org\/[^\s<]+/g,
-        (match: string) => {
-          return `<span style="white-space: nowrap;">${match}</span>`;
-        }
-      );
-    }
     if (tier === 'monograph') {
       const imgCount = (contentAsHtml.match(/<img/g) || []).length;
       console.log(`Found ${imgCount} img tags in HTML`);
@@ -458,15 +393,12 @@ export async function generatePdfV2(
         return html;
       };
       
-      // DISABLED: Keep semantic HTML lists instead of converting to enh-bullet
-      // contentAsHtml = transformLists(contentAsHtml);
+      // contentAsHtml = transformLists(contentAsHtml);  // DISABLED - breaks bullet formatting
       
-      // LOG LIST STATUS (no longer transforming)
-      console.log('[ENHANCED-LIST-STATUS]', {
-        ulCount: (contentAsHtml.match(/<ul/gi) || []).length,
-        olCount: (contentAsHtml.match(/<ol/gi) || []).length,
-        liCount: (contentAsHtml.match(/<li/gi) || []).length,
-        bibliographyOL: (contentAsHtml.match(/<ol class="bibliography">/g) || []).length
+      // LOG AFTER LIST TRANSFORM
+      console.log('[ENHANCED-LIST-TRANSFORM]', {
+        enhBullets: (contentAsHtml.match(/class="enh-bullet"/g) || []).length,
+        remainingLI: (contentAsHtml.match(/<li/gi) || []).length
       });
       
       // Step 2: Wrap citations with preceding word to prevent orphaning
@@ -503,7 +435,7 @@ export async function generatePdfV2(
       // Step 4: Protect parenthetical expressions
       contentAsHtml = contentAsHtml.replace(
         /\(e\.g\.[^)]{1,40}\)/g,
-        (match: string) => `<span class="nowrap">${match}</span>`
+        (match) => `<span class="nowrap">${match}</span>`
       );
       
       // Step 5: Keep numbers with their units
@@ -518,6 +450,11 @@ export async function generatePdfV2(
         // Revert to original HTML if feature is disabled
         contentAsHtml = await marked.parse(cleanedContent);
       }
+      
+      // Step 7: Normalize bibliography for Enhanced tier - simplified
+      console.log('[BIBLIOGRAPHY] Removing sentinels...');
+      contentAsHtml = normalizeEnhancedBibliography(contentAsHtml);
+      console.log('[BIBLIOGRAPHY] Sentinels removed');
     }
     
     
@@ -538,11 +475,28 @@ export async function generatePdfV2(
     // No special processing needed - clean HTML generation
     
     // DEBUG: Save HTML for comparison
-    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+    if ((tier === 'enhanced' && options.enhancedV2Enabled) || process.env.DEBUG_PDF === '1') {
       try {
-        const debugPath = `debug-${assessmentData.guide_type}-enhanced-v2.html`;
+        const debugPath = tier === 'enhanced' 
+          ? `debug-enhanced-${assessmentData.guide_type || 'unknown'}.html`
+          : `debug-${tier}-${assessmentData.guide_type || 'unknown'}.html`;
         await fs.writeFile(debugPath, fullHtml);
-        console.log(`[DEBUG] Saved HTML to ${debugPath}`);
+        console.log(`[DEBUG] Saved HTML to ${debugPath} for inspection`);
+        
+        // Log specific debug info for bibliography
+        if (tier === 'enhanced') {
+          // Verify bibliography structure
+          const bibBlock = fullHtml.match(/<h2[^>]*>\s*Bibliography\s*<\/h2>[\s\S]*?(?=<h2|<\/body>)/i)?.[0] || '';
+          console.log('[BIB-DEBUG] has <ol class="bibliography">', /<ol[^>]*\bbibliography\b/.test(bibBlock));
+          console.log('[BIB-DEBUG] DOI spans count:', (bibBlock.match(/class="doi"/g) || []).length);
+          console.log('[BIB-DEBUG] Non-breaking hyphens:', (bibBlock.match(/&#8209;/g) || []).length);
+          console.log('[BIB-DEBUG] Has <p> inside <li>:', /<li[^>]*>[\s\S]*?<p/i.test(bibBlock));
+          
+          // Check for problematic CSS
+          if (fullHtml.includes('overflow-wrap:anywhere') || fullHtml.includes('overflow-wrap: anywhere')) {
+            console.warn('[BIB-DEBUG] WARNING: Found overflow-wrap:anywhere which will break DOIs!');
+          }
+        }
       } catch (e) {
         console.log('[DEBUG] Could not save HTML:', e);
       }
@@ -559,14 +513,10 @@ export async function generatePdfV2(
     // Pipe browser console to Node console
     page.on('console', msg => console.log('[PAGE]', msg.text()));
     
-    // Use wider viewport for better text rendering
-    await page.setViewport({ 
-      width: 1200,  // Wider viewport for better text flow
-      height: 1600, // Proper height
-      deviceScaleFactor: 1 
-    });
-    console.info('Step 3: New page opened with wider viewport. Setting content...');
-    console.log('[WIDTH-DEBUG] Page viewport:', await page.viewport());
+    // Set explicit viewport for consistent rendering across all tiers
+    // Use EXTRA wide viewport to prevent text wrapping issues
+    await page.setViewport({ width: 2400, height: 3400 }); // Extra wide viewport to prevent citation breaks
+    console.info('Step 3: New page opened with A4 viewport. Setting content...');
     
     // Check if the HTML content is valid before setting it
     if (!fullHtml || typeof fullHtml !== 'string' || fullHtml.length < 50) {
@@ -579,195 +529,62 @@ export async function generatePdfV2(
     console.log('[PDF] About to set HTML content with length:', fullHtml.length);
     console.log('[PDF] HTML contains img tags:', fullHtml.includes('<img'));
     
-    await page.setContent(fullHtml, { 
-      waitUntil: 'networkidle0',
-      timeout: 30000 
-    });
-    console.info('Step 5: Content set. Checking dimensions...');
-    
-    // Check actual dimensions for overflow
-    const dimensions = await page.evaluate(() => {
-      return {
-        bodyWidth: document.body.scrollWidth,
-        bodyHeight: document.body.scrollHeight,
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight,
-        overflow: document.body.scrollWidth > window.innerWidth
-      };
-    });
-    console.log('[WIDTH-DEBUG] Actual dimensions:', dimensions);
-    if (dimensions.overflow) {
-      console.warn('[WARNING] Content is overflowing the page width!');
+    // FINAL CLEANUP - Remove any sentinels that survived (Enhanced V2 only)
+    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+      console.log('[FINAL-DESENTINEL] Removing any remaining sentinels before PDF generation...');
+      fullHtml = finalDeSentinelize(fullHtml);
+      
+      // Add guard to FAIL FAST if sentinels remain
+      if (fullHtml.includes('[[DOI') || fullHtml.includes('[[RANGE')) {
+        console.error('CRITICAL: Sentinels still present in final HTML!');
+        // Log the specific sentinels found
+        const doiSentinels = (fullHtml.match(/\[\[DOI[^\]]*\]\]/g) || []).slice(0, 3);
+        const rangeSentinels = (fullHtml.match(/\[\[RANGE[^\]]*\]\]/g) || []).slice(0, 3);
+        console.error('Found DOI sentinels:', doiSentinels);
+        console.error('Found RANGE sentinels:', rangeSentinels);
+        throw new Error('SENTINELS_STILL_PRESENT_IN_FINAL_HTML');
+      }
+      console.log('[FINAL-DESENTINEL] All sentinels removed successfully');
     }
     
+    await page.setContent(fullHtml, { 
+      waitUntil: 'networkidle0', // Try 'domcontentloaded' if images cause hanging
+      timeout: 30000 
+    });
+    console.info('Step 5: Content set. Generating PDF...');
     console.log('[PDF] Content set successfully');
     logger.info('Page content set');
     
-    // Enhanced V2: Clean markdown processing approach (DOM manipulation disabled)
+    // DOM-aware glue for Enhanced tier to prevent citation/phrase orphaning
     if (tier === 'enhanced' && options.enhancedV2Enabled) {
-      console.log('[ENHANCED-V2] Using clean markdown processing - DOM manipulation disabled');
+      console.log('[ENHANCED-DOM-GLUE] Starting DOM-aware glue...');
       
-      // Add clean print styles and prevent awkward breaks
+      // First inject styles
       await page.addStyleTag({ content: `
-        html, body {
-          margin: 0 !important;
-          padding: 0 !important;           /* ← no body padding; margins come from Puppeteer */
-          width: 100% !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
+        .nowrap { white-space: nowrap; }
+        .cite { display: inline-block; }
+        .glue { display: inline-block; }
+        .bib { margin-top: 6pt; }
+        .bib-item { 
+          margin: 6pt 0; 
+          line-height: 1.35; 
+          page-break-inside: avoid; 
+          break-inside: avoid; 
         }
-        
-        body {
-          font-size: 12pt !important;
-          line-height: 1.55 !important;
-          box-sizing: border-box !important;
-        }
-        
-        /* The printable text column = page width minus Puppeteer margins (1" + 1") */
-        body > * {
-          max-width: calc(8.5in - 2in) !important;
-          margin: 0 auto !important;
-          padding: 0 !important;
-          box-sizing: border-box !important;
-        }
-        
-        /* Natural wrapping; no clipping; no hard break-all */
-        p, li, div, span, td, th, h1, h2, h3, h4 {
-          white-space: normal !important;
-          overflow-wrap: break-word !important;
-          word-break: normal !important;
-          hyphens: auto !important;   /* allow normal hyphenation when needed */
-          max-width: 100% !important;
-        }
-        
-        /* Lists: simple, predictable */
-        ul, ol {
-          padding-left: 1.25em !important;
-          margin: 0.5em 0 !important;
-          list-style-position: outside !important;
-        }
-        li {
-          margin: 0.2em 0 !important;
-          break-inside: avoid;
-          page-break-inside: avoid;
-          text-align: left !important;
-        }
-        
-        /* Bibliography: drop hanging indent (it was causing numbers on their own line) */
-        ol.bibliography { padding-left: 1.5em !important; }
-        ol.bibliography > li {
-          margin: 0.35em 0 !important;
-          text-indent: 0 !important;     /* ← critical */
-          padding-left: 0 !important;     /* ← critical */
-        }
-        
-        /* Force normal wrapping everywhere (no nowrap anchors that stretch lines) */
-        a, .citation {
-          white-space: normal !important;
-          display: inline !important;
-        }
-        
-        /* Paragraph & list text should never justify-stretch */
-        p, li {
-          text-align: left !important;
-          text-justify: auto !important;
-          letter-spacing: normal !important;
-          word-spacing: normal !important;
-        }
-        
-        /* Ensure consistent left alignment and normal spacing */
-        p, li {
-          text-align: left !important;
-          text-justify: auto !important;
-          letter-spacing: normal !important;
-        }
-        
-        h2 { 
-          font-size: 16pt !important;
-          margin-top: 1.5em !important;
-        }
-        
-        h3 { 
-          font-size: 14pt !important;
-          margin-top: 1.2em !important;
-        }
-        
-        /* Prevent awkward line breaks */
-        p, li {
-          hyphens: none !important;
-          word-break: normal !important;
-          overflow-wrap: normal !important;
-          line-height: 1.6 !important;
-        }
-        
-        /* Keep citations with their text */
-        p > span:last-child {
-          white-space: nowrap !important;
-        }
-        
-        /* Better bullet formatting */
-        li {
-          page-break-inside: avoid !important;
-          break-inside: avoid !important;
-          margin-bottom: 0.5em !important;
-        }
-        
-        /* Bibliography specific formatting */
-        .bibliography li,
-        #bibliography li {
-          margin-bottom: 0.5em !important;
-          padding-right: 0.5in !important;
-          font-size: 11pt !important;
-        }
-        
-        /* Keep headings with following content */
-        h1, h2, h3, h4, h5, h6 {
-          page-break-after: avoid !important;
-          break-after: avoid !important;
-        }
-        
-        /* Prevent URL breaking - Enhanced V2 specific */
-        a {
-          word-break: break-word;
-          overflow-wrap: anywhere;
-        }
-        
-        /* Bibliography specific URL handling - force DOIs to stay together */
-        .bibliography a, 
-        .references a,
-        a[href*="doi.org"] {
-          display: inline-block;
-          white-space: nowrap;
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        
-        /* Allow wrapping at slashes for very long URLs */
-        .bibliography li,
-        .references li {
-          word-break: break-word;
-          overflow-wrap: anywhere;
-          hyphens: none;
-        }
-        
-        /* Ensure DOI spans don't break */
-        span[style*="nowrap"] {
-          display: inline-block !important;
-          white-space: nowrap !important;
-        }
-        
         @media print { 
-          a[href]::after { content: none !important; }
-          
-          /* Ensure bullets don't break */
-          ul, ol {
-            page-break-inside: avoid !important;
-          }
+          a[href]::after { content: none !important; } 
         }
       `});
       
-      // Note: All formatting is now handled in markdown processing before HTML conversion
+      // Execute the enhanced DOM glue script
+      await page.evaluate(enhancedDomGlueShipScript);
+      console.log('[ENHANCED-DOM-GLUE] DOM-aware glue applied');
+      
+      // Inject the print CSS LAST to ensure it overrides everything
+      await page.addStyleTag({ content: '@media print{a[href]::after{content:none!important}}' });
+      console.log('[ENHANCED-DOM-GLUE] Injected final print CSS to stop DOI duplication');
+      
+      // Save the final HTML after all transformations for debugging
       try {
         const finalHtml = await page.content();
         const slug = assessmentData.guide_type || assessmentData.guideType || 'unknown';
@@ -836,20 +653,21 @@ export async function generatePdfV2(
     }
     
     const pdfBuffer = await page.pdf({
-      format: 'Letter',  // US Letter, not A4!
+      format: 'A4',
       printBackground: true,
       displayHeaderFooter: true,
       headerTemplate: '<div></div>',
       footerTemplate: `
-        <div style="width: 100%; font-size: 10px; padding: 5px 0; text-align: right;">
-          <span style="margin-right: 20px;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+        <div style="width: 100%; font-size: 10px; padding: 5px 0; text-align: center;">
+          <span>© PainOptix™ Educational Content</span>
+          <span style="float: right; margin-right: 20px;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
         </div>
       `,
       margin: {
-        top: '1in',
-        right: '1in',
+        top: '0.75in',
+        right: '0.4in',  // Further reduced for maximum text width
         bottom: '1in',
-        left: '1in'
+        left: '0.4in'    // Further reduced for maximum text width
       },
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {
@@ -943,34 +761,6 @@ export async function generatePdfFromContent(
     // 2. Parse frontmatter
     const { data: frontmatter, content: mainContent } = matter(markdownContent);
     
-    // DEBUG: Check frontmatter title
-    console.log('[DEBUG] Original frontmatter title:', frontmatter.title);
-    console.log('[DEBUG] Has "Learn About" in title?', frontmatter.title?.includes('Learn About'));
-    
-    // FIX: Remove "Learn About" from title if present
-    if (frontmatter.title && frontmatter.title.includes('Learn About')) {
-      frontmatter.title = frontmatter.title.replace('Learn About ', '').replace('Learn About', '').trim();
-      console.log('[DEBUG] Fixed frontmatter title:', frontmatter.title);
-    }
-    
-    // FIX: Ensure proper condition name for cover
-    if (frontmatter.title === 'Pain Assessment Guide') {
-      const conditionMap: Record<string, string> = {
-        'sciatica': 'Sciatica',
-        'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
-        'si_joint_dysfunction': 'SI Joint Dysfunction',
-        'canal_stenosis': 'Spinal Canal Stenosis',
-        'central_disc_bulge': 'Central Disc Bulge',
-        'facet_arthropathy': 'Facet Arthropathy',
-        'muscular_nslbp': 'Muscular Non-Specific Low Back Pain',
-        'lumbar_instability': 'Lumbar Instability',
-        'urgent_symptoms': 'Urgent Symptoms'
-      };
-      const condition = assessmentData.guide_type || assessmentData.guideType || '';
-      frontmatter.title = conditionMap[condition] || 'Pain Assessment Guide';
-      console.log('[DEBUG] Replaced generic title with:', frontmatter.title);
-    }
-    
     if (!mainContent) {
       logger.error('Main content is undefined after parsing frontmatter');
       throw new Error('Failed to parse markdown content');
@@ -982,22 +772,7 @@ export async function generatePdfFromContent(
       cleanedContent = cleanedContent
         .replace(/>>EXECUTIVE_SUMMARY[\s\S]*?>>END/g, '')
         .replace(/>>KEY_POINTS[\s\S]*?>>END/g, '')
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .replace(/^END$/gm, '')  // Remove standalone END lines
-        .replace(/^DISCLAIMER$/gm, '## Disclaimer');  // Convert DISCLAIMER to heading
-    }
-    
-    // Strip END markers for all tiers (monograph protection)
-    if (tier === 'monograph') {
-      console.log('[MONO-END] before-strip count:',
-        (cleanedContent.match(/(^|\n)\s*(\[?END\]?|>>END)\s*(?=\n|$)/g) || []).length);
-    }
-    
-    cleanedContent = stripEndMarkers(cleanedContent);
-    
-    if (tier === 'monograph') {
-      console.log('[MONO-END] after-strip count:',
-        (cleanedContent.match(/(^|\n)\s*(\[?END\]?|>>END)\s*(?=\n|$)/g) || []).length);
+        .replace(/<!--[\s\S]*?-->/g, '');
     }
     
     // Replace static placeholders
@@ -1015,74 +790,6 @@ export async function generatePdfFromContent(
       cleanedContent = replacePlaceholders(cleanedContent, assessmentData.responses);
     }
     
-    // Enhanced V2: Clean markdown processing BEFORE image processing
-    if (tier === 'enhanced' && options.enhancedV2Enabled) {
-      console.log('[ENHANCED-V2] Applying clean markdown processing (generatePdfFromContent)');
-      
-      // AGGRESSIVE HTML CLEANUP - Remove all br tags before markdown processing
-      cleanedContent = cleanedContent.replace(/<br\s*\/?>/gi, ' ');
-      cleanedContent = cleanedContent.replace(/&lt;br\s*\/?&gt;/gi, ' ');
-      
-      // DEBUG: Log what we're working with
-      console.log('[TITLE-DEBUG-FROM-CONTENT] guideType:', guideType);
-      console.log('[TITLE-DEBUG-FROM-CONTENT] assessmentData.guide_type:', assessmentData.guide_type);
-      console.log('[TITLE-DEBUG-FROM-CONTENT] assessmentData.guideType:', assessmentData.guideType);
-      
-      // Get human-readable condition name
-      const conditionNames: Record<string, string> = {
-        'si_joint_dysfunction': 'Sacroiliac Joint Pain',
-        'sciatica': 'Sciatica',
-        'facet_arthropathy': 'Facet Joint Arthropathy',
-        'muscular_nslbp': 'Muscular Lower Back Pain',
-        'central_disc_bulge': 'Central Disc Bulge',
-        'canal_stenosis': 'Spinal Canal Stenosis',
-        'lumbar_instability': 'Lumbar Instability',
-        'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
-        'urgent_symptoms': 'Urgent Symptoms'
-      };
-      
-      // Use the proper guide type, not a file path
-      const actualCondition = assessmentData.guide_type || assessmentData.guideType || guideType;
-      const conditionName = conditionNames[actualCondition] || actualCondition.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
-      
-      console.log('[TITLE-DEBUG-FROM-CONTENT] actualCondition:', actualCondition);
-      console.log('[TITLE-DEBUG-FROM-CONTENT] conditionName:', conditionName);
-      
-      // Fix "Learn About" title to include condition name with proper spacing
-      cleanedContent = cleanedContent.replace(/^(#+\s*)?Learn About\s*.*$/m, `\n## Learn About ${conditionName}\n\n`);
-      
-      // Keep citations attached to their preceding text
-      cleanedContent = cleanedContent.replace(/\[([^,]+),\s+(\d{4})\]/g, '[$1,\u00A0$2]');
-      cleanedContent = cleanedContent.replace(/\[([A-Z][a-z]+),\s+/g, '[$1,\u00A0');
-      cleanedContent = cleanedContent.replace(/(\S+)\s+(\[[^\]]+\])/g, '$1\u00A0$2');
-      
-      // Shorten DOI URLs
-      cleanedContent = cleanedContent.replace(/https:\/\/doi\.org\//g, 'doi.org/');
-      
-      // Process bibliography section with proper formatting
-      const bibliographyRegex = /^(##?\s*(?:Bibliography|References))$([\s\S]*?)$/m;
-      cleanedContent = cleanedContent.replace(bibliographyRegex, (match, title, content) => {
-        let fixedContent = content;
-        
-        // Remove https:// prefixes
-        fixedContent = fixedContent.replace(/https:\/\//g, '');
-        
-        // Remove END markers
-        fixedContent = fixedContent.replace(/\bEND\b(?!\w)/g, '');
-        fixedContent = fixedContent.replace(/^END$/gm, '');
-        
-        // Split by numbers followed by period and reformat
-        const entries = fixedContent.split(/(?=\d+\.)/g)
-          .filter((entry: string) => entry.trim())
-          .map((entry: string) => {
-            // Ensure proper formatting with line break before each entry
-            return entry.trim().replace(/^(\d+)\.\s*/, '\n$1. ');
-          });
-        
-        return `${title}\n${entries.join('\n')}`;
-      });
-    }
-    
     // Process markdown to add images for monographs
     try {
       logger.info('Processing markdown with images...');
@@ -1097,57 +804,6 @@ export async function generatePdfFromContent(
     logger.info('Converting markdown to HTML...');
     let contentAsHtml = await marked.parse(cleanedContent);
     logger.info('HTML conversion complete, length:', contentAsHtml.length);
-    
-    // HTML failsafe: Remove any residual "END" node that slipped through as its own paragraph/span
-    contentAsHtml = contentAsHtml.replace(/>\s*(\[?END\]?|>>END)\s*</g, '><');
-    
-    // Apply bibliography normalization for enhanced tier ONLY
-    if (tier === 'enhanced') {
-      console.error('[BIB] normalizer call (pre) len=', contentAsHtml.length);
-      bibDump('before', contentAsHtml);
-
-      contentAsHtml = normalizeEnhancedBibliography(contentAsHtml);
-
-      const liCount = (contentAsHtml.match(/<li>/g) || []).length;
-      const hasOl = /<ol class="bibliography">/.test(contentAsHtml);
-      console.error('[BIB] normalizer call (post) hasOl=', hasOl, 'liCount=', liCount, 'len=', contentAsHtml.length);
-
-      bibDump('after', contentAsHtml);
-    }
-    
-    // Apply bibliography processing for monographs too (ensure proper list formatting)
-    if (tier === 'monograph') {
-      // Process >>BIBLIOGRAPHY sections for monographs
-      const monoBibRx = />>\s*BIBLIOGRAPHY\s*<\/p>([\s\S]*?)(?=<h|$)/i;
-      contentAsHtml = contentAsHtml.replace(monoBibRx, (match, bibContent) => {
-        // Parse the bibliography content and create proper list
-        const lines = bibContent.split('\n').map((l: string) => l.trim()).filter(Boolean);
-        const entries: string[] = [];
-        let cur = '';
-        
-        for (const line of lines) {
-          // Remove any paragraph tags and extract text
-          const cleanLine = line.replace(/<\/?p[^>]*>/g, '').trim();
-          if (/^\d+\.\s?/.test(cleanLine)) {
-            if (cur) entries.push(cur.trim());
-            cur = cleanLine.replace(/^(\d+)\.\s?/, '');
-          } else if (cleanLine && !cleanLine.includes('>>END')) {
-            cur += (cur ? ' ' : '') + cleanLine;
-          }
-        }
-        if (cur) entries.push(cur.trim());
-        
-        const lis = entries.map((e: string) => `<li>${e}</li>`).join('');
-        return `<h2>Bibliography</h2>\n<ol class="bibliography">${lis}</ol>`;
-      });
-    }
-    
-    // Post-HTML cleanup for any remaining artifacts
-    if (tier === 'enhanced' && options.enhancedV2Enabled) {
-      // Final cleanup of any HTML br tags that might have been generated
-      contentAsHtml = contentAsHtml.replace(/<br\s*\/?>/gi, ' ');
-      contentAsHtml = contentAsHtml.replace(/&lt;br\s*\/?&gt;/gi, ' ');
-    }
     
     // LOG ENHANCED PATH ENTRY (generatePdfFromContent)
     console.log('[ENHANCED-PATH-ENTRY-FROM-CONTENT]', {
@@ -1196,15 +852,12 @@ export async function generatePdfFromContent(
         return html;
       };
       
-      // DISABLED: Keep semantic HTML lists instead of converting to enh-bullet
-      // contentAsHtml = transformLists(contentAsHtml);
+      // contentAsHtml = transformLists(contentAsHtml);  // DISABLED - breaks bullet formatting
       
-      // LOG LIST STATUS (no longer transforming)
-      console.log('[ENHANCED-LIST-STATUS]', {
-        ulCount: (contentAsHtml.match(/<ul/gi) || []).length,
-        olCount: (contentAsHtml.match(/<ol/gi) || []).length,
-        liCount: (contentAsHtml.match(/<li/gi) || []).length,
-        bibliographyOL: (contentAsHtml.match(/<ol class="bibliography">/g) || []).length
+      // LOG AFTER LIST TRANSFORM
+      console.log('[ENHANCED-LIST-TRANSFORM]', {
+        enhBullets: (contentAsHtml.match(/class="enh-bullet"/g) || []).length,
+        remainingLI: (contentAsHtml.match(/<li/gi) || []).length
       });
       
       // Step 2: Wrap citations with preceding word
@@ -1240,7 +893,7 @@ export async function generatePdfFromContent(
       // Step 4: Protect parenthetical expressions
       contentAsHtml = contentAsHtml.replace(
         /\(e\.g\.[^)]{1,40}\)/g,
-        (match: string) => `<span class="nowrap">${match}</span>`
+        (match) => `<span class="nowrap">${match}</span>`
       );
       
       // Step 5: Keep numbers with their units
@@ -1257,11 +910,28 @@ export async function generatePdfFromContent(
     // No special processing needed - clean HTML generation
     
     // DEBUG: Save HTML for comparison
-    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+    if ((tier === 'enhanced' && options.enhancedV2Enabled) || process.env.DEBUG_PDF === '1') {
       try {
-        const debugPath = `debug-${assessmentData.guide_type}-enhanced-v2.html`;
+        const debugPath = tier === 'enhanced' 
+          ? `debug-enhanced-${assessmentData.guide_type || 'unknown'}.html`
+          : `debug-${tier}-${assessmentData.guide_type || 'unknown'}.html`;
         await fs.writeFile(debugPath, fullHtml);
-        console.log(`[DEBUG] Saved HTML to ${debugPath}`);
+        console.log(`[DEBUG] Saved HTML to ${debugPath} for inspection`);
+        
+        // Log specific debug info for bibliography
+        if (tier === 'enhanced') {
+          // Verify bibliography structure
+          const bibBlock = fullHtml.match(/<h2[^>]*>\s*Bibliography\s*<\/h2>[\s\S]*?(?=<h2|<\/body>)/i)?.[0] || '';
+          console.log('[BIB-DEBUG] has <ol class="bibliography">', /<ol[^>]*\bbibliography\b/.test(bibBlock));
+          console.log('[BIB-DEBUG] DOI spans count:', (bibBlock.match(/class="doi"/g) || []).length);
+          console.log('[BIB-DEBUG] Non-breaking hyphens:', (bibBlock.match(/&#8209;/g) || []).length);
+          console.log('[BIB-DEBUG] Has <p> inside <li>:', /<li[^>]*>[\s\S]*?<p/i.test(bibBlock));
+          
+          // Check for problematic CSS
+          if (fullHtml.includes('overflow-wrap:anywhere') || fullHtml.includes('overflow-wrap: anywhere')) {
+            console.warn('[BIB-DEBUG] WARNING: Found overflow-wrap:anywhere which will break DOIs!');
+          }
+        }
       } catch (e) {
         console.log('[DEBUG] Could not save HTML:', e);
       }
@@ -1278,14 +948,10 @@ export async function generatePdfFromContent(
     // Pipe browser console to Node console
     page.on('console', msg => console.log('[PAGE]', msg.text()));
     
-    // Use wider viewport for better text rendering
-    await page.setViewport({ 
-      width: 1200,  // Wider viewport for better text flow
-      height: 1600, // Proper height
-      deviceScaleFactor: 1 
-    });
-    console.info('Step 3: New page opened with wider viewport. Setting content...');
-    console.log('[WIDTH-DEBUG] Page viewport:', await page.viewport());
+    // Set explicit viewport for consistent rendering across all tiers
+    // Use EXTRA wide viewport to prevent text wrapping issues
+    await page.setViewport({ width: 2400, height: 3400 }); // Extra wide viewport to prevent citation breaks
+    console.info('Step 3: New page opened with A4 viewport. Setting content...');
     
     // Check if the HTML content is valid before setting it
     if (!fullHtml || typeof fullHtml !== 'string' || fullHtml.length < 50) {
@@ -1298,195 +964,62 @@ export async function generatePdfFromContent(
     console.log('[PDF] About to set HTML content with length:', fullHtml.length);
     console.log('[PDF] HTML contains img tags:', fullHtml.includes('<img'));
     
-    await page.setContent(fullHtml, { 
-      waitUntil: 'networkidle0',
-      timeout: 30000 
-    });
-    console.info('Step 5: Content set. Checking dimensions...');
-    
-    // Check actual dimensions for overflow
-    const dimensions = await page.evaluate(() => {
-      return {
-        bodyWidth: document.body.scrollWidth,
-        bodyHeight: document.body.scrollHeight,
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight,
-        overflow: document.body.scrollWidth > window.innerWidth
-      };
-    });
-    console.log('[WIDTH-DEBUG] Actual dimensions:', dimensions);
-    if (dimensions.overflow) {
-      console.warn('[WARNING] Content is overflowing the page width!');
+    // FINAL CLEANUP - Remove any sentinels that survived (Enhanced V2 only)
+    if (tier === 'enhanced' && options.enhancedV2Enabled) {
+      console.log('[FINAL-DESENTINEL] Removing any remaining sentinels before PDF generation...');
+      fullHtml = finalDeSentinelize(fullHtml);
+      
+      // Add guard to FAIL FAST if sentinels remain
+      if (fullHtml.includes('[[DOI') || fullHtml.includes('[[RANGE')) {
+        console.error('CRITICAL: Sentinels still present in final HTML!');
+        // Log the specific sentinels found
+        const doiSentinels = (fullHtml.match(/\[\[DOI[^\]]*\]\]/g) || []).slice(0, 3);
+        const rangeSentinels = (fullHtml.match(/\[\[RANGE[^\]]*\]\]/g) || []).slice(0, 3);
+        console.error('Found DOI sentinels:', doiSentinels);
+        console.error('Found RANGE sentinels:', rangeSentinels);
+        throw new Error('SENTINELS_STILL_PRESENT_IN_FINAL_HTML');
+      }
+      console.log('[FINAL-DESENTINEL] All sentinels removed successfully');
     }
     
+    await page.setContent(fullHtml, { 
+      waitUntil: 'networkidle0', // Try 'domcontentloaded' if images cause hanging
+      timeout: 30000 
+    });
+    console.info('Step 5: Content set. Generating PDF...');
     console.log('[PDF] Content set successfully');
     logger.info('Page content set');
     
-    // Enhanced V2: Clean markdown processing approach (DOM manipulation disabled)
+    // DOM-aware glue for Enhanced tier to prevent citation/phrase orphaning
     if (tier === 'enhanced' && options.enhancedV2Enabled) {
-      console.log('[ENHANCED-V2] Using clean markdown processing - DOM manipulation disabled');
+      console.log('[ENHANCED-DOM-GLUE] Starting DOM-aware glue...');
       
-      // Add clean print styles and prevent awkward breaks
+      // First inject styles
       await page.addStyleTag({ content: `
-        html, body {
-          margin: 0 !important;
-          padding: 0 !important;           /* ← no body padding; margins come from Puppeteer */
-          width: 100% !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
+        .nowrap { white-space: nowrap; }
+        .cite { display: inline-block; }
+        .glue { display: inline-block; }
+        .bib { margin-top: 6pt; }
+        .bib-item { 
+          margin: 6pt 0; 
+          line-height: 1.35; 
+          page-break-inside: avoid; 
+          break-inside: avoid; 
         }
-        
-        body {
-          font-size: 12pt !important;
-          line-height: 1.55 !important;
-          box-sizing: border-box !important;
-        }
-        
-        /* The printable text column = page width minus Puppeteer margins (1" + 1") */
-        body > * {
-          max-width: calc(8.5in - 2in) !important;
-          margin: 0 auto !important;
-          padding: 0 !important;
-          box-sizing: border-box !important;
-        }
-        
-        /* Natural wrapping; no clipping; no hard break-all */
-        p, li, div, span, td, th, h1, h2, h3, h4 {
-          white-space: normal !important;
-          overflow-wrap: break-word !important;
-          word-break: normal !important;
-          hyphens: auto !important;   /* allow normal hyphenation when needed */
-          max-width: 100% !important;
-        }
-        
-        /* Lists: simple, predictable */
-        ul, ol {
-          padding-left: 1.25em !important;
-          margin: 0.5em 0 !important;
-          list-style-position: outside !important;
-        }
-        li {
-          margin: 0.2em 0 !important;
-          break-inside: avoid;
-          page-break-inside: avoid;
-          text-align: left !important;
-        }
-        
-        /* Bibliography: drop hanging indent (it was causing numbers on their own line) */
-        ol.bibliography { padding-left: 1.5em !important; }
-        ol.bibliography > li {
-          margin: 0.35em 0 !important;
-          text-indent: 0 !important;     /* ← critical */
-          padding-left: 0 !important;     /* ← critical */
-        }
-        
-        /* Force normal wrapping everywhere (no nowrap anchors that stretch lines) */
-        a, .citation {
-          white-space: normal !important;
-          display: inline !important;
-        }
-        
-        /* Paragraph & list text should never justify-stretch */
-        p, li {
-          text-align: left !important;
-          text-justify: auto !important;
-          letter-spacing: normal !important;
-          word-spacing: normal !important;
-        }
-        
-        /* Ensure consistent left alignment and normal spacing */
-        p, li {
-          text-align: left !important;
-          text-justify: auto !important;
-          letter-spacing: normal !important;
-        }
-        
-        h2 { 
-          font-size: 16pt !important;
-          margin-top: 1.5em !important;
-        }
-        
-        h3 { 
-          font-size: 14pt !important;
-          margin-top: 1.2em !important;
-        }
-        
-        /* Prevent awkward line breaks */
-        p, li {
-          hyphens: none !important;
-          word-break: normal !important;
-          overflow-wrap: normal !important;
-          line-height: 1.6 !important;
-        }
-        
-        /* Keep citations with their text */
-        p > span:last-child {
-          white-space: nowrap !important;
-        }
-        
-        /* Better bullet formatting */
-        li {
-          page-break-inside: avoid !important;
-          break-inside: avoid !important;
-          margin-bottom: 0.5em !important;
-        }
-        
-        /* Bibliography specific formatting */
-        .bibliography li,
-        #bibliography li {
-          margin-bottom: 0.5em !important;
-          padding-right: 0.5in !important;
-          font-size: 11pt !important;
-        }
-        
-        /* Keep headings with following content */
-        h1, h2, h3, h4, h5, h6 {
-          page-break-after: avoid !important;
-          break-after: avoid !important;
-        }
-        
-        /* Prevent URL breaking - Enhanced V2 specific */
-        a {
-          word-break: break-word;
-          overflow-wrap: anywhere;
-        }
-        
-        /* Bibliography specific URL handling - force DOIs to stay together */
-        .bibliography a, 
-        .references a,
-        a[href*="doi.org"] {
-          display: inline-block;
-          white-space: nowrap;
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        
-        /* Allow wrapping at slashes for very long URLs */
-        .bibliography li,
-        .references li {
-          word-break: break-word;
-          overflow-wrap: anywhere;
-          hyphens: none;
-        }
-        
-        /* Ensure DOI spans don't break */
-        span[style*="nowrap"] {
-          display: inline-block !important;
-          white-space: nowrap !important;
-        }
-        
         @media print { 
-          a[href]::after { content: none !important; }
-          
-          /* Ensure bullets don't break */
-          ul, ol {
-            page-break-inside: avoid !important;
-          }
+          a[href]::after { content: none !important; } 
         }
       `});
       
-      // Note: All formatting is now handled in markdown processing before HTML conversion
+      // Execute the enhanced DOM glue script
+      await page.evaluate(enhancedDomGlueShipScript);
+      console.log('[ENHANCED-DOM-GLUE] DOM-aware glue applied');
+      
+      // Inject the print CSS LAST to ensure it overrides everything
+      await page.addStyleTag({ content: '@media print{a[href]::after{content:none!important}}' });
+      console.log('[ENHANCED-DOM-GLUE] Injected final print CSS to stop DOI duplication');
+      
+      // Save the final HTML after all transformations for debugging
       try {
         const finalHtml = await page.content();
         const slug = assessmentData.guide_type || assessmentData.guideType || 'unknown';
@@ -1555,20 +1088,21 @@ export async function generatePdfFromContent(
     }
     
     const pdfBuffer = await page.pdf({
-      format: 'Letter',  // US Letter, not A4!
+      format: 'A4',
       printBackground: true,
       displayHeaderFooter: true,
       headerTemplate: '<div></div>',
       footerTemplate: `
-        <div style="width: 100%; font-size: 10px; padding: 5px 0; text-align: right;">
-          <span style="margin-right: 20px;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+        <div style="width: 100%; font-size: 10px; padding: 5px 0; text-align: center;">
+          <span>© PainOptix™ Educational Content</span>
+          <span style="float: right; margin-right: 20px;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
         </div>
       `,
       margin: {
-        top: '1in',
-        right: '1in',
+        top: '0.75in',
+        right: '0.4in',  // Further reduced for maximum text width
         bottom: '1in',
-        left: '1in'
+        left: '0.4in'    // Further reduced for maximum text width
       },
       // Set scale for proper text rendering
       ...(tier === 'monograph' ? {

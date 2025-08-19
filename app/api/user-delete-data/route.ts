@@ -33,10 +33,21 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { createClient } from '@supabase/supabase-js'
+
+// Admin client with elevated privileges for data deletion operations
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
 
 export async function DELETE(request: NextRequest) {
-  const supabase = supabaseAdmin();
   try {
     const { assessmentId } = await request.json()
     
@@ -50,8 +61,7 @@ export async function DELETE(request: NextRequest) {
 
     // SECURITY: Verify assessment exists before proceeding
     // This prevents enumeration attacks and ensures we have data to delete
-    // Removed duplicate: // Duplicate removed: const supabase = supabaseAdmin();
-    const { data: assessment, error: fetchError } = await supabase
+    const { data: assessment, error: fetchError } = await supabaseAdmin
       .from('assessments')
       .select('*')
       .eq('id', assessmentId)
@@ -82,7 +92,7 @@ export async function DELETE(request: NextRequest) {
     // This ensures clean deletion without orphaned records
     
     // 1. Delete assessment_progress records (dependent on session_id)
-    const { error: progressError } = await supabase
+    const { error: progressError } = await supabaseAdmin
       .from('assessment_progress')
       .delete()
       .eq('session_id', assessment.session_id)
@@ -96,7 +106,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 2. Delete assessment_sessions record (dependent on assessment)
-    const { error: sessionError } = await supabase
+    const { error: sessionError } = await supabaseAdmin
       .from('assessment_sessions')
       .delete()
       .eq('session_id', assessment.session_id)
@@ -110,7 +120,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 3. Delete guide_deliveries records (tracks email/SMS delivery)
-    const { error: deliveriesError } = await supabase
+    const { error: deliveriesError } = await supabaseAdmin
       .from('guide_deliveries')
       .delete()
       .eq('assessment_id', assessmentId)
@@ -124,7 +134,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 4. Delete follow_ups records (14-day follow-up data)
-    const { error: followUpsError } = await supabase
+    const { error: followUpsError } = await supabaseAdmin
       .from('follow_ups')
       .delete()
       .eq('assessment_id', assessmentId)
@@ -138,7 +148,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 5. Delete telehealth_appointments records (future feature tracking)
-    const { error: telehealthError } = await supabase
+    const { error: telehealthError } = await supabaseAdmin
       .from('telehealth_appointments')
       .delete()
       .eq('assessment_id', assessmentId)
@@ -152,7 +162,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 6. Delete paincrowdsource_sync_queue records (integration data)
-    const { error: syncQueueError } = await supabase
+    const { error: syncQueueError } = await supabaseAdmin
       .from('paincrowdsource_sync_queue')
       .delete()
       .eq('assessment_id', assessmentId)
@@ -166,7 +176,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 7. Finally, delete the main assessment record (contains personal data)
-    const { error: assessmentError } = await supabase
+    const { error: assessmentError } = await supabaseAdmin
       .from('assessments')
       .delete()
       .eq('id', assessmentId)
@@ -181,7 +191,7 @@ export async function DELETE(request: NextRequest) {
 
     // 8. REGULATORY COMPLIANCE: Create audit log entry for SAMD requirements
     // This maintains traceability without storing personal data
-    const { error: auditError } = await supabase
+    const { error: auditError } = await supabaseAdmin
       .from('deletion_audit_log')
       .insert({
         deleted_by: 'user_self_service', // Source of deletion request

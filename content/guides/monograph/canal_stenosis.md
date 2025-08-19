@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Canal Stenosis
-subtitle:
+subtitle: Comprehensive Monograph
 ---
 
 # PainOptix™ Canal Stenosis Monograph
@@ -9,7 +9,7 @@ subtitle:
 
 ## Section 1: Understanding Your Symptoms and Next Steps
 
-### Understanding Back and Leg Discomfort: Information About Movement
+### Understanding of Back and Leg Discomfort: Information About Movement
 
 You've taken a key step toward improving your comfort by exploring how your symptoms align with common patterns. Based on your PainFinder™ quiz responses, your symptoms resemble those often associated with lumbar spinal stenosis, a condition where the spinal canal narrows, potentially affecting nerves and causing leg discomfort. This guide, crafted by Dr. Carpentier at DrCPainMD, aims to:
 - Explain what your symptoms might suggest.

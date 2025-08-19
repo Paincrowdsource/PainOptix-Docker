@@ -1,6 +1,6 @@
 ---
 title: PainOptix™ Central Disc Bulge
-subtitle:
+subtitle: Comprehensive Monograph
 ---
 
 # PainOptix™ Central Disc Bulge Monograph
@@ -9,7 +9,7 @@ subtitle:
 
 ## Section 1: Introduction & Symptom Summary
 
-### Understanding Central Disc Bulge Symptoms: Information About Movement
+### Understanding of Central Disc Bulge Symptoms: Information About Movement
 
 You've taken a key step toward understanding your symptoms by completing the PainFinder™ quiz. Your responses suggest a pattern consistent with Central Disc Bulge, which often involves low back and bilateral leg pain that worsens with sitting. This monograph, crafted by Dr. Carpentier at DrCPainMD.com, aims to:
 - Explain what your symptoms might indicate.
@@ -35,6 +35,8 @@ These findings suggest Central Disc Bulge symptoms, often related to mechanical 
 - You may use the 14-day tracker (Section 14) to log your progress.
 - Share anonymized experiences on PainCrowdsource.org to learn what works for others.
 - Discuss your symptoms with a healthcare provider for a thorough evaluation.
+
+Feedback Prompt: Was this guide helpful? [Yes/No] Did you visit a doctor? [Yes/No] How well did this guide describe your symptoms? [Very Well/Somewhat/Not at All] Outcome: [Free text]
 
 ## Section 2: Understanding Central Disc Bulge
 
@@ -248,17 +250,17 @@ Medications and supplements can manage short-term symptoms, enabling activity. C
 
 ### Medications
 
-- NSAIDs (e.g., Ibuprofen, Naproxen): Reduce inflammation, use with food for 1–2 weeks [Enthoven et al., 2016].
+- NSAIDs (e.g., Ibuprofen 400–800 mg, Naproxen 250–500 mg): Reduce inflammation, use with food for 1–2 weeks [Enthoven et al., 2016].
 - Neuropathic Pain Modifiers (e.g., Gabapentin): For burning or tingling leg pain, under physician guidance [Jordan et al., 2011].
-- Muscle Relaxants (e.g., Cyclobenzaprine): Brief use (3–5 days) for spasms, may cause drowsiness [Qaseem et al., 2017].
+- Muscle Relaxants (e.g., Cyclobenzaprine 5–10 mg): Brief use (3–5 days) for spasms, may cause drowsiness [Qaseem et al., 2017].
 - Acetaminophen: No meaningful benefit for low back pain [Saragiotto et al., 2016].
 
 ### Supplements
 
-- Turmeric (Curcumin): Consult with healthcare provider for dosage [Daily et al., 2016].
-- Magnesium: Consult with healthcare provider for dosage [Daily et al., 2016].
-- Omega-3 Fatty Acids: Consult with healthcare provider for dosage [Daily et al., 2016].
-- Vitamin D: Consult with healthcare provider for dosage if deficient [Daily et al., 2016].
+- Turmeric (Curcumin): 500–1000 mg daily with piperine [Daily et al., 2016].
+- Magnesium: 200–400 mg daily for muscle tension [Daily et al., 2016].
+- Omega-3 Fatty Acids: 1–2 g daily [Daily et al., 2016].
+- Vitamin D: 2000–4000 IU daily if deficient [Daily et al., 2016].
 
 Track effectiveness on PainCrowdsource.org to refine your approach.
 

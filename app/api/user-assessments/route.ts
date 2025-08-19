@@ -36,7 +36,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { createClient } from '@supabase/supabase-js'
+
+// Admin client for authorized database access
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
 
 /**
  * Session Token Verification Function
@@ -68,7 +80,6 @@ function verifySession(token: string): { identifier: string } | null {
 }
 
 export async function GET(request: NextRequest) {
-  const supabase = supabaseAdmin();
   try {
     // AUTHENTICATION: Extract Bearer token from Authorization header
     const authorization = request.headers.get('authorization')
@@ -93,8 +104,7 @@ export async function GET(request: NextRequest) {
 
     // AUTHORIZATION: Fetch assessments for authenticated user only
     // Uses OR condition to match either email or phone identifier
-    // Removed duplicate: // Duplicate removed: const supabase = supabaseAdmin();
-    const { data: assessments, error } = await supabase
+    const { data: assessments, error } = await supabaseAdmin
       .from('assessments')
       .select(`
         id,

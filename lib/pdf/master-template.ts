@@ -16,13 +16,6 @@ export function getPdfHtmlTemplate(
     @page {
       size: A4;
       margin: 1in;
-      @bottom-center {
-        content: "PainOptix™ is for general educational use only and is not a substitute for professional medical advice. Always seek the guidance of a qualified healthcare provider regarding any medical condition.";
-        font-size: 8pt;
-        color: #666;
-        max-width: 90%;
-        text-align: center;
-      }
     }
 
     body {
@@ -104,10 +97,27 @@ export function getPdfHtmlTemplate(
     .bibliography {
       font-size: 10pt;
       line-height: 1.4;
+      margin: 0;
+      padding-left: 1.5rem;
+      list-style: decimal;
+      word-break: keep-all;
+      overflow-wrap: normal;
+      hyphens: none;
     }
-
+    
     .bibliography li {
-      margin-bottom: 8pt;
+      margin-bottom: 0.6rem;
+      list-style-position: outside;
+      display: list-item;
+    }
+    
+    .bibliography .norun {
+      display: inline-block;
+      white-space: nowrap;
+    }
+    
+    .bibliography .doi {
+      white-space: nowrap;
     }
 
     /* Tier-specific styling */
@@ -158,17 +168,78 @@ export function getPdfHtmlTemplate(
     }
   `;
 
-  // Only show tier badge if subtitle doesn't already say the same thing
-  const showTierBadge = tier === 'monograph' || 
-    (tier === 'enhanced' && frontmatter.subtitle !== 'Enhanced Clinical Guide');
-  
-  const tierBadge = showTierBadge ? (
-    tier === 'monograph' ? 
-      '<span class="tier-badge tier-monograph">COMPREHENSIVE MONOGRAPH</span>' :
-      tier === 'enhanced' ?
-      '<span class="tier-badge tier-enhanced">ENHANCED CLINICAL GUIDE</span>' :
-      ''
-  ) : '';
+  // Enhanced-specific CSS for hanging bullets and text control
+  const enhancedCss = tier === 'enhanced' ? `
+    /* Enhanced tier hanging-bullet paragraphs */
+    .enh-bullet {
+      display: flex;
+      page-break-inside: avoid;
+      margin: 0 0 12pt 0;
+    }
+    
+    .enh-bullet .dot {
+      flex: 0 0 16pt;
+      font-weight: normal;
+    }
+    
+    .enh-bullet .txt {
+      flex: 1;
+      text-align: justify;
+      hyphens: auto;
+    }
+    
+    /* Citation and phrase gluing */
+    .cite, .nowrap, .glue {
+      white-space: nowrap;
+      display: inline-block;
+    }
+    
+    /* Bibliography formatting */
+    .bib {
+      margin-top: 12pt;
+    }
+    
+    .bib-item {
+      margin: 6pt 0;
+      line-height: 1.35;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    
+    /* Disable link href printing */
+    @media print {
+      a[href]::after {
+        content: none !important;
+      }
+    }
+  ` : '';
+
+  const tierBadge = tier === 'monograph' ? 
+    '<span class="tier-badge tier-monograph">COMPREHENSIVE MONOGRAPH</span>' :
+    tier === 'enhanced' ?
+    '<span class="tier-badge tier-enhanced">ENHANCED CLINICAL GUIDE</span>' :
+    '';
+
+  // Build heading based on tier and guide type
+  const getHeading = () => {
+    if (tier === 'enhanced') {
+      // Map guide types to proper headings
+      const headingMap: Record<string, string> = {
+        facet_arthropathy: 'Facet Arthropathy',
+        central_disc_bulge: 'Central Disc Bulge',
+        canal_stenosis: 'Canal Stenosis',
+        lumbar_instability: 'Lumbar Instability',
+        muscular_nslbp: 'Muscular / NSLBP',
+        upper_lumbar_radiculopathy: 'Upper Lumbar Radiculopathy',
+        si_joint_dysfunction: 'SI Joint Dysfunction',
+        urgent_symptoms: 'Urgent Symptoms',
+        sciatica: 'Sciatica'
+      };
+      const condition = headingMap[assessment.guide_type] || headingMap[assessment.guideType] || 'Your Back Pain';
+      return `Learn About ${condition}`;
+    }
+    return frontmatter.title || (assessment.guideType ? assessment.guideType.replace(/_/g, ' ').toUpperCase() : 'ASSESSMENT GUIDE');
+  };
 
   return `
     <!DOCTYPE html>
@@ -176,17 +247,18 @@ export function getPdfHtmlTemplate(
       <head>
         <base href="${process.env.NODE_ENV === 'development' && !process.env.NETLIFY ? 'http://localhost:3000/' : 'https://painoptixstaging.netlify.app/'}">
         <meta charset="utf-8" />
-        <style>${cssStyles}</style>
+        <style>${cssStyles}${enhancedCss}</style>
       </head>
       <body>
         <div class="cover-page">
-          <h1 class="cover-title">${frontmatter.title || (assessment.guideType ? assessment.guideType.replace(/_/g, ' ').toUpperCase() : 'ASSESSMENT GUIDE')}</h1>
-          ${frontmatter.subtitle && frontmatter.subtitle !== 'Enhanced Clinical Guide' ? `<h2>${frontmatter.subtitle}</h2>` : ''}
-          ${tierBadge || (tier === 'enhanced' ? '<h2>Enhanced Clinical Guide</h2>' : '')}
+          <h1 class="cover-title">${getHeading()}</h1>
+          ${tier === 'enhanced' ? '<p>Thank you for using PainOptix™ to better understand your back pain. This Enhanced Clinical Guide provides detailed, evidence-based information about your condition.</p>' : ''}
+          ${frontmatter.subtitle && tier !== 'enhanced' ? `<h2>${frontmatter.subtitle}</h2>` : ''}
+          ${tierBadge}
           <p style="margin-top: 48pt;">
             <strong>Prepared for:</strong> ${assessment.name || 'Patient'}<br/>
             <strong>Date:</strong> ${currentDate}<br/>
-            <strong>Initial Pain Score:</strong> ${assessment.initialPainScore || 'N/A'}/10
+            <strong>Initial Pain Score:</strong> ${assessment.initialPainScore || assessment.initial_pain_score || 'N/A'}/10
           </p>
           <p style="position: absolute; bottom: 1in; left: 0; right: 0; text-align: center; font-size: 10pt;">
             Developed by Bradley W. Carpentier, MD<br/>
