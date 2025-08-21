@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { ArrowRight, Star, Zap, BookOpen, Download, Shield, CheckCircle, Award, Clock, Activity, MapPin, AlertCircle, Info } from 'lucide-react'
-import { GuideContent } from './GuideContent'
+import { GuideContent } from '@/src/components/GuideContent'
 import { formatAssessmentResponses } from '@/lib/assessment-formatter'
 import { isHighestTier, getTierDisplayName, mapDbTierToUrl } from '@/lib/utils/tier-mapping'
 import UserDeleteModal from '@/components/UserDeleteModal'
@@ -417,7 +417,7 @@ export default function GuidePage() {
         <GuideContent 
           guideType={assessment.guide_type}
           tier={
-            (assessment.payment_tier && isHighestTier(String(assessment.payment_tier))) || assessment.payment_tier === 20 ? 'monograph' :
+            (assessment.payment_tier && isHighestTier(String(assessment.payment_tier))) || assessment.payment_tier === 20 ? 'comprehensive' :
             assessment.payment_tier === 'enhanced' || assessment.payment_tier === 5 ? 'enhanced' :
             'free'
           }
