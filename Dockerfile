@@ -66,8 +66,10 @@ FROM node:20-slim AS runner
 
 WORKDIR /app
 
-# Install Chromium dependencies and utilities
+# Install Chromium binary and dependencies
 RUN apt-get update && apt-get install -y \
+    # Chromium browser
+    chromium \
     # Core Chromium dependencies
     libnss3 \
     libnspr4 \
@@ -118,6 +120,10 @@ RUN groupadd -r app && useradd -r -g app -G audio,video app \
 # Set production environment
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Configure Puppeteer to use system Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Memory optimization for large PDF generation
 ENV NODE_OPTIONS="--max-old-space-size=4096"

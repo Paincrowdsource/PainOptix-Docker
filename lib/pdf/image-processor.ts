@@ -111,8 +111,8 @@ function addExerciseImages(content: string): string {
               exerciseCount++;
               processedLines.push('');
               
-              // Always use production URL for images so Puppeteer can load them
-              const baseUrl = 'https://painoptixstaging.netlify.app';
+              // Use production URL for images so Puppeteer can load them
+              const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://painoptix-clean-9n639.ondigitalocean.app';
               const encodedImageName = encodeURIComponent(imageName);
               const imageUrl = `${baseUrl}/medical-illustrations/exercises/${encodedImageName}`;
               console.log('[PDF] Using external image URL:', imageUrl);
@@ -163,8 +163,8 @@ function addAnatomicalImages(content: string, condition: string): string {
         const nextContent = sections[i + 1];
         if (nextContent && anatomicalImages.length > 0) {
           // Insert the first anatomical image at the beginning of the section content
-          // Always use production URL for images so Puppeteer can load them
-          const baseUrl = 'https://painoptixstaging.netlify.app';
+          // Use production URL for images so Puppeteer can load them
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://painoptix-clean-9n639.ondigitalocean.app';
           const encodedImageName = encodeURIComponent(anatomicalImages[0]);
           const imageUrl = `${baseUrl}/medical-illustrations/anatomical/${encodedImageName}`;
           console.log('[PDF] Using external anatomical image URL:', imageUrl);

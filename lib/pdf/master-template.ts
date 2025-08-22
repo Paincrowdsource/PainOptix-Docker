@@ -245,7 +245,7 @@ export function getPdfHtmlTemplate(
     <!DOCTYPE html>
     <html>
       <head>
-        <base href="${process.env.NODE_ENV === 'development' && !process.env.NETLIFY ? 'http://localhost:3000/' : 'https://painoptixstaging.netlify.app/'}">
+        <base href="${process.env.NODE_ENV === 'development' && !process.env.NETLIFY ? 'http://localhost:3000/' : (process.env.NEXT_PUBLIC_APP_URL || 'https://painoptix-clean-9n639.ondigitalocean.app') + '/'}">
         <meta charset="utf-8" />
         <style>${cssStyles}${enhancedCss}</style>
       </head>
