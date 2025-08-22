@@ -111,7 +111,7 @@ function normalizeEnhancedBibliography(html: string): string {
 
     // Collect everything until next heading
     console.log('[BIB-NORMALIZE] Collecting bibliography content');
-    const collected: any[] = [];
+    const collected: cheerio.Cheerio<any>[] = [];
     let n = bibH.next();
     while (n.length && !/^h[1-6]$/i.test(n[0].tagName || '')) {
       collected.push(n);

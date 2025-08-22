@@ -1,6 +1,10 @@
 import { getServiceSupabase } from './supabase'
 import { sendEmail, sendSMS } from './communications'
 import { getEducationalGuideEmailTemplate, getSMSTemplate } from './email-templates/educational-guide'
+import { getFreeTierWelcomeTemplate } from './email/templates/free-tier-welcome'
+import { getEnhancedConfirmationTemplate } from './email/templates/enhanced-confirmation'
+import { getMonographConfirmationTemplate } from './email/templates/monograph-confirmation'
+import { resolveTierAndFlags } from './email/resolve-tier'
 import { features } from './config'
 
 export async function deliverEducationalGuide(assessmentId: string) {
@@ -32,13 +36,42 @@ export async function deliverEducationalGuide(assessmentId: string) {
           .charAt(0).toUpperCase() + assessment.email.split('@')[0].split('.')[0].slice(1);
       }
       
-      const emailTemplate = getEducationalGuideEmailTemplate({
-        guideType: assessment.guide_type,
-        assessmentId: assessment.id,
-        firstName: firstName || 'Patient',
-        relievingFactors: assessment.responses?.find((r: any) => r.questionId === 'Q5')?.answer || 'certain positions',
-        aggravatingFactors: assessment.responses?.find((r: any) => r.questionId === 'Q4')?.answer || 'certain activities'
-      })
+      // Use new segmented templates based on tier
+      const { tier, redFlag } = await resolveTierAndFlags(supabase, assessmentId)
+      
+      let emailTemplate: { subject: string; html: string; text: string }
+      
+      if (tier === 'monograph') {
+        const html = getMonographConfirmationTemplate({ 
+          assessmentResults: assessment.responses,
+          userTier: tier 
+        })
+        emailTemplate = {
+          subject: 'Your Complete Educational Monograph is Ready',
+          html,
+          text: 'Your Complete Educational Monograph is Ready. Please view this email in HTML format.'
+        }
+      } else if (tier === 'enhanced') {
+        const html = getEnhancedConfirmationTemplate({ 
+          assessmentResults: assessment.responses,
+          userTier: tier 
+        })
+        emailTemplate = {
+          subject: 'Your Enhanced Educational Report is Ready',
+          html,
+          text: 'Your Enhanced Educational Report is Ready. Please view this email in HTML format.'
+        }
+      } else {
+        const html = getFreeTierWelcomeTemplate({ 
+          assessmentResults: assessment.responses,
+          userTier: tier 
+        })
+        emailTemplate = {
+          subject: 'Your PainOptix Educational Assessment & Free Guide',
+          html,
+          text: 'Your PainOptix Educational Assessment & Free Guide is Ready. Please view this email in HTML format.'
+        }
+      }
       
       // Validate email address before sending
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -91,13 +124,42 @@ export async function deliverEducationalGuide(assessmentId: string) {
               .charAt(0).toUpperCase() + assessment.email.split('@')[0].split('.')[0].slice(1);
           }
           
-          const emailTemplate = getEducationalGuideEmailTemplate({
-            guideType: assessment.guide_type,
-            assessmentId: assessment.id,
-            firstName: firstName || 'Patient',
-            relievingFactors: assessment.responses?.find((r: any) => r.questionId === 'Q5')?.answer || 'certain positions',
-            aggravatingFactors: assessment.responses?.find((r: any) => r.questionId === 'Q4')?.answer || 'certain activities'
-          })
+          // Use new segmented templates based on tier
+          const { tier, redFlag } = await resolveTierAndFlags(supabase, assessmentId)
+          
+          let emailTemplate: { subject: string; html: string; text: string }
+          
+          if (tier === 'monograph') {
+            const html = getMonographConfirmationTemplate({ 
+              assessmentResults: assessment.responses,
+              userTier: tier 
+            })
+            emailTemplate = {
+              subject: 'Your Complete Educational Monograph is Ready',
+              html,
+              text: 'Your Complete Educational Monograph is Ready. Please view this email in HTML format.'
+            }
+          } else if (tier === 'enhanced') {
+            const html = getEnhancedConfirmationTemplate({ 
+              assessmentResults: assessment.responses,
+              userTier: tier 
+            })
+            emailTemplate = {
+              subject: 'Your Enhanced Educational Report is Ready',
+              html,
+              text: 'Your Enhanced Educational Report is Ready. Please view this email in HTML format.'
+            }
+          } else {
+            const html = getFreeTierWelcomeTemplate({ 
+              assessmentResults: assessment.responses,
+              userTier: tier 
+            })
+            emailTemplate = {
+              subject: 'Your PainOptix Educational Assessment & Free Guide',
+              html,
+              text: 'Your PainOptix Educational Assessment & Free Guide is Ready. Please view this email in HTML format.'
+            }
+          }
           
           deliverySuccess = await sendEmail({
             to: assessment.email,
