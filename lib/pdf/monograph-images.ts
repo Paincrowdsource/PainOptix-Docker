@@ -71,6 +71,7 @@ export const exerciseImageMap: Record<string, string> = {
   'Single Leg Stand': 'Single Leg Stance.png',
   'Single Leg Stance': 'Single Leg Stance.png',
   'Single-Leg Stand': 'Single Leg Stance.png',
+  'Standing Balance': 'Standing_Hip_Flexion.png',
   'Abdominal Bracing': 'Supine_Abdominal_Bracing.png',
   'Core Bracing': 'Supine_Abdominal_Bracing.png',
   'Supine Abdominal Bracing': 'Supine_Abdominal_Bracing.png',
