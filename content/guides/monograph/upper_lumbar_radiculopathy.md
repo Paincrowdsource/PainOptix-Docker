@@ -250,7 +250,7 @@ Consult your healthcare provider about appropriate options.
 ### Medications
 
 - NSAIDs: For inflammation around nerve roots.
-- Neuropathic Medications: Gabapentin, pregabalin for nerve pain.
+- Neuropathic Medications: Specific medications available for nerve pain.
 - Muscle Relaxants: If significant muscle spasm.
 - Oral Steroids: Sometimes used for acute flares.
 
