@@ -80,7 +80,7 @@ SI joint pain is characterized by discomfort in the lower back or buttocks, ofte
 
 ### Common Symptoms
 
-- Pain near the {{painLocation}}
+- Pain near the dimples of buttocks
 - Discomfort in the groin, hip, or upper thigh (not below the knee).
 - Stiffness after rest, easing with light activity.
 - Worsening with prolonged standing, single-leg tasks, or twisting.
