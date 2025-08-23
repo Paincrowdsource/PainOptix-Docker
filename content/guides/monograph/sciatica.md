@@ -31,7 +31,7 @@ Your symptoms align with a pattern often seen in adults with sciatica-like disco
 - **Numbness/Tingling:** Possible in the thigh, calf, foot, or toes.
 - **No Urgent Symptoms Reported.**
 
-These symptoms may suggest irritation of a nerve in the lower spine, often linked to repetitive stress, posture, or spinal changes [Chiu et al., 2015]. Similar discomfort can arise from other causes, like hip issues or muscle strain, so a healthcare provider's evaluation, possibly with imaging, is needed to clarify the cause [Vroomen et al., 2002]. This guide offers general strategies to support movement and comfort, which are used by some people with similar symptoms (e.g., many people report improvement with conservative care within 6–12 weeks [Chiu et al., 2015]).
+These symptoms may suggest irritation of a nerve in the lower spine, often linked to repetitive stress, posture, or spinal changes [Chiu et al., 2015]. Similar discomfort can arise from other causes, like hip issues or muscle strain, so a healthcare provider's evaluation, possibly with imaging, is needed to clarify the cause [Vroomen et al., 2002]. This guide offers general strategies to support movement and comfort, which are used by some people with similar symptoms (e.g., many people report improvement with conservative care within 6-12 weeks [Chiu et al., 2015]).
 
 ### Your Next Steps
 
@@ -120,7 +120,7 @@ This pattern guides:
 - **Posture Adjustments:** Avoiding forward tilt (e.g., sitting) [Chou et al., 2007].
 - **Progress Tracking:** Monitoring leg pain and function (Section 14).
 
-These strategies have helped 70–80% of people with similar symptoms improve [Long et al., 2004]. Track your progress on PainCrowdsource.org to refine your approach.
+These strategies have helped 70-80% of people with similar symptoms improve [Long et al., 2004]. Track your progress on PainCrowdsource.org to refine your approach.
 
 ## Section 5: When to See a Doctor
 
@@ -133,7 +133,7 @@ Most people with this pattern improve with general movement strategies, but some
 - **Fever, Chills, or Weight Loss:** Could indicate infection or systemic illness.
 - **Cancer History with New Pain:** Requires evaluation for metastasis [Chou et al., 2007].
 
-For non-urgent issues (e.g., discomfort lasting over 6–8 weeks), see a healthcare provider. Log changes on PainCrowdsource.org to track trends.
+For non-urgent issues (e.g., discomfort lasting over 6-8 weeks), see a healthcare provider. Log changes on PainCrowdsource.org to track trends.
 
 ## Section 6: Why Movement Helps
 
@@ -162,11 +162,11 @@ PainCrowdsource.org users report 50% less calf numbness after 2 weeks of walking
 
 ### A Plan to Boost Mobility
 
-This 4-week plan aims to improve comfort and movement, with 70–80% of people showing improvement with extension-based strategies [Long et al., 2004]. Progress gradually and stop if leg discomfort worsens.
+This 4-week plan aims to improve comfort and movement, with 70-80% of people showing improvement with extension-based strategies [Long et al., 2004]. Progress gradually and stop if leg discomfort worsens.
 
 ### General Guidelines
 
-- Dedicate 30–60 minutes daily (walking plus exercises).
+- Dedicate 30-60 minutes daily (walking plus exercises).
 - Avoid prolonged sitting, deep bending, or heavy lifting.
 - You may use the 14-day tracker (Section 14).
 - Check with a healthcare provider before starting.
@@ -175,34 +175,34 @@ This 4-week plan aims to improve comfort and movement, with 70–80% of people s
 
 **Goals:** Ease nerve pressure, improve circulation.
 
-- **Prone Lying:** Lie face down on a flat surface, relax for 5–10 minutes, 3x daily [Long et al., 2004].
+- **Prone Lying:** Lie face down on a flat surface, relax for 5-10 minutes, 3x daily [Long et al., 2004].
 - **Prone Press-Ups (Modified McKenzie):** Lie on stomach, hands under shoulders. Press chest up gently, keeping hips down. 10 reps, 3x daily [Long et al., 2004].
-- **Walking:** 5–10 minutes, 2–3x daily, neutral posture.
+- **Walking:** 5-10 minutes, 2-3x daily, neutral posture.
 - **Avoid:** Prolonged sitting, heavy lifting, bending.
 
 ### Week 2: Nerve Mobility and Core
 
 **Goals:** Enhance nerve glide, engage core.
 
-- **Seated Sciatic Nerve Glides:** Sit tall, straighten one leg gently until a mild stretch, return. 10 reps per leg, 2–3x daily [Coppieters & Butler, 2008].
-- **Supine Abdominal Bracing:** Lie on back, knees bent, contract lower abdomen. Hold 5–10 seconds, 2 sets of 10, 2x daily [Wilke et al., 1995].
-- **Bridges (if no worsening):** Lie on back, lift hips upward. 1–2 sets of 10, 2x daily [Fritz et al., 2011].
-- **Walking:** Increase to 15–20 minutes daily.
+- **Seated Sciatic Nerve Glides:** Sit tall, straighten one leg gently until a mild stretch, return. 10 reps per leg, 2-3x daily [Coppieters & Butler, 2008].
+- **Supine Abdominal Bracing:** Lie on back, knees bent, contract lower abdomen. Hold 5-10 seconds, 2 sets of 10, 2x daily [Wilke et al., 1995].
+- **Bridges (if no worsening):** Lie on back, lift hips upward. 1-2 sets of 10, 2x daily [Fritz et al., 2011].
+- **Walking:** Increase to 15-20 minutes daily.
 
 ### Week 3: Strengthening and Balance
 
 **Goals:** Build postural control, endurance.
 
-- **Bird-Dog:** On hands and knees, extend opposite arm/leg, hold 3–5 seconds. 2 sets of 8–10 per side, 2x daily [Wilke et al., 1995].
+- **Bird-Dog:** On hands and knees, extend opposite arm/leg, hold 3-5 seconds. 2 sets of 8-10 per side, 2x daily [Wilke et al., 1995].
 - **Sit-to-Stand Drills:** Rise from a chair without using hands, keep spine neutral. 10 reps, 2x daily [Delitto et al., 2012].
-- **Walking:** 20–30 minutes daily.
+- **Walking:** 20-30 minutes daily.
 
 ### Week 4: Functional Movement
 
 **Goals:** Prepare for daily tasks, maintain stability.
 
 - **Hip Hinge with Dowel:** Hold dowel along spine, bend at hips, keep back straight. 10 reps, 2x daily [Delitto et al., 2012].
-- **Unilateral Carries:** Carry light weight (5–10 lbs), walk 10–15 steps, switch sides. 2 sets per side, 2x daily.
+- **Unilateral Carries:** Carry light weight (5-10 lbs), walk 10-15 steps, switch sides. 2 sets per side, 2x daily.
 - **Walking:** Maintain or increase to 30+ minutes.
 - **Resume Tasks:** Light chores, stairs, neutral spine.
 
@@ -212,7 +212,7 @@ This 4-week plan aims to improve comfort and movement, with 70–80% of people s
 
 Posture can influence comfort. Consider these strategies:
 
-- **Sitting:** Use a firm chair with lumbar support, hips above knees. Stand every 20–30 minutes [Chou et al., 2007].
+- **Sitting:** Use a firm chair with lumbar support, hips above knees. Stand every 20-30 minutes [Chou et al., 2007].
 - **Standing:** Shift weight, use a footrest for prolonged standing.
 - **Lifting:** Hip hinge, keep objects close, avoid twisting.
 - **Sleeping:** Back sleepers: Pillow under knees. Side sleepers: Pillow between knees. Use stomach position briefly for prone lying if comfortable [Fritz et al., 2011].
@@ -226,11 +226,11 @@ PainCrowdsource.org reports 40% less sitting-related leg discomfort after 2 week
 
 These can support your movement plan:
 
-- **Heat:** 15–20 minutes before exercise to loosen muscles [Brosseau et al., 2003].
-- **Ice:** 10–15 minutes for flare-ups.
-- **TENS:** 20–30 minutes, up to 3x daily [Johnson & Martinson, 2007].
+- **Heat:** 15-20 minutes before exercise to loosen muscles [Brosseau et al., 2003].
+- **Ice:** 10-15 minutes for flare-ups.
+- **TENS:** 20-30 minutes, up to 3x daily [Johnson & Martinson, 2007].
 - **Topical Treatments:** Menthol or capsaicin creams for comfort.
-- **Breathing:** Diaphragmatic breathing, 2–3 minutes, 2–3x daily.
+- **Breathing:** Diaphragmatic breathing, 2-3 minutes, 2-3x daily.
 
 Track effects on PainCrowdsource.org.
 
@@ -249,10 +249,10 @@ Discuss with a healthcare provider before use:
 
 ### Supplements
 
-- **Turmeric:** 500–1000 mg daily with piperine [Daily et al., 2016].
-- **Magnesium:** 200–400 mg daily.
-- **Omega-3:** 1–2 g daily.
-- **Vitamin D:** 2000–4000 IU if deficient.
+- **Turmeric:** 500-1000 mg daily with piperine [Daily et al., 2016].
+- **Magnesium:** 200-400 mg daily.
+- **Omega-3:** 1-2 g daily.
+- **Vitamin D:** 2000-4000 IU if deficient.
 
 Track outcomes on PainCrowdsource.org.
 
@@ -262,7 +262,7 @@ Track outcomes on PainCrowdsource.org.
 
 For persistent symptoms, discuss with a healthcare provider:
 
-- **Injections:** Epidural steroids or nerve blocks for ongoing leg discomfort (after 6–8 weeks) [Weinstein et al., 2006].
+- **Injections:** Epidural steroids or nerve blocks for ongoing leg discomfort (after 6-8 weeks) [Weinstein et al., 2006].
 - **Surgery:** Discectomy for severe pain or weakness after 12 weeks, if confirmed by imaging [Chou et al., 2007].
 - **When Not Needed:** If symptoms improve or no urgent concerns exist [Chiu et al., 2015].
 
@@ -278,7 +278,7 @@ Imaging isn't always needed. Discuss with a doctor:
 - Symptoms <6 weeks, improving.
 
 ### When Appropriate
-- Discomfort >6–12 weeks, urgent symptoms, or planning interventions [Patel et al., 2016].
+- Discomfort >6-12 weeks, urgent symptoms, or planning interventions [Patel et al., 2016].
 
 ### Types
 - **MRI:** For disc or nerve issues [Chou et al., 2007].
@@ -295,9 +295,9 @@ Studies and PainCrowdsource.org show:
 
 - **Walking:** some people report improvementment [Roffey et al., 2010].
 - **Extension Exercises:** 70% may experience improvementment [Long et al., 2004].
-- **Nerve Glides:** 60–65% benefit [Coppieters & Butler, 2008].
-- **Physical Therapy:** 70–80% may experience improvementment in 6–12 weeks [Qaseem et al., 2017].
-- **NSAIDs:** 60–65% benefit [Enthoven et al., 2016].
+- **Nerve Glides:** 60-65% benefit [Coppieters & Butler, 2008].
+- **Physical Therapy:** 70-80% may experience improvementment in 6-12 weeks [Qaseem et al., 2017].
+- **NSAIDs:** 60-65% benefit [Enthoven et al., 2016].
 
 A user reported 50% less leg discomfort in 3 weeks with nerve glides and walking. Track progress on PainCrowdsource.org.
 
@@ -317,7 +317,7 @@ Monitoring helps you and your doctor understand what works.
 
 ### Metrics
 
-- **Pain Score (0–10):** Worst back or leg discomfort.
+- **Pain Score (0-10):** Worst back or leg discomfort.
 - **Numbness/Tingling:** None/Mild/Moderate/Severe (Location: e.g., calf).
 - **Sitting Tolerance:** Time before discomfort (minutes).
 - **Walking Time:** Total minutes.
@@ -334,7 +334,7 @@ Monitoring helps you and your doctor understand what works.
 - Exercises: ____________________________
 - Notes: _______________________________
 
-(Repeat for Days 2–14)
+(Repeat for Days 2-14)
 
 ### Guidance
 
@@ -354,7 +354,7 @@ Monitoring helps you and your doctor understand what works.
 
 ### Signs to Act
 
-- Discomfort worsens after 6–8 weeks.
+- Discomfort worsens after 6-8 weeks.
 - New numbness, weakness, or urgent symptoms [Gardner et al., 2011].
 - Limited walking or sitting.
 
@@ -385,44 +385,44 @@ Keep moving and take charge of your comfort.
 —The PainOptix Team
 
 >>BIBLIOGRAPHY
-1. Adams, M. A., & Roughley, P. J. (2006). What is intervertebral disc degeneration, and what causes it? Spine, 31(18), 2151–2161. https://doi.org/10.1097/01.brs.0000231761.73859.2c
+1. Adams, M. A., & Roughley, P. J. (2006). What is intervertebral disc degeneration, and what causes it? Spine, 31(18), 2151-2161. https://doi.org/10.1097/01.brs.0000231761.73859.2c
 
-2. Boden, S. D., et al. (1990). Abnormal magnetic-resonance scans of the lumbar spine in asymptomatic subjects. The Journal of Bone and Joint Surgery. American Volume, 72(3), 403–408. https://doi.org/10.2106/00004623-199072030-00008
+2. Boden, S. D., et al. (1990). Abnormal magnetic-resonance scans of the lumbar spine in asymptomatic subjects. The Journal of Bone and Joint Surgery. American Volume, 72(3), 403-408. https://doi.org/10.2106/00004623-199072030-00008
 
 3. Brosseau, L., et al. (2003). Thermotherapy for treatment of osteoarthritis. Cochrane Database of Systematic Reviews, (4), CD004522. https://doi.org/10.1002/14651858.CD004522
 
-4. Chiu, C. C., et al. (2015). The probability of spontaneous regression of lumbar herniated disc: A systematic review. Clinical Rehabilitation, 29(3), 184–195. https://doi.org/10.1177/0269215514540919
+4. Chiu, C. C., et al. (2015). The probability of spontaneous regression of lumbar herniated disc: A systematic review. Clinical Rehabilitation, 29(3), 184-195. https://doi.org/10.1177/0269215514540919
 
-5. Chou, R., et al. (2007). Diagnosis and treatment of low back pain. Annals of Internal Medicine, 147(7), 478–491. https://doi.org/10.7326/0003-4819-147-7-200710020-00006
+5. Chou, R., et al. (2007). Diagnosis and treatment of low back pain. Annals of Internal Medicine, 147(7), 478-491. https://doi.org/10.7326/0003-4819-147-7-200710020-00006
 
-6. Coppieters, M. W., & Butler, D. S. (2008). Do 'sliders' and 'tensioners' target different structures? Physical Therapy in Sport, 9(1), 24–33. https://doi.org/10.1016/j.ptsp.2007.09.002
+6. Coppieters, M. W., & Butler, D. S. (2008). Do 'sliders' and 'tensioners' target different structures? Physical Therapy in Sport, 9(1), 24-33. https://doi.org/10.1016/j.ptsp.2007.09.002
 
-7. Daily, J. W., et al. (2016). Efficacy of turmeric extracts and curcumin. Journal of Medicinal Food, 19(8), 717–729. https://doi.org/10.1089/jmf.2016.3705
+7. Daily, J. W., et al. (2016). Efficacy of turmeric extracts and curcumin. Journal of Medicinal Food, 19(8), 717-729. https://doi.org/10.1089/jmf.2016.3705
 
-8. Deyo, R. A., et al. (2006). Back pain prevalence and visit rates. Spine, 31(23), 2724–2727. https://doi.org/10.1097/01.brs.0000241139.30919.f5
+8. Deyo, R. A., et al. (2006). Back pain prevalence and visit rates. Spine, 31(23), 2724-2727. https://doi.org/10.1097/01.brs.0000241139.30919.f5
 
 9. Enthoven, W. T., et al. (2016). Non-steroidal anti-inflammatory drugs for chronic low back pain. Cochrane Database of Systematic Reviews, (2), CD012087. https://doi.org/10.1002/14651858.CD012087
 
-10. Foster, N. E., et al. (2018). Prevention and treatment of low back pain. The Lancet, 391(10137), 2368–2383. https://doi.org/10.1016/S0140-6736(18)30489-6
+10. Foster, N. E., et al. (2018). Prevention and treatment of low back pain. The Lancet, 391(10137), 2368-2383. https://doi.org/10.1016/S0140-6736(18)30489-6
 
-11. Gardner, A., et al. (2011). Cauda equina syndrome: A review of the current clinical and medico-legal position. European Spine Journal, 20(5), 690–697. https://doi.org/10.1007/s00586-010-1668-3
+11. Gardner, A., et al. (2011). Cauda equina syndrome: A review of the current clinical and medico-legal position. European Spine Journal, 20(5), 690-697. https://doi.org/10.1007/s00586-010-1668-3
 
-12. Johnson, M. I., & Martinson, M. (2007). Efficacy of electrical nerve stimulation for chronic musculoskeletal pain. Pain, 130(1–2), 157–165. https://doi.org/10.1016/j.pain.2007.02.007
+12. Johnson, M. I., & Martinson, M. (2007). Efficacy of electrical nerve stimulation for chronic musculoskeletal pain. Pain, 130(1-2), 157-165. https://doi.org/10.1016/j.pain.2007.02.007
 
-13. Long, A., et al. (2004). Does it matter which exercise? Physiotherapy, 90(3), 151–157. https://doi.org/10.1016/j.physio.2004.03.002
+13. Long, A., et al. (2004). Does it matter which exercise? Physiotherapy, 90(3), 151-157. https://doi.org/10.1016/j.physio.2004.03.002
 
-14. Patel, N. D., et al. (2016). ACR Appropriateness Criteria low back pain. Journal of the American College of Radiology, 13(9), 1069–1078. https://doi.org/10.1016/j.jacr.2016.06.008
+14. Patel, N. D., et al. (2016). ACR Appropriateness Criteria low back pain. Journal of the American College of Radiology, 13(9), 1069-1078. https://doi.org/10.1016/j.jacr.2016.06.008
 
-15. Qaseem, A., et al. (2017). Noninvasive treatments for acute, subacute, and chronic low back pain. Annals of Internal Medicine, 166(7), 514–530. https://doi.org/10.7326/M16-2367
+15. Qaseem, A., et al. (2017). Noninvasive treatments for acute, subacute, and chronic low back pain. Annals of Internal Medicine, 166(7), 514-530. https://doi.org/10.7326/M16-2367
 
-16. Roffey, D. M., et al. (2010). Conservative management of lumbar disc herniation with associated radiculopathy. Spine, 35(5), 488–495. https://doi.org/10.1097/BRS.0b013e3181cc3f56
+16. Roffey, D. M., et al. (2010). Conservative management of lumbar disc herniation with associated radiculopathy. Spine, 35(5), 488-495. https://doi.org/10.1097/BRS.0b013e3181cc3f56
 
 17. Saragiotto, B. T., et al. (2016). Paracetamol for low back pain. Cochrane Database of Systematic Reviews, (6), CD012230. https://doi.org/10.1002/14651858.CD012230
 
-18. van Tulder, M. W., et al. (2003). Muscle relaxants for nonspecific low back pain. Spine, 28(19), 1978–1992. https://doi.org/10.1097/01.BRS.0000092482.54851.09
+18. van Tulder, M. W., et al. (2003). Muscle relaxants for nonspecific low back pain. Spine, 28(19), 1978-1992. https://doi.org/10.1097/01.BRS.0000092482.54851.09
 
-19. Vroomen, P. C., et al. (2002). Diagnostic value of history and physical examination in patients suspected of lumbosacral nerve root compression. Journal of Neurology, Neurosurgery, and Psychiatry, 72(5), 630–634. https://doi.org/10.1136/jnnp.72.5.630
+19. Vroomen, P. C., et al. (2002). Diagnostic value of history and physical examination in patients suspected of lumbosacral nerve root compression. Journal of Neurology, Neurosurgery, and Psychiatry, 72(5), 630-634. https://doi.org/10.1136/jnnp.72.5.630
 
-20. Weinstein, J. N., et al. (2006). Surgical vs nonoperative treatment for lumbar disk herniation. JAMA, 296(20), 2441–2450. https://doi.org/10.1001/jama.296.20.2441
+20. Weinstein, J. N., et al. (2006). Surgical vs nonoperative treatment for lumbar disk herniation. JAMA, 296(20), 2441-2450. https://doi.org/10.1001/jama.296.20.2441
 
 **Notice:** This guide is for educational purposes only. Always consult a healthcare provider for educational advice and before making health-related decisions.
