@@ -7,6 +7,29 @@ import { getMonographConfirmationTemplate } from './email/templates/monograph-co
 import { resolveTierAndFlags } from './email/resolve-tier'
 import { features } from './config'
 
+// Helper function to format assessment data for email templates
+function formatAssessmentResults(assessment: any) {
+  // Map guide_type to human-readable diagnosis
+  const diagnosisMap: Record<string, string> = {
+    'sciatica': 'Sciatica',
+    'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
+    'facet_arthropathy': 'Facet Arthropathy',
+    'si_joint_dysfunction': 'SI Joint Dysfunction',
+    'central_disc_bulge': 'Central Disc Bulge',
+    'muscular_nslbp': 'Muscular Low Back Pain',
+    'degenerated_disc': 'Degenerated Disc',
+    'spondylolisthesis': 'Spondylolisthesis'
+  }
+
+  return {
+    assessmentId: assessment.id,
+    diagnosis: diagnosisMap[assessment.guide_type] || assessment.guide_type || 'Back Pain',
+    severity: 'See assessment details',
+    duration: 'See assessment details',
+    guide_type: assessment.guide_type
+  }
+}
+
 export async function deliverEducationalGuide(assessmentId: string) {
   const supabase = getServiceSupabase()
   
@@ -39,11 +62,14 @@ export async function deliverEducationalGuide(assessmentId: string) {
       // Use new segmented templates based on tier
       const { tier, redFlag } = await resolveTierAndFlags(supabase, assessmentId)
       
+      // Format assessment data for templates
+      const assessmentResults = formatAssessmentResults(assessment)
+      
       let emailTemplate: { subject: string; html: string; text: string }
       
       if (tier === 'monograph') {
         const html = getMonographConfirmationTemplate({ 
-          assessmentResults: assessment.responses,
+          assessmentResults,
           userTier: tier 
         })
         emailTemplate = {
@@ -53,7 +79,7 @@ export async function deliverEducationalGuide(assessmentId: string) {
         }
       } else if (tier === 'enhanced') {
         const html = getEnhancedConfirmationTemplate({ 
-          assessmentResults: assessment.responses,
+          assessmentResults,
           userTier: tier 
         })
         emailTemplate = {
@@ -63,7 +89,7 @@ export async function deliverEducationalGuide(assessmentId: string) {
         }
       } else {
         const html = getFreeTierWelcomeTemplate({ 
-          assessmentResults: assessment.responses,
+          assessmentResults,
           userTier: tier 
         })
         emailTemplate = {
@@ -127,11 +153,14 @@ export async function deliverEducationalGuide(assessmentId: string) {
           // Use new segmented templates based on tier
           const { tier, redFlag } = await resolveTierAndFlags(supabase, assessmentId)
           
+          // Format assessment data for templates
+          const assessmentResults = formatAssessmentResults(assessment)
+          
           let emailTemplate: { subject: string; html: string; text: string }
           
           if (tier === 'monograph') {
             const html = getMonographConfirmationTemplate({ 
-              assessmentResults: assessment.responses,
+              assessmentResults,
               userTier: tier 
             })
             emailTemplate = {
@@ -141,7 +170,7 @@ export async function deliverEducationalGuide(assessmentId: string) {
             }
           } else if (tier === 'enhanced') {
             const html = getEnhancedConfirmationTemplate({ 
-              assessmentResults: assessment.responses,
+              assessmentResults,
               userTier: tier 
             })
             emailTemplate = {
@@ -151,7 +180,7 @@ export async function deliverEducationalGuide(assessmentId: string) {
             }
           } else {
             const html = getFreeTierWelcomeTemplate({ 
-              assessmentResults: assessment.responses,
+              assessmentResults,
               userTier: tier 
             })
             emailTemplate = {

@@ -78,16 +78,28 @@ export async function POST(req: NextRequest) {
         // Get assessment results for email template
         const { data: assessmentData } = await supabase
           .from('assessments')
-          .select('*, assessment_results(*)')
+          .select('*')
           .eq('id', assessmentId)
           .single()
 
+        // Map guide_type to human-readable diagnosis
+        const diagnosisMap: Record<string, string> = {
+          'sciatica': 'Sciatica',
+          'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
+          'facet_arthropathy': 'Facet Arthropathy',
+          'si_joint_dysfunction': 'SI Joint Dysfunction',
+          'central_disc_bulge': 'Central Disc Bulge',
+          'muscular_nslbp': 'Muscular Low Back Pain',
+          'degenerated_disc': 'Degenerated Disc',
+          'spondylolisthesis': 'Spondylolisthesis'
+        }
+
         const assessmentResults = {
           assessmentId,
-          diagnosis: assessmentData?.assessment_results?.primary_diagnosis,
-          severity: assessmentData?.assessment_results?.severity,
-          duration: assessmentData?.assessment_results?.duration,
-          ...assessmentData?.assessment_results
+          diagnosis: diagnosisMap[assessmentData?.guide_type] || assessmentData?.guide_type || 'Back Pain',
+          severity: 'See assessment details',  // Not directly stored
+          duration: 'See assessment details',  // Not directly stored
+          guide_type: assessmentData?.guide_type
         }
 
         // Determine product from session
