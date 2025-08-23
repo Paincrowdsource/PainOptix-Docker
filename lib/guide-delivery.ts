@@ -6,6 +6,8 @@ import { getEnhancedConfirmationTemplate } from './email/templates/enhanced-conf
 import { getMonographConfirmationTemplate } from './email/templates/monograph-confirmation'
 import { resolveTierAndFlags } from './email/resolve-tier'
 import { features } from './config'
+import { logCommunication } from './comm/communication-logs'
+import { logEvent } from './logging'
 
 // Helper function to format assessment data for email templates
 function formatAssessmentResults(assessment: any) {
@@ -126,6 +128,26 @@ export async function deliverEducationalGuide(assessmentId: string) {
             console.error(`Email attempt ${deliveryAttempts} failed:`, errorMessage)
           }
         }
+        
+        // Log the communication if successful
+        if (deliverySuccess) {
+          await logCommunication({
+            assessmentId: assessment.id,
+            templateKey: tier === 'monograph' ? 'monograph_confirmation' : 
+                        tier === 'enhanced' ? 'enhanced_confirmation' : 
+                        'free_tier_welcome',
+            status: 'sent',
+            channel: 'email',
+            recipient: assessment.email,
+            subject: emailTemplate.subject,
+            message: emailTemplate.html.substring(0, 500)
+          })
+          
+          await logEvent('email_sent_initial_assessment', { 
+            assessmentId: assessment.id, 
+            tier 
+          })
+        }
       }
     } else if (assessment.phone_number) {
       // Try SMS if available
@@ -196,6 +218,26 @@ export async function deliverEducationalGuide(assessmentId: string) {
             html: emailTemplate.html,
             text: emailTemplate.text
           })
+          
+          // Log the SMS fallback email if successful
+          if (deliverySuccess) {
+            await logCommunication({
+              assessmentId: assessment.id,
+              templateKey: tier === 'monograph' ? 'monograph_confirmation' : 
+                          tier === 'enhanced' ? 'enhanced_confirmation' : 
+                          'free_tier_welcome',
+              status: 'sent',
+              channel: 'email',
+              recipient: assessment.email,
+              subject: emailTemplate.subject,
+              message: emailTemplate.html.substring(0, 500)
+            })
+            
+            await logEvent('email_sent_sms_fallback', { 
+              assessmentId: assessment.id, 
+              tier 
+            })
+          }
         }
       } else {
         // SMS not available, log warning
