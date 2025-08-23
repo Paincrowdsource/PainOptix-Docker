@@ -48,9 +48,10 @@ export async function resolveTierAndFlags(
       }
       
       // Check payment_tier field
+      // Note: Database uses 'comprehensive' for $20 tier, code uses 'monograph'
       if (assessment?.payment_tier === 'enhanced' || assessment?.payment_tier === 5) {
         tier = 'enhanced';
-      } else if (assessment?.payment_tier === 'monograph' || assessment?.payment_tier === 20) {
+      } else if (assessment?.payment_tier === 'monograph' || assessment?.payment_tier === 'comprehensive' || assessment?.payment_tier === 20) {
         tier = 'monograph';
       }
     } catch (err) {

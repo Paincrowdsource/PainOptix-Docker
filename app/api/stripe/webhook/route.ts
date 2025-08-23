@@ -53,10 +53,18 @@ export async function POST(req: NextRequest) {
         const { assessmentId, tierPrice, tierName, guideType, email, phone, initial_pain_score } = session.metadata
 
         // Update assessment with payment info
+        // Map tierName to database enum values (comprehensive for $20)
+        let dbPaymentTier = tierName || 'enhanced';
+        if (tierName === 'monograph' || tierPrice === '20') {
+          dbPaymentTier = 'comprehensive';
+        } else if (tierName === 'enhanced' || tierPrice === '5') {
+          dbPaymentTier = 'enhanced';
+        }
+        
         const { error: updateError } = await supabase
           .from('assessments')
           .update({
-            payment_tier: tierName || 'enhanced',
+            payment_tier: dbPaymentTier,
             payment_completed: true,
             stripe_session_id: session.id
           })
