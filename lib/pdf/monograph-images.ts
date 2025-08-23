@@ -9,7 +9,7 @@ export const exerciseImageMap: Record<string, string> = {
   'Glute Bridge': 'Bridges_Pose.png',
   'Bridges (if no worsening)': 'Bridges_Pose.png',
   'Wall Sits': 'Wall_Sit_Exercise_82325.png',
-  'Wall Sit': 'Wall_Sit_Exercise_82325.png'
+  'Wall Sit': 'Wall_Sit_Exercise_82325.png',
   'Wall Squats': 'Partial Wall Squats.png',
   'Partial Wall Squats': 'Partial Wall Squats.png',
   'Step-Ups': 'Step_Ups.png',
