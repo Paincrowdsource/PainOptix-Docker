@@ -445,7 +445,6 @@ Stay hopeful, stay active, and trust the process.
 
 >>BIBLIOGRAPHY
 1. Adams, M. A., & Roughley, P. J. (2006). What is intervertebral disc degeneration? Spine, 31(18), 2151-2161.
->>END
 2. Deyo, R. A., et al. (2006). Low back pain. New England Journal of Medicine, 344(5), 363-370.
 3. Kreiner, D. S., et al. (2014). An evidence-based clinical guideline for the diagnosis and treatment of lumbar disc herniation with radiculopathy. The Spine Journal, 14(1), 180-191.
 4. Nee, R. J., & Butler, D. (2006). Management of peripheral neuropathic pain. Physical Therapy, 86(12), 1614-1627.

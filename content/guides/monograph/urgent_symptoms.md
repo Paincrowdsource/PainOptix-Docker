@@ -456,7 +456,6 @@ Share your story on PainCrowdsource.org to help others recognize urgent symptoms
 
 >>BIBLIOGRAPHY
 1. Ahn, U. M., et al. (2000). Cauda equina syndrome secondary to lumbar disc herniation. Spine, 25(12), 1515-1522.
->>END
 2. Berbari, E. F., et al. (2015). Infectious Diseases Society of America clinical practice guidelines for the diagnosis and treatment of native vertebral osteomyelitis in adults. Clinical Infectious Diseases, 61(6), e26-e46.
 3. Chou, R., et al. (2007). Diagnosis and treatment of low back pain. Annals of Internal Medicine, 147(7), 478-491.
 4. Downie, A., et al. (2013). Red flags to screen for malignancy and fracture in patients with low back pain. Cochrane Database of Systematic Reviews, (1), CD008643.

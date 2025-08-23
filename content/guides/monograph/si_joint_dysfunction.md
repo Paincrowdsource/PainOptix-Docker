@@ -359,7 +359,6 @@ Keep moving, stay focused, and take charge of your comfort.
 
 >>BIBLIOGRAPHY
 1. Chou, R., et al. (2007). Diagnosis and treatment of low back pain. Annals of Internal Medicine, 147(7), 478–491.
->>END
 
 2. Cohen, S. P. (2005). Sacroiliac joint pain: A comprehensive review. Anesthesia & Analgesia, 101(5), 1440–1453.
 

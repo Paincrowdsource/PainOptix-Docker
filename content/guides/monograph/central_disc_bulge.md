@@ -408,7 +408,6 @@ Share your journey on PainCrowdsource.org to discover effective strategies and s
 
 >>BIBLIOGRAPHY
 1. Adams, M. A., & Roughley, P. J. (2006). What is intervertebral disc degeneration, and what causes it? Spine, 31(18), 2151–2161.
->>END
 2. Boden, S. D., et al. (1990). Abnormal magnetic-resonance scans of the lumbar spine in asymptomatic subjects. The Journal of Bone and Joint Surgery, 72(3), 403–408.
 3. Brosseau, L., et al. (2003). Thermotherapy for treatment of osteoarthritis. Cochrane Database of Systematic Reviews, (4), CD004522.
 4. Chiu, C. C., et al. (2015). The probability of spontaneous regression of lumbar herniated disc: A systematic review. Clinical Rehabilitation, 29(3), 184–195.

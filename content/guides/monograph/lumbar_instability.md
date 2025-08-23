@@ -420,7 +420,6 @@ Share your journey to inspire others facing similar challenges.
 
 >>BIBLIOGRAPHY
 1. Adams, M. A., & Roughley, P. J. (2006). What is intervertebral disc degeneration, and what causes it? Spine, 31(18), 2151-2161.
->>END
 2. Bergmark, A. (1989). Stability of the lumbar spine: A study in mechanical engineering. Acta Orthopaedica Scandinavica, 60(sup230), 1-54.
 3. Chou, R., et al. (2007). Diagnosis and treatment of low back pain. Annals of Internal Medicine, 147(7), 478-491.
 4. Fritz, J. M., et al. (2005). Lumbar spine segmental mobility assessment. Journal of Manual & Manipulative Therapy, 13(2), 85-95.

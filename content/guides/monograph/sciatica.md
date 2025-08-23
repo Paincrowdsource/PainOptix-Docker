@@ -386,7 +386,6 @@ Keep moving and take charge of your comfort.
 
 >>BIBLIOGRAPHY
 1. Adams, M. A., & Roughley, P. J. (2006). What is intervertebral disc degeneration, and what causes it? Spine, 31(18), 2151–2161. https://doi.org/10.1097/01.brs.0000231761.73859.2c
->>END
 
 2. Boden, S. D., et al. (1990). Abnormal magnetic-resonance scans of the lumbar spine in asymptomatic subjects. The Journal of Bone and Joint Surgery. American Volume, 72(3), 403–408. https://doi.org/10.2106/00004623-199072030-00008
 

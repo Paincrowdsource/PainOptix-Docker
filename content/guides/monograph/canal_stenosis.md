@@ -416,7 +416,6 @@ Your journey matters. Share it to help others and learn from their experiences.
 
 >>BIBLIOGRAPHY
 1. Ammendolia C, et al. (2013). Nonoperative treatment for lumbar spinal stenosis with neurogenic claudication. Cochrane Database Syst Rev.
->>END
 2. Genevay S, Atlas SJ. (2010). Lumbar spinal stenosis. Best Pract Res Clin Rheumatol, 24(2), 253-265.
 3. Katz JN, Harris MB. (2008). Lumbar spinal stenosis. N Engl J Med, 358(8), 818-825.
 4. Kreiner DS, et al. (2013). An evidence-based clinical guideline for the diagnosis and treatment of degenerative lumbar spinal stenosis. Spine J, 13(7), 734-743.

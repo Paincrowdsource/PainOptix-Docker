@@ -453,7 +453,6 @@ Stay active, stay positive, and keep moving forward!
 
 >>BIBLIOGRAPHY
 1. Adams, M. A., & Roughley, P. J. (2006). What is intervertebral disc degeneration, and what causes it? Spine, 31(18), 2151-2161.
->>END
 2. Choi, B. K., et al. (2010). Exercises for prevention of recurrences of low-back pain. Cochrane Database of Systematic Reviews.
 3. Chou, R., et al. (2007). Diagnosis and treatment of low back pain. Annals of Internal Medicine, 147(7), 478-491.
 4. Costa, L. C., et al. (2009). Motor control exercise for chronic low back pain. Physical Therapy, 89(12), 1275-1286.
