@@ -68,7 +68,6 @@ export const exerciseImageMap: Record<string, string> = {
   'Unilateral Carry': 'Unilateral Carries.png',
   'Seated Leg Extension': 'Seated_Leg_Extension.png',
   'Leg Extension': 'Seated_Leg_Extension.png',
-  'Seated Lumbar Flexion': 'Seated_Lumbar_Flexion.png',
   'Lumbar Flexion': 'Seated_Lumbar_Flexion.png',
   'Seated Row': 'Seated_Rows.png',
   'Seated Rows': 'Seated_Rows.png',
