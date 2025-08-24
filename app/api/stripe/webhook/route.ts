@@ -52,6 +52,14 @@ export async function POST(req: NextRequest) {
         const session = event.data.object
         const { assessmentId, tierPrice, tierName, guideType, email, phone, initial_pain_score } = session.metadata
 
+        // Log the received metadata for debugging
+        logger.info('Stripe webhook received', {
+          assessmentId,
+          tierPrice,
+          tierName,
+          email: email ? 'present' : 'missing'
+        })
+
         // Update assessment with payment info
         // Map tierName to database enum values (comprehensive for $20)
         let dbPaymentTier = tierName || 'enhanced';
@@ -161,8 +169,8 @@ export async function POST(req: NextRequest) {
           await logEvent('email_followup_scheduled', { assessmentId, type: 'enhanced_d4' })
         }
 
-        if (productPriceId === process.env.STRIPE_PRICE_MONOGRAPH || tierPrice === '20') {
-          // Monograph ($20) purchase
+        if (productPriceId === process.env.STRIPE_PRICE_MONOGRAPH || tierPrice === '20' || tierName === 'comprehensive' || dbPaymentTier === 'comprehensive') {
+          // Monograph ($20) purchase - handles both 'monograph' and 'comprehensive' tier names
           if (email) {
             await sendEmail(
               email,
