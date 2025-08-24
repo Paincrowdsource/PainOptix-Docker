@@ -1,7 +1,3 @@
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { getServiceSupabase } from '@/lib/supabase'
@@ -52,27 +48,11 @@ export async function POST(req: NextRequest) {
         const session = event.data.object
         const { assessmentId, tierPrice, tierName, guideType, email, phone, initial_pain_score } = session.metadata
 
-        // Log the received metadata for debugging
-        logger.info('Stripe webhook received', {
-          assessmentId,
-          tierPrice,
-          tierName,
-          email: email ? 'present' : 'missing'
-        })
-
         // Update assessment with payment info
-        // Map tierName to database enum values (comprehensive for $20)
-        let dbPaymentTier = tierName || 'enhanced';
-        if (tierName === 'monograph' || tierPrice === '20') {
-          dbPaymentTier = 'comprehensive';
-        } else if (tierName === 'enhanced' || tierPrice === '5') {
-          dbPaymentTier = 'enhanced';
-        }
-        
         const { error: updateError } = await supabase
           .from('assessments')
           .update({
-            payment_tier: dbPaymentTier,
+            payment_tier: tierName || 'enhanced',
             payment_completed: true,
             stripe_session_id: session.id
           })
@@ -86,28 +66,16 @@ export async function POST(req: NextRequest) {
         // Get assessment results for email template
         const { data: assessmentData } = await supabase
           .from('assessments')
-          .select('*')
+          .select('*, assessment_results(*)')
           .eq('id', assessmentId)
           .single()
 
-        // Map guide_type to human-readable diagnosis
-        const diagnosisMap: Record<string, string> = {
-          'sciatica': 'Sciatica',
-          'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
-          'facet_arthropathy': 'Facet Arthropathy',
-          'si_joint_dysfunction': 'SI Joint Dysfunction',
-          'central_disc_bulge': 'Central Disc Bulge',
-          'muscular_nslbp': 'Muscular Low Back Pain',
-          'degenerated_disc': 'Degenerated Disc',
-          'spondylolisthesis': 'Spondylolisthesis'
-        }
-
         const assessmentResults = {
           assessmentId,
-          diagnosis: diagnosisMap[assessmentData?.guide_type] || assessmentData?.guide_type || 'Back Pain',
-          severity: 'See assessment details',  // Not directly stored
-          duration: 'See assessment details',  // Not directly stored
-          guide_type: assessmentData?.guide_type
+          diagnosis: assessmentData?.assessment_results?.primary_diagnosis,
+          severity: assessmentData?.assessment_results?.severity,
+          duration: assessmentData?.assessment_results?.duration,
+          ...assessmentData?.assessment_results
         }
 
         // Determine product from session
@@ -169,8 +137,8 @@ export async function POST(req: NextRequest) {
           await logEvent('email_followup_scheduled', { assessmentId, type: 'enhanced_d4' })
         }
 
-        if (productPriceId === process.env.STRIPE_PRICE_MONOGRAPH || tierPrice === '20' || tierName === 'comprehensive' || dbPaymentTier === 'comprehensive') {
-          // Monograph ($20) purchase - handles both 'monograph' and 'comprehensive' tier names
+        if (productPriceId === process.env.STRIPE_PRICE_MONOGRAPH || tierPrice === '20') {
+          // Monograph ($20) purchase
           if (email) {
             await sendEmail(
               email,
@@ -267,11 +235,103 @@ export async function POST(req: NextRequest) {
       case 'checkout.session.expired':
       case 'checkout.session.async_payment_failed': {
         const session = event.data.object
+        const { assessmentId } = session.metadata || {}
+        
+        if (assessmentId) {
+          await logEvent('checkout_session_failed', {
+            assessmentId,
+            sessionId: session.id,
+            eventType: event.type
+          })
+        }
+        break
+      }
+
+      // Customer events
+      case 'customer.created': {
+        const customer = event.data.object
+        await logEvent('customer_created', {
+          customerId: customer.id,
+          email: customer.email
+        })
+        break
+      }
+
+      case 'customer.updated': {
+        const customer = event.data.object
+        await logEvent('customer_updated', {
+          customerId: customer.id,
+          email: customer.email
+        })
+        break
+      }
+
+      // Subscription events
+      case 'customer.subscription.created': {
+        const subscription = event.data.object
+        await logEvent('subscription_created', {
+          subscriptionId: subscription.id,
+          customerId: subscription.customer,
+          status: subscription.status,
+          priceId: subscription.items.data[0]?.price.id
+        })
+        break
+      }
+
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object
+        await logEvent('subscription_updated', {
+          subscriptionId: subscription.id,
+          customerId: subscription.customer,
+          status: subscription.status,
+          cancelAtPeriodEnd: subscription.cancel_at_period_end
+        })
+        break
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object
+        await logEvent('subscription_deleted', {
+          subscriptionId: subscription.id,
+          customerId: subscription.customer
+        })
+        break
+      }
+
+      // Invoice events
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object
+        await logEvent('invoice_payment_succeeded', {
+          invoiceId: invoice.id,
+          customerId: invoice.customer,
+          amountPaid: invoice.amount_paid,
+          subscriptionId: invoice.subscription
+        })
+        break
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object
+        await logEvent('invoice_payment_failed', {
+          invoiceId: invoice.id,
+          customerId: invoice.customer,
+          attemptCount: invoice.attempt_count,
+          nextPaymentAttempt: invoice.next_payment_attempt
+        })
+        
+        // Could send failure notification email here
+        if (invoice.customer_email) {
+          // await sendPaymentFailedEmail(invoice.customer_email, invoice)
+        }
         break
       }
 
       default: {
-        // Unhandled webhook event type
+        // Log unhandled event types for monitoring
+        await logEvent('webhook_unhandled_event', {
+          eventType: event.type,
+          eventId: event.id
+        })
       }
     }
 
