@@ -94,7 +94,7 @@ A PainCrowdsource.org user reported a 50% reduction in back discomfort after 3 w
 
 ## Section 4: Your Unique Symptom Pattern
 
-Your PainFinder™ responses suggest facet arthropathy, likely affecting the L4-L5 or L5-S1 facet joints, common in adults over 40 with repetitive extension stress (e.g., standing jobs, poor posture) [Kalichman et al., 2008].
+Your PainFinder™ responses suggest facet arthropathy, likely affecting the lower lumbar facet joints, common in adults over 40 with repetitive extension stress (e.g., standing jobs, poor posture) [Kalichman et al., 2008].
 
 ### Key Features
 
@@ -390,7 +390,6 @@ Keep moving and take charge of your comfort.
 
 >>BIBLIOGRAPHY
 1. Adams, M. A., & Hutton, W. C. (1983). The mechanical function of the lumbar apophyseal joints. Spine, 8(3), 327–330. https://doi.org/10.1097/00007632-198304000-00017
->>END
 2. Boden, S. D., et al. (1990). Abnormal magnetic-resonance scans of the lumbar spine in asymptomatic subjects. The Journal of Bone and Joint Surgery. American Volume, 72(3), 403–408. https://doi.org/10.2106/00004623-199072030-00008
 3. Brosseau, L., et al. (2003). Thermotherapy for treatment of osteoarthritis. Cochrane Database of Systematic Reviews, (4), CD004522. https://doi.org/10.1002/14651858.CD004522
 4. Chou, R., et al. (2007). Diagnosis and treatment of low back pain. Annals of Internal Medicine, 147(7), 478–491. https://doi.org/10.7326/0003-4819-147-7-200710020-00006

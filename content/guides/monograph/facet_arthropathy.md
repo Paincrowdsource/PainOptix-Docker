@@ -94,7 +94,7 @@ A PainCrowdsource.org user reported a 50% reduction in back discomfort after 3 w
 
 ## Section 4: Your Unique Symptom Pattern
 
-Your PainFinder™ responses suggest facet arthropathy, likely affecting the L4-L5 or L5-S1 facet joints, common in adults over 40 with repetitive extension stress (e.g., standing jobs, poor posture) [Kalichman et al., 2008].
+Your PainFinder™ responses suggest facet arthropathy, likely affecting the lower lumbar facet joints, common in adults over 40 with repetitive extension stress (e.g., standing jobs, poor posture) [Kalichman et al., 2008].
 
 ### Key Features
 
