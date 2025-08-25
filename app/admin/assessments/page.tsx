@@ -52,10 +52,19 @@ export default function AssessmentsPage() {
   const loadAssessments = async () => {
     try {
       // Use API route that has service role access
-      const response = await fetch('/api/admin/assessments');
+      // Include credentials to send cookies
+      const response = await fetch('/api/admin/assessments', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add admin password as fallback auth
+          'x-admin-password': 'PainOptix2025Admin!'
+        }
+      });
       
       if (!response.ok) {
         const error = await response.json();
+        console.error('API Error:', error);
         throw new Error(error.error || 'Failed to load assessments');
       }
       
