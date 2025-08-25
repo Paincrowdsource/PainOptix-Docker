@@ -51,18 +51,20 @@ export default function AssessmentsPage() {
 
   const loadAssessments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('assessments')
-        .select(`
-          *,
-          guide_deliveries (*)
-        `)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setAssessments(data || [])
+      // Use API route that has service role access
+      const response = await fetch('/api/admin/assessments');
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to load assessments');
+      }
+      
+      const { assessments } = await response.json();
+      setAssessments(assessments || [])
     } catch (err) {
       console.error('Error loading assessments:', err)
+      // Show error to user
+      alert('Failed to load assessments. Please check if you are logged in as admin.');
     } finally {
       setLoading(false)
     }
@@ -130,20 +132,9 @@ export default function AssessmentsPage() {
   }
 
   const viewDetails = async (assessment: Assessment) => {
-    // Load full assessment details
-    const { data } = await supabase
-      .from('assessments')
-      .select(`
-        *,
-        guide_deliveries (*),
-        follow_ups (*)
-      `)
-      .eq('id', assessment.id)
-      .single()
-
-    if (data) {
-      setSelectedAssessment(data)
-    }
+    // For now, just use the assessment we already have
+    // In the future, could create an API endpoint for detailed view
+    setSelectedAssessment(assessment)
   }
 
   const handleDeleteClick = (assessment: Assessment) => {
