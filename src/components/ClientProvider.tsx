@@ -3,10 +3,7 @@
 import { ReactNode } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from './ErrorBoundary';
-import dynamic from 'next/dynamic';
-
-// Dynamically import MetaPixel with no SSR
-const MetaPixel = dynamic(() => import('./MetaPixel'), { ssr: false });
+import MetaPixel from './MetaPixel';
 
 interface ClientProviderProps {
   children: ReactNode;
