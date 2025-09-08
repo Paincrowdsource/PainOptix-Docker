@@ -1,14 +1,16 @@
 /**
  * Meta Pixel Event Definitions for PainOptix
  * Standard events for the assessment and purchase flow
+ * Uses dynamic imports to ensure client-side only execution
  */
-
-import { trackEvent, trackCustomEvent } from '@/lib/pixel';
 
 /**
  * Track when a user starts the assessment
  */
-export const trackAssessmentStarted = () => {
+export const trackAssessmentStarted = async () => {
+  if (typeof window === 'undefined') return;
+  
+  const { trackEvent } = await import('@/lib/pixel');
   trackEvent('InitiateCheckout', {
     content_category: 'assessment',
     content_type: 'pain_assessment',
@@ -18,7 +20,10 @@ export const trackAssessmentStarted = () => {
 /**
  * Track when a user completes the assessment questions
  */
-export const trackAssessmentCompleted = (diagnosisType?: string) => {
+export const trackAssessmentCompleted = async (diagnosisType?: string) => {
+  if (typeof window === 'undefined') return;
+  
+  const { trackEvent } = await import('@/lib/pixel');
   trackEvent('Lead', {
     content_category: 'assessment_complete',
     content_name: diagnosisType || 'unknown',
@@ -28,7 +33,10 @@ export const trackAssessmentCompleted = (diagnosisType?: string) => {
 /**
  * Track when a user submits contact info
  */
-export const trackContactInfoSubmitted = () => {
+export const trackContactInfoSubmitted = async () => {
+  if (typeof window === 'undefined') return;
+  
+  const { trackEvent } = await import('@/lib/pixel');
   trackEvent('CompleteRegistration', {
     content_name: 'email_submission',
     status: true,
@@ -38,7 +46,10 @@ export const trackContactInfoSubmitted = () => {
 /**
  * Track when a user views pricing options
  */
-export const trackViewPricing = (tier?: string) => {
+export const trackViewPricing = async (tier?: string) => {
+  if (typeof window === 'undefined') return;
+  
+  const { trackEvent } = await import('@/lib/pixel');
   trackEvent('ViewContent', {
     content_category: 'pricing',
     content_name: tier || 'all_tiers',
@@ -49,7 +60,10 @@ export const trackViewPricing = (tier?: string) => {
 /**
  * Track when a user initiates a purchase
  */
-export const trackPurchaseInitiated = (tier: string, value: number) => {
+export const trackPurchaseInitiated = async (tier: string, value: number) => {
+  if (typeof window === 'undefined') return;
+  
+  const { trackEvent } = await import('@/lib/pixel');
   trackEvent('AddToCart', {
     content_category: 'guide',
     content_name: tier,
@@ -62,7 +76,10 @@ export const trackPurchaseInitiated = (tier: string, value: number) => {
 /**
  * Track when a purchase is completed
  */
-export const trackPurchaseCompleted = (tier: string, value: number, assessmentId: string) => {
+export const trackPurchaseCompleted = async (tier: string, value: number, assessmentId: string) => {
+  if (typeof window === 'undefined') return;
+  
+  const { trackEvent } = await import('@/lib/pixel');
   trackEvent('Purchase', {
     content_category: 'guide',
     content_name: tier,
@@ -76,7 +93,10 @@ export const trackPurchaseCompleted = (tier: string, value: number, assessmentId
 /**
  * Track when a user downloads their guide
  */
-export const trackGuideDownloaded = (tier: string) => {
+export const trackGuideDownloaded = async (tier: string) => {
+  if (typeof window === 'undefined') return;
+  
+  const { trackCustomEvent } = await import('@/lib/pixel');
   trackCustomEvent('GuideDownloaded', {
     tier: tier,
     action: 'download',
@@ -86,7 +106,10 @@ export const trackGuideDownloaded = (tier: string) => {
 /**
  * Track when a follow-up email is opened (via tracking pixel)
  */
-export const trackFollowUpOpened = (dayNumber: number) => {
+export const trackFollowUpOpened = async (dayNumber: number) => {
+  if (typeof window === 'undefined') return;
+  
+  const { trackCustomEvent } = await import('@/lib/pixel');
   trackCustomEvent('FollowUpEngagement', {
     day: dayNumber,
     action: 'email_opened',
@@ -96,7 +119,10 @@ export const trackFollowUpOpened = (dayNumber: number) => {
 /**
  * Track when a user clicks "Delete My Data"
  */
-export const trackDataDeletionRequested = () => {
+export const trackDataDeletionRequested = async () => {
+  if (typeof window === 'undefined') return;
+  
+  const { trackCustomEvent } = await import('@/lib/pixel');
   trackCustomEvent('DataDeletionRequest', {
     action: 'requested',
   });
@@ -105,7 +131,10 @@ export const trackDataDeletionRequested = () => {
 /**
  * Track referrer source
  */
-export const trackReferrerSource = (source: string) => {
+export const trackReferrerSource = async (source: string) => {
+  if (typeof window === 'undefined') return;
+  
+  const { trackCustomEvent } = await import('@/lib/pixel');
   trackCustomEvent('ReferrerTracked', {
     source: source,
     timestamp: new Date().toISOString(),
