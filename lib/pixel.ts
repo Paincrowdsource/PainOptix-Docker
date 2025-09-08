@@ -29,12 +29,15 @@ class MetaPixel {
   private currentPath = '';
 
   constructor() {
-    // Load config from environment variables
-    this.config = {
-      pixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID,
-      enabled: process.env.NEXT_PUBLIC_META_PIXEL_ENABLED === 'true',
-      testEventCode: process.env.NEXT_PUBLIC_META_TEST_EVENT_CODE,
-    };
+    // Only access environment variables in browser
+    if (typeof window !== 'undefined') {
+      // Load config from environment variables
+      this.config = {
+        pixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID,
+        enabled: process.env.NEXT_PUBLIC_META_PIXEL_ENABLED === 'true',
+        testEventCode: process.env.NEXT_PUBLIC_META_TEST_EVENT_CODE,
+      };
+    }
   }
 
   /**
@@ -42,6 +45,9 @@ class MetaPixel {
    * Injects the base code and fires initial PageView
    */
   public init(): void {
+    // Exit if not in browser
+    if (typeof window === 'undefined') return;
+    
     // Exit if already initialized or not enabled
     if (this.initialized || !this.config.enabled || !this.config.pixelId) {
       if (!this.config.enabled) {
@@ -106,7 +112,7 @@ class MetaPixel {
    * @param path Optional path to track (defaults to current URL)
    */
   public trackPageView(path?: string): void {
-    if (!this.initialized || !this.config.enabled) return;
+    if (typeof window === 'undefined' || !this.initialized || !this.config.enabled) return;
 
     try {
       // Prevent duplicate tracking for same path (handles hash changes)
@@ -130,7 +136,7 @@ class MetaPixel {
    * @param parameters Optional event parameters (no PII allowed)
    */
   public track(eventName: string, parameters?: Record<string, any>): void {
-    if (!this.initialized || !this.config.enabled) return;
+    if (typeof window === 'undefined' || !this.initialized || !this.config.enabled) return;
 
     try {
       // Validate no PII in parameters
@@ -156,7 +162,7 @@ class MetaPixel {
    * @param parameters Optional event parameters (no PII allowed)
    */
   public trackCustom(eventName: string, parameters?: Record<string, any>): void {
-    if (!this.initialized || !this.config.enabled) return;
+    if (typeof window === 'undefined' || !this.initialized || !this.config.enabled) return;
 
     try {
       // Validate no PII in parameters
@@ -196,7 +202,7 @@ class MetaPixel {
    * @param url The new URL
    */
   public handleRouteChange(url: string): void {
-    if (!this.initialized || !this.config.enabled) return;
+    if (typeof window === 'undefined' || !this.initialized || !this.config.enabled) return;
     
     // Extract path from URL
     const path = new URL(url, window.location.origin).pathname;
