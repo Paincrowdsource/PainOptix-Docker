@@ -6,7 +6,13 @@
 
 declare global {
   interface Window {
-    fbq: any;
+    fbq: any & {
+      callMethod?: Function;
+      queue?: any[];
+      push?: Function;
+      loaded?: boolean;
+      version?: string;
+    };
     _fbq: any;
   }
 }
@@ -76,7 +82,7 @@ class MetaPixel {
   private injectPixelCode(): void {
     if (window.fbq) return;
 
-    const n = window.fbq = function() {
+    const n: any = window.fbq = function() {
       n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
     };
     
