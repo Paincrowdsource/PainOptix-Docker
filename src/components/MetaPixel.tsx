@@ -1,45 +1,29 @@
 'use client';
 
 import Script from 'next/script';
-import { useEffect } from 'react';
 
 export default function MetaPixel() {
-  const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
-  const testEventCode = process.env.NEXT_PUBLIC_META_TEST_EVENT_CODE;
-  const isEnabled = process.env.NEXT_PUBLIC_META_PIXEL_ENABLED === 'true';
+  // TEMPORARY HARDCODE - Environment variables not working in DigitalOcean build
+  // TODO: Fix environment variable issue and revert this
+  const pixelId = '1623899711325019';
+  const enabled = true;
   
-  // Debug logging
-  useEffect(() => {
-    console.log('[MetaPixel] Configuration:', {
-      pixelId,
-      isEnabled,
-      testEventCode,
-      env: {
-        NEXT_PUBLIC_META_PIXEL_ID: process.env.NEXT_PUBLIC_META_PIXEL_ID,
-        NEXT_PUBLIC_META_PIXEL_ENABLED: process.env.NEXT_PUBLIC_META_PIXEL_ENABLED,
-      }
-    });
-  }, []);
+  // Original code for reference (not working due to env var issue):
+  // const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  // const enabled = process.env.NEXT_PUBLIC_META_PIXEL_ENABLED === 'true';
   
-  if (!pixelId || !isEnabled) {
-    console.log('[MetaPixel] Not rendering - pixelId:', pixelId, 'enabled:', isEnabled);
+  if (!pixelId || !enabled) {
     return null;
   }
-
-  // Build initialization code with optional test event
-  const initCode = testEventCode 
-    ? `fbq('init', '${pixelId}', {}, {test_event_code: '${testEventCode}'})`
-    : `fbq('init', '${pixelId}')`;
 
   return (
     <>
       <Script
         id="fb-pixel"
         strategy="afterInteractive"
-        onLoad={() => console.log('[MetaPixel] Facebook Pixel script loaded')}
+        onLoad={() => console.log('[MetaPixel] Facebook Pixel loaded with ID:', pixelId)}
         dangerouslySetInnerHTML={{
           __html: `
-            console.log('[MetaPixel] Initializing with ID:', '${pixelId}');
             !function(f,b,e,v,n,t,s)
             {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
             n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -48,9 +32,8 @@ export default function MetaPixel() {
             t.src=v;s=b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
-            ${initCode};
+            fbq('init', '${pixelId}');
             fbq('track', 'PageView');
-            console.log('[MetaPixel] PageView tracked');
           `,
         }}
       />
