@@ -1,12 +1,24 @@
 import { Metadata } from 'next';
 import ComprehensiveCareClient from './client';
+import { defaultMetadata, pageMetadata } from '@/lib/metadata';
 
 // Server-side feature flag check
 const isFeatureEnabled = process.env.FEATURE_BUNDLE_350 === 'true';
 
 export const metadata: Metadata = {
-  title: 'Comprehensive Care Bundle - PainOptix',
-  description: 'Complete education, personalized coaching, and professional consultation',
+  ...defaultMetadata,
+  title: pageMetadata.comprehensiveCare.title,
+  description: pageMetadata.comprehensiveCare.description,
+  openGraph: {
+    ...defaultMetadata.openGraph,
+    title: pageMetadata.comprehensiveCare.title,
+    description: pageMetadata.comprehensiveCare.description,
+  },
+  twitter: {
+    ...defaultMetadata.twitter,
+    title: pageMetadata.comprehensiveCare.title,
+    description: pageMetadata.comprehensiveCare.description,
+  },
   robots: 'noindex' // Prevent indexing until launch
 };
 
