@@ -1,12 +1,28 @@
 'use client';
 
 import Script from 'next/script';
+import { useEffect } from 'react';
 
 export default function MetaPixel() {
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
   const testEventCode = process.env.NEXT_PUBLIC_META_TEST_EVENT_CODE;
+  const isEnabled = process.env.NEXT_PUBLIC_META_PIXEL_ENABLED === 'true';
   
-  if (!pixelId || process.env.NEXT_PUBLIC_META_PIXEL_ENABLED !== 'true') {
+  // Debug logging
+  useEffect(() => {
+    console.log('[MetaPixel] Configuration:', {
+      pixelId,
+      isEnabled,
+      testEventCode,
+      env: {
+        NEXT_PUBLIC_META_PIXEL_ID: process.env.NEXT_PUBLIC_META_PIXEL_ID,
+        NEXT_PUBLIC_META_PIXEL_ENABLED: process.env.NEXT_PUBLIC_META_PIXEL_ENABLED,
+      }
+    });
+  }, []);
+  
+  if (!pixelId || !isEnabled) {
+    console.log('[MetaPixel] Not rendering - pixelId:', pixelId, 'enabled:', isEnabled);
     return null;
   }
 
@@ -20,8 +36,10 @@ export default function MetaPixel() {
       <Script
         id="fb-pixel"
         strategy="afterInteractive"
+        onLoad={() => console.log('[MetaPixel] Facebook Pixel script loaded')}
         dangerouslySetInnerHTML={{
           __html: `
+            console.log('[MetaPixel] Initializing with ID:', '${pixelId}');
             !function(f,b,e,v,n,t,s)
             {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
             n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -32,6 +50,7 @@ export default function MetaPixel() {
             'https://connect.facebook.net/en_US/fbevents.js');
             ${initCode};
             fbq('track', 'PageView');
+            console.log('[MetaPixel] PageView tracked');
           `,
         }}
       />
