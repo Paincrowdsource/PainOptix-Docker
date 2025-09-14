@@ -39,28 +39,26 @@ export default function CommunicationsPage() {
 
   const loadData = async () => {
     try {
-      // Load delivery logs
-      const { data: logs } = await supabase
-        .from('guide_deliveries')
-        .select(`
-          *,
-          assessment:assessments (
-            email,
-            phone_number,
-            guide_type
-          )
-        `)
-        .order('delivered_at', { ascending: false, nullsFirst: false })
+      // Use API endpoint to fetch data with service role permissions
+      const response = await fetch('/api/admin/communications', {
+        headers: {
+          'x-admin-token': localStorage.getItem('adminToken') || ''
+        }
+      })
 
-      setDeliveryLogs(logs || [])
+      if (!response.ok) {
+        throw new Error('Failed to fetch communications data')
+      }
 
-      // Load SMS opt-outs
-      const { data: optOutData } = await supabase
-        .from('sms_opt_outs')
-        .select('*')
-        .order('opted_out_at', { ascending: false })
-
-      setOptOuts(optOutData || [])
+      const data = await response.json()
+      
+      setDeliveryLogs(data.deliveryLogs || [])
+      setOptOuts(data.optOuts || [])
+      
+      // Log communication logs for debugging
+      if (data.communicationLogs && data.communicationLogs.length > 0) {
+        console.log(`Found ${data.communicationLogs.length} communication logs (SendGrid/Twilio)`)
+      }
     } catch (err) {
       console.error('Error loading communications data:', err)
     } finally {
