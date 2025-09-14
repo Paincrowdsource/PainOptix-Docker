@@ -1,29 +1,28 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
+import dynamic from 'next/dynamic';
 import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from './ErrorBoundary';
 import { PixelProvider } from './PixelProvider';
 import GoogleAnalytics from './GoogleAnalytics';
-import GoogleAnalyticsEvents from './GoogleAnalyticsEvents';
+
+// Dynamically import GoogleAnalyticsEvents with SSR disabled
+const GoogleAnalyticsEvents = dynamic(
+  () => import('./GoogleAnalyticsEvents'),
+  { ssr: false }
+);
 
 interface ClientProviderProps {
   children: ReactNode;
 }
 
 export function ClientProvider({ children }: ClientProviderProps) {
-  // Only render GA events tracking after mount to avoid SSR issues
-  const [mounted, setMounted] = useState(false);
-  
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   return (
     <ErrorBoundary>
       <PixelProvider>
         <GoogleAnalytics />
-        {mounted && <GoogleAnalyticsEvents />}
+        <GoogleAnalyticsEvents />
         <Toaster 
           position="top-center"
           toastOptions={{
