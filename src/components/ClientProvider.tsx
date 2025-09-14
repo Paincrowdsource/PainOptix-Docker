@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from './ErrorBoundary';
 import { PixelProvider } from './PixelProvider';
@@ -12,11 +12,18 @@ interface ClientProviderProps {
 }
 
 export function ClientProvider({ children }: ClientProviderProps) {
+  // Only render GA events tracking after mount to avoid SSR issues
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <ErrorBoundary>
       <PixelProvider>
         <GoogleAnalytics />
-        <GoogleAnalyticsEvents />
+        {mounted && <GoogleAnalyticsEvents />}
         <Toaster 
           position="top-center"
           toastOptions={{
