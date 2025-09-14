@@ -35,74 +35,38 @@ export default function AdminDashboardClient() {
 
   const loadDashboardData = async () => {
     try {
-      // Get total assessments
-      const { count: totalAssessments } = await supabase
-        .from('assessments')
-        .select('*', { count: 'exact', head: true })
-
-      // Get revenue by tier
-      const { data: revenueData } = await supabase
-        .from('assessments')
-        .select('payment_tier, payment_completed')
-        .eq('payment_completed', true)
-
-      const revenueByTier = {
-        free: 0,
-        enhanced: 0,
-        comprehensive: 0
-      }
-
-      const tierPrices = {
-        free: 0,
-        enhanced: 47,
-        comprehensive: 97
-      }
-
-      revenueData?.forEach(assessment => {
-        const tier = assessment.payment_tier || 'free'
-        revenueByTier[tier as keyof typeof revenueByTier] += tierPrices[tier as keyof typeof tierPrices]
-      })
-
-      // Get delivery stats
-      const { data: communicationLogs } = await supabase
-        .from('communication_logs')
-        .select('type, status')
-
-      const deliveryStats = {
-        emailSuccess: 0,
-        emailFailed: 0,
-        smsSuccess: 0,
-        smsFailed: 0
-      }
-
-      communicationLogs?.forEach(log => {
-        if (log.type === 'email') {
-          if (log.status === 'sent') {
-            deliveryStats.emailSuccess++
-          } else if (log.status === 'failed') {
-            deliveryStats.emailFailed++
-          }
-        } else if (log.type === 'sms') {
-          if (log.status === 'sent') {
-            deliveryStats.smsSuccess++
-          } else if (log.status === 'failed') {
-            deliveryStats.smsFailed++
-          }
+      // Use API endpoint to fetch data with service role permissions
+      const response = await fetch('/api/admin/dashboard', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add admin password as fallback auth
+          'x-admin-password': 'PainOptix2025Admin!'
         }
       })
 
-      // Get recent assessments
-      const { data: recentAssessments } = await supabase
-        .from('assessments')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10)
+      if (!response.ok) {
+        const error = await response.json()
+        console.error('Dashboard API Error:', error)
+        throw new Error(error.error || 'Failed to fetch dashboard data')
+      }
 
+      const data = await response.json()
+      
       setStats({
-        totalAssessments: totalAssessments || 0,
-        revenueByTier,
-        deliveryStats,
-        recentAssessments: recentAssessments || []
+        totalAssessments: data.totalAssessments || 0,
+        revenueByTier: data.revenueByTier || {
+          free: 0,
+          enhanced: 0,
+          comprehensive: 0
+        },
+        deliveryStats: data.deliveryStats || {
+          emailSuccess: 0,
+          emailFailed: 0,
+          smsSuccess: 0,
+          smsFailed: 0
+        },
+        recentAssessments: data.recentAssessments || []
       })
     } catch (err: any) {
       setError(err.message)
