@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 // Extend Window interface for gtag
@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-export default function GoogleAnalyticsEvents() {
+function GoogleAnalyticsEventsInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -31,4 +31,12 @@ export default function GoogleAnalyticsEvents() {
   }, [pathname, searchParams]);
 
   return null; // This component doesn't render anything
+}
+
+export default function GoogleAnalyticsEvents() {
+  return (
+    <Suspense fallback={null}>
+      <GoogleAnalyticsEventsInner />
+    </Suspense>
+  );
 }
