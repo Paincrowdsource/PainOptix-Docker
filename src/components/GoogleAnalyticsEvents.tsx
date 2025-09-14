@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 // Extend Window interface for gtag
 declare global {
@@ -10,33 +10,22 @@ declare global {
   }
 }
 
-function GoogleAnalyticsEventsInner() {
+export default function GoogleAnalyticsEvents() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     // Only track if gtag is available
     if (typeof window !== 'undefined' && window.gtag) {
-      const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
-      
-      // Send page view event for SPA navigation
-      // HIPAA compliant - no PII in URLs
+      // Just use pathname without search params to avoid SSR issues
+      // Search params will be included in page_location anyway
       window.gtag('event', 'page_view', {
-        page_path: url,
+        page_path: pathname,
         page_title: document.title,
         page_location: window.location.href,
         anonymize_ip: true
       });
     }
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   return null; // This component doesn't render anything
-}
-
-export default function GoogleAnalyticsEvents() {
-  return (
-    <Suspense fallback={null}>
-      <GoogleAnalyticsEventsInner />
-    </Suspense>
-  );
 }
