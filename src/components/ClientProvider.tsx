@@ -4,10 +4,14 @@ import { ReactNode } from 'react';
 import dynamic from 'next/dynamic';
 import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from './ErrorBoundary';
-import { PixelProvider } from './PixelProvider';
 import GoogleAnalytics from './GoogleAnalytics';
 
-// Dynamically import GoogleAnalyticsEvents with SSR disabled
+// Dynamically import components that use useSearchParams with SSR disabled
+const PixelProvider = dynamic(
+  () => import('./PixelProvider').then(mod => ({ default: mod.PixelProvider })),
+  { ssr: false }
+);
+
 const GoogleAnalyticsEvents = dynamic(
   () => import('./GoogleAnalyticsEvents'),
   { ssr: false }
