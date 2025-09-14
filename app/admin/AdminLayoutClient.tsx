@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Menu, X, FileText, BarChart3, Users, MessageSquare, TestTube, ScrollText, LogOut } from 'lucide-react';
+import { Menu, X, FileText, BarChart3, Users, MessageSquare, TestTube, ScrollText, LogOut, Activity } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 
 interface AdminLayoutClientProps {
@@ -62,6 +62,7 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
     { href: '/admin/assessments', label: 'Assessments', icon: FileText },
     { href: '/admin/communications', label: 'Communications', icon: MessageSquare },
     { href: '/admin/logs', label: 'Logs & Monitoring', icon: ScrollText },
+    { href: '/admin/analytics', label: 'Analytics', icon: Activity },
   ];
 
   // Show loading state
