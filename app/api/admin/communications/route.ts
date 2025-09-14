@@ -1,18 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
-    // Check for admin authentication
-    const authHeader = request.headers.get('x-admin-token')
-    if (authHeader !== process.env.ADMIN_TOKEN) {
+    // Method 1: Try Supabase Auth first
+    const cookieStore = await cookies()
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    
+    // Check if user is authenticated
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    let isAuthenticated = false
+    let isAdmin = false
+    
+    if (session?.user) {
+      // Check if user has admin role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_role')
+        .eq('id', session.user.id)
+        .single()
+      
+      if (profile?.user_role === 'admin') {
+        isAuthenticated = true
+        isAdmin = true
+      }
+    }
+    
+    // Method 2: Fallback to simple password check if Supabase auth fails
+    if (!isAuthenticated) {
+      // Check for admin password in header as fallback
+      const authHeader = request.headers.get('x-admin-password')
+      const adminPassword = process.env.ADMIN_PASSWORD
+      
+      if (authHeader && adminPassword && authHeader === adminPassword) {
+        isAuthenticated = true
+        isAdmin = true
+      }
+    }
+    
+    // If still not authenticated, return 401
+    if (!isAuthenticated || !isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = getServiceSupabase()
+    const supabaseService = getServiceSupabase()
 
     // Load delivery logs with assessment data
-    const { data: deliveryLogs, error: deliveryError } = await supabase
+    const { data: deliveryLogs, error: deliveryError } = await supabaseService
       .from('guide_deliveries')
       .select(`
         *,
@@ -30,7 +67,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Load SMS opt-outs
-    const { data: optOuts, error: optOutError } = await supabase
+    const { data: optOuts, error: optOutError } = await supabaseService
       .from('sms_opt_outs')
       .select('*')
       .order('opted_out_at', { ascending: false })
@@ -41,7 +78,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Also get communication_logs for additional email tracking
-    const { data: commLogs, error: commError } = await supabase
+    const { data: commLogs, error: commError } = await supabaseService
       .from('communication_logs')
       .select('*')
       .order('created_at', { ascending: false })

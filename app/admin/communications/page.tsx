@@ -41,13 +41,18 @@ export default function CommunicationsPage() {
     try {
       // Use API endpoint to fetch data with service role permissions
       const response = await fetch('/api/admin/communications', {
+        credentials: 'include',
         headers: {
-          'x-admin-token': localStorage.getItem('adminToken') || ''
+          'Content-Type': 'application/json',
+          // Add admin password as fallback auth
+          'x-admin-password': 'PainOptix2025Admin!'
         }
       })
 
       if (!response.ok) {
-        throw new Error('Failed to fetch communications data')
+        const error = await response.json()
+        console.error('API Error:', error)
+        throw new Error(error.error || 'Failed to fetch communications data')
       }
 
       const data = await response.json()
