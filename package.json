@@ -31,7 +31,7 @@
     "update-payments": "tsx scripts/manual-payment-update.ts",
     "create-admin": "tsx scripts/create-admin-user.ts",
     "setup-admin": "tsx scripts/setup-admin-user.ts",
-    "checkins:dispatch": "tsx scripts/dispatch-cron.ts"
+    "checkins:dispatch": "node scripts/dispatch-cron.js"
   },
   "keywords": [],
   "author": "",
