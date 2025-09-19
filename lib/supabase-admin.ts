@@ -1,46 +1,63 @@
-import { createClient } from '@supabase/supabase-js'
+import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getServiceSupabase } from "@/lib/supabase";
 
-// Admin client with service role key - bypasses RLS
-// WARNING: Only use server-side, never expose to client
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
+let cached: SupabaseClient | null = null;
+
+function ensureSupabaseAdmin(): SupabaseClient {
+  if (!cached) {
+    cached = getServiceSupabase();
   }
-)
-
-// Helper function to safely read assessments
-export async function getAssessmentById(id: string) {
-  const { data, error } = await supabaseAdmin
-    .from('assessments')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (error) {
-    console.error('Error fetching assessment:', error)
-    return null
-  }
-
-  return data
+  return cached;
 }
 
-// Helper to get assessments by email
-export async function getAssessmentsByEmail(email: string) {
-  const { data, error } = await supabaseAdmin
-    .from('assessments')
-    .select('*')
-    .eq('email', email)
-    .order('created_at', { ascending: false })
+export const supabaseAdmin = new Proxy({} as SupabaseClient, {
+  get(_target, prop, receiver) {
+    const client = ensureSupabaseAdmin();
+    const value = Reflect.get(
+      client as unknown as Record<PropertyKey, unknown>,
+      prop,
+      receiver,
+    );
+    if (typeof value === "function") {
+      return value.bind(client);
+    }
+    return value;
+  },
+});
+
+export function getSupabaseAdmin(): SupabaseClient {
+  return ensureSupabaseAdmin();
+}
+
+export async function getAssessmentById(id: string) {
+  const supabase = ensureSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("assessments")
+    .select("*")
+    .eq("id", id)
+    .single();
 
   if (error) {
-    console.error('Error fetching assessments:', error)
-    return []
+    console.error("Error fetching assessment:", error);
+    return null;
   }
 
-  return data
+  return data;
+}
+
+export async function getAssessmentsByEmail(email: string) {
+  const supabase = ensureSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("assessments")
+    .select("*")
+    .eq("email", email)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching assessments:", error);
+    return [];
+  }
+
+  return data;
 }

@@ -1,126 +1,163 @@
-/**
- * Universal logger that works in both server and client environments
- */
+export type LogLevel = "debug" | "info" | "warn" | "error";
 
-// For client-side code, use a simple console-based logger
-// For server-side code, the actual winston logger will be used via webpack alias
+type LogPayload = Record<string, unknown>;
 
-class UniversalLogger {
-  private isDevelopment = process.env.NODE_ENV === 'development';
+function hash8(value: string) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
 
-  debug(message: string, meta?: any) {
-    if (!this.isDevelopment) return;
-    console.debug(`[DEBUG] ${message}`, meta || '');
+function toPayload(meta?: unknown): LogPayload {
+  if (meta === null || meta === undefined) return {};
+  if (typeof meta === "object" && !Array.isArray(meta)) {
+    return meta as LogPayload;
+  }
+  return { value: meta };
+}
+
+function sanitize(data: LogPayload): LogPayload {
+  return JSON.parse(
+    JSON.stringify(data, (_key, value) => {
+      if (typeof value === "string" && value.includes("@")) {
+        return `***${hash8(value)}`;
+      }
+      return value;
+    }),
+  );
+}
+
+export function log(
+  event: string,
+  data: LogPayload = {},
+  level: LogLevel = "info",
+) {
+  const safe = sanitize(data);
+  const line = {
+    ts: new Date().toISOString(),
+    env: process.env.NODE_ENV || "dev",
+    level,
+    event,
+    ...safe,
+  };
+  // eslint-disable-next-line no-console
+  console.log(JSON.stringify(line));
+}
+
+function normaliseError(error: unknown) {
+  if (error instanceof Error) {
+    return { name: error.name, message: error.message, stack: error.stack };
+  }
+  return error;
+}
+
+function merge(base: LogPayload, meta?: unknown): LogPayload {
+  return { ...base, ...toPayload(meta) };
+}
+
+class StructuredLogger {
+  private shouldLogDebug() {
+    return process.env.NODE_ENV !== "production";
   }
 
-  info(message: string, meta?: any) {
-    console.info(`[INFO] ${message}`, meta || '');
+  debug(message: string, meta?: unknown) {
+    if (!this.shouldLogDebug()) return;
+    log("logger.debug", merge({ message }, meta), "debug");
   }
 
-  warn(message: string, meta?: any) {
-    console.warn(`[WARN] ${message}`, meta || '');
+  info(message: string, meta?: unknown) {
+    log("logger.info", merge({ message }, meta));
   }
 
-  error(message: string, error?: any, meta?: any) {
-    const errorData = error instanceof Error ? {
-      name: error.name,
-      message: error.message,
-      stack: error.stack
-    } : error;
-    
-    console.error(`[ERROR] ${message}`, { error: errorData, ...meta });
+  warn(message: string, meta?: unknown) {
+    log("logger.warn", merge({ message }, meta), "warn");
   }
 
-  // Service helpers
-  service(name: string, status: 'initialized' | 'failed', details?: string) {
-    if (status === 'initialized') {
-      this.info(`Service initialized: ${name}`, { service: name, details });
-    } else {
-      this.error(`Service failed: ${name}`, undefined, { service: name, details });
-    }
+  error(message: string, error?: unknown, meta?: unknown) {
+    log(
+      "logger.error",
+      merge({ message, error: normaliseError(error) }, meta),
+      "error",
+    );
   }
 
-  // API error helper
-  apiError(endpoint: string, error: unknown, context?: Record<string, any>) {
-    this.error(`API Error: ${endpoint}`, error as Error, { endpoint, context });
+  service(name: string, status: "initialized" | "failed", details?: string) {
+    log("service.status", merge({ name, status, details }, undefined));
   }
 
-  // Performance tracking
-  metric(name: string, value: number, unit: string = 'ms', tags?: Record<string, any>) {
-    if (this.isDevelopment) {
-      console.debug(`[METRIC] ${name}: ${value}${unit}`, tags);
-    }
+  apiError(endpoint: string, error: unknown, context?: unknown) {
+    log(
+      "api.error",
+      merge({ endpoint, error: normaliseError(error) }, context),
+      "error",
+    );
+  }
+
+  metric(name: string, value: number, unit: string = "ms", tags?: unknown) {
+    if (!this.shouldLogDebug()) return;
+    log("metric", merge({ name, value, unit }, tags), "debug");
   }
 }
 
-// Export universal logger instance
-export const logger = new UniversalLogger();
-
-// Export aliases for compatibility
+export const logger = new StructuredLogger();
 export const winstonLogger = logger;
-export class Logger extends UniversalLogger {}
-export class EnhancedLogger extends UniversalLogger {}
+export class Logger extends StructuredLogger {}
+export class EnhancedLogger extends StructuredLogger {}
 
-// Export helpers
 export const logHelpers = {
-  assessment: (action: string, assessmentId: string, details?: any) => {
-    logger.info(`Assessment: ${action}`, {
-      category: 'assessment',
-      action,
-      assessmentId,
-      ...details
-    });
+  assessment: (action: string, assessmentId: string, details?: unknown) => {
+    logger.info("assessment.event", merge({ action, assessmentId }, details));
   },
-  
-  payment: (action: string, sessionId: string, details?: any) => {
-    logger.info(`Payment: ${action}`, {
-      category: 'payment',
-      action,
-      sessionId,
-      ...details
-    });
+  payment: (action: string, sessionId: string, details?: unknown) => {
+    logger.info("payment.event", merge({ action, sessionId }, details));
   },
-  
-  pdf: (action: string, details?: any) => {
-    logger.info(`PDF: ${action}`, {
-      category: 'pdf',
-      action,
-      ...details
-    });
+  pdf: (action: string, details?: unknown) => {
+    logger.info("pdf.event", merge({ action }, details));
   },
-  
-  email: (action: string, recipient: string, details?: any) => {
-    logger.info(`Email: ${action}`, {
-      category: 'email',
-      action,
-      recipient,
-      ...details
-    });
+  email: (action: string, recipient: string, details?: unknown) => {
+    logger.info(
+      "email.event",
+      merge({ action, recipient: `***${hash8(recipient)}` }, details),
+    );
   },
-  
-  admin: (action: string, adminId: string, resourceType: string, resourceId?: string, metadata?: any) => {
-    logger.info(`Admin: ${action}`, {
-      audit: true,
-      action,
-      resourceType,
-      resourceId,
-      adminId,
-      ...metadata
-    });
-  }
+  admin: (
+    action: string,
+    adminId: string,
+    resourceType: string,
+    resourceId?: string,
+    metadata?: unknown,
+  ) => {
+    logger.info(
+      "admin.event",
+      merge(
+        {
+          action,
+          resourceType,
+          resourceId,
+          adminId: `***${hash8(adminId)}`,
+        },
+        metadata,
+      ),
+    );
+  },
 };
 
-// Stub functions for client compatibility
 export function runWithRequestContext<T>(
-  context: { requestId?: string; userId?: string },
-  callback: () => T
+  _context: { requestId?: string; userId?: string },
+  callback: () => T,
 ): T {
   return callback();
 }
 
-export function requestLoggingMiddleware(req: any, res: any, next: any) {
+export function requestLoggingMiddleware(
+  _req: unknown,
+  _res: unknown,
+  next: () => void,
+) {
   next();
 }
 
-// Winston is not available in client
 export const winston = undefined;
