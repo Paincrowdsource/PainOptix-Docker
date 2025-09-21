@@ -1,4 +1,4 @@
-name: Checkins Dispatch (cron)
+﻿name: Checkins Dispatch (cron)
 on:
   schedule:
     - cron: "*/15 * * * *"
@@ -6,10 +6,17 @@ on:
 jobs:
   dispatch:
     runs-on: ubuntu-latest
+    env:
+      APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+      DISPATCH_TOKEN: ${{ secrets.CHECKINS_DISPATCH_TOKEN }}
     steps:
-      - name: Call dispatcher (dry-run, safe)
+      - name: Skip when secrets missing
+        if: env.APP_BASE_URL == '' || env.DISPATCH_TOKEN == ''
         run: |
-          curl -s -X POST "${{ secrets.APP_BASE_URL }}/api/checkins/dispatch?dryRun=1" \
-            -H "X-Dispatch-Token: ${{ secrets.CHECKINS_DISPATCH_TOKEN }}" \
+          echo "Checkins dispatch skipped: APP_BASE_URL or CHECKINS_DISPATCH_TOKEN not configured for this repo." 
+      - name: Call dispatcher (dry-run, safe)
+        if: env.APP_BASE_URL != '' && env.DISPATCH_TOKEN != ''
+        run: |
+          curl -s -X POST "$APP_BASE_URL/api/checkins/dispatch?dryRun=1" \
+            -H "X-Dispatch-Token: $DISPATCH_TOKEN" \
             -H "Content-Type: application/json"
-
