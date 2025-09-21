@@ -20,15 +20,20 @@ export async function sendEmail(opts: SendEmailOptions): Promise<{ ok: boolean; 
   if (key) {
     try {
       sgMail.setApiKey(key);
-      const [resp, body] = await sgMail.send({
+      const message: Record<string, unknown> = {
         from,
         to,
         subject: opts.subject,
-        html: opts.html,
-        text: opts.text,
-      });
+      };
+      if (opts.html) {
+        message.html = opts.html;
+      }
+      if (opts.text) {
+        message.text = opts.text;
+      }
+      const [resp, body] = await sgMail.send(message as any);
       if (resp.statusCode >= 200 && resp.statusCode < 300) {
-        const id = resp.headers['x-message-id'] || (Array.isArray(body) ? body[0]?.id : body?.id);
+        const id = resp.headers['x-message-id'] || (Array.isArray(body) ? body[0]?.id : (body as any)?.id);
         return { ok: true, provider: 'sendgrid', id };
       }
       return { ok: false, provider: 'sendgrid', error: `HTTP ${resp.statusCode}` };
