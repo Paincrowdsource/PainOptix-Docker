@@ -1,4 +1,4 @@
-/**
+﻿/**
  * User Data Deletion API Endpoint
  * 
  * PURPOSE:
@@ -27,25 +27,15 @@
  * DATA FLOW:
  * 1. Validate assessment ID and verify existence
  * 2. Create audit summary with non-sensitive metadata
- * 3. Delete in dependency order: progress → sessions → deliveries → follow-ups → telehealth → sync → assessment
+ * 3. Delete in dependency order: progress â†’ sessions â†’ deliveries â†’ follow-ups â†’ telehealth â†’ sync â†’ assessment
  * 4. Create audit log entry
  * 5. Return success confirmation
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // Admin client with elevated privileges for data deletion operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -220,3 +210,4 @@ export async function DELETE(request: NextRequest) {
     )
   }
 }
+

@@ -1,19 +1,45 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+﻿import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+function resolveUrl(): string {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  if (!url) {
+    throw new Error("Supabase URL is not defined in environment variables.");
+  }
+  return url;
+}
 
 let anonClient: SupabaseClient | null = null;
-let browserClient: SupabaseClient | null = null;
-let serviceClient: SupabaseClient | null = null;
-
 function ensureAnonClient(): SupabaseClient {
   if (!anonClient) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) {
-      throw new Error("Public Supabase envs missing");
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+    if (!anonKey) {
+      throw new Error("Supabase anon key is not defined in environment variables.");
     }
-    anonClient = createClient(url, key);
+    anonClient = createClient(resolveUrl(), anonKey);
   }
   return anonClient;
+}
+
+let serviceClient: SupabaseClient | null = null;
+function ensureServiceClient(): SupabaseClient {
+  if (!serviceClient) {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+      throw new Error("Supabase service role key is not defined in environment variables.");
+    }
+    serviceClient = createClient(resolveUrl(), serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+  }
+  return serviceClient;
+}
+
+export function getSupabaseAnon(): SupabaseClient {
+  return ensureAnonClient();
+}
+
+export function getSupabaseAdmin(): SupabaseClient {
+  return ensureServiceClient();
 }
 
 export const supabase = new Proxy({} as SupabaseClient, {
@@ -31,26 +57,13 @@ export const supabase = new Proxy({} as SupabaseClient, {
   },
 });
 
-/** Browser-only anon client for client components */
-export function getBrowserSupabase() {
+export function getBrowserSupabase(): SupabaseClient {
   if (typeof window === "undefined") {
     throw new Error("getBrowserSupabase is browser-only");
   }
-  if (!browserClient) {
-    browserClient = ensureAnonClient();
-  }
-  return browserClient;
+  return ensureAnonClient();
 }
 
-/** Server-only service client (jobs, API routes, scripts) */
-export function getServiceSupabase() {
-  if (!serviceClient) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!url || !key) {
-      throw new Error("service key missing (server-only path)");
-    }
-    serviceClient = createClient(url, key, { auth: { persistSession: false } });
-  }
-  return serviceClient;
+export function getServiceSupabase(): SupabaseClient {
+  return ensureServiceClient();
 }
