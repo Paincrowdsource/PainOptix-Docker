@@ -1,20 +1,56 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+let anonClient: SupabaseClient | null = null;
+let browserClient: SupabaseClient | null = null;
+let serviceClient: SupabaseClient | null = null;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-// Server-side client with service role key
-export const getServiceSupabase = () => {
-  return createClient(
-    supabaseUrl,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
+function ensureAnonClient(): SupabaseClient {
+  if (!anonClient) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) {
+      throw new Error("Public Supabase envs missing");
     }
-  )
+    anonClient = createClient(url, key);
+  }
+  return anonClient;
+}
+
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop, receiver) {
+    const client = ensureAnonClient();
+    const value = Reflect.get(
+      client as unknown as Record<PropertyKey, unknown>,
+      prop,
+      receiver,
+    );
+    if (typeof value === "function") {
+      return value.bind(client);
+    }
+    return value;
+  },
+});
+
+/** Browser-only anon client for client components */
+export function getBrowserSupabase() {
+  if (typeof window === "undefined") {
+    throw new Error("getBrowserSupabase is browser-only");
+  }
+  if (!browserClient) {
+    browserClient = ensureAnonClient();
+  }
+  return browserClient;
+}
+
+/** Server-only service client (jobs, API routes, scripts) */
+export function getServiceSupabase() {
+  if (!serviceClient) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+      throw new Error("service key missing (server-only path)");
+    }
+    serviceClient = createClient(url, key, { auth: { persistSession: false } });
+  }
+  return serviceClient;
 }
