@@ -18,7 +18,8 @@ export async function sendEmail(opts: SendEmailOptions): Promise<{ ok: boolean; 
 
   if (key) {
     try {
-      const sgModule = await import('@sendgrid/mail');\n      const sg = (sgModule.default ?? sgModule) as typeof import('@sendgrid/mail').default;
+      const sgModule = await import('@sendgrid/mail');
+      const sg = (sgModule.default ?? sgModule) as typeof import('@sendgrid/mail').default;
       sg.setApiKey(key);
       const [resp, body] = await sg.send({
         from,
@@ -48,5 +49,4 @@ export async function sendEmail(opts: SendEmailOptions): Promise<{ ok: boolean; 
 }
 
 export default sendEmail;
-
 
