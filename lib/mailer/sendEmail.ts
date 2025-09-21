@@ -1,4 +1,5 @@
-﻿/**
+﻿import sgMail from '@sendgrid/mail';
+/**
  * SendGrid mailer for check-ins.
  * Uses @sendgrid/mail when SENDGRID_API_KEY is present.
  * Falls back to console log so builds never fail in dev.
@@ -18,9 +19,8 @@ export async function sendEmail(opts: SendEmailOptions): Promise<{ ok: boolean; 
 
   if (key) {
     try {
-      const sg = (await import('@sendgrid/mail')) as typeof import('@sendgrid/mail');
-      (sg as any).setApiKey(key);
-      const [resp, body] = await (sg as any).send({
+      sgMail.setApiKey(key);
+      const [resp, body] = await sgMail.send({
         from,
         to,
         subject: opts.subject,
