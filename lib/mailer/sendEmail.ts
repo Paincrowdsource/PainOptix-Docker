@@ -19,8 +19,8 @@ export async function sendEmail(opts: SendEmailOptions): Promise<{ ok: boolean; 
   if (key) {
     try {
       const sg = (await import('@sendgrid/mail')) as typeof import('@sendgrid/mail');
-      sg.setApiKey(key);
-      const [resp, body] = await sg.send({
+      (sg as any).setApiKey(key);
+      const [resp, body] = await (sg as any).send({
         from,
         to,
         subject: opts.subject,
