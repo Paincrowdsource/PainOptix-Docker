@@ -11,11 +11,11 @@ jobs:
       DISPATCH_TOKEN: ${{ secrets.CHECKINS_DISPATCH_TOKEN }}
     steps:
       - name: Skip when secrets missing
-        if: env.APP_BASE_URL == '' || env.DISPATCH_TOKEN == ''
+        if: ${{ env.APP_BASE_URL == '' || env.DISPATCH_TOKEN == '' }}
         run: |
-          echo "Checkins dispatch skipped: APP_BASE_URL or CHECKINS_DISPATCH_TOKEN not configured for this repo." 
+          echo "Checkins dispatch skipped: APP_BASE_URL or CHECKINS_DISPATCH_TOKEN not configured for this repo."
       - name: Call dispatcher (dry-run, safe)
-        if: env.APP_BASE_URL != '' && env.DISPATCH_TOKEN != ''
+        if: ${{ env.APP_BASE_URL != '' && env.DISPATCH_TOKEN != '' }}
         run: |
           curl -s -X POST "$APP_BASE_URL/api/checkins/dispatch?dryRun=1" \
             -H "X-Dispatch-Token: $DISPATCH_TOKEN" \
