@@ -20,6 +20,8 @@ export async function GET() {
       from: flag("EMAIL_FROM") || flag("SENDGRID_FROM_EMAIL"),
       emailFrom: flag("EMAIL_FROM"),
       sendgridFromEmail: flag("SENDGRID_FROM_EMAIL"),
+      emailFromValue: process.env.EMAIL_FROM || null,
+      sendgridFromEmailValue: process.env.SENDGRID_FROM_EMAIL || null,
     },
     stripe: {
       secret: flag("STRIPE_SECRET_KEY"),
