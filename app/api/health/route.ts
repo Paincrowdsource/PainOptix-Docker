@@ -18,6 +18,8 @@ export async function GET() {
     sendgrid: {
       apiKey: flag("SENDGRID_API_KEY"),
       from: flag("EMAIL_FROM") || flag("SENDGRID_FROM_EMAIL"),
+      emailFrom: flag("EMAIL_FROM"),
+      sendgridFromEmail: flag("SENDGRID_FROM_EMAIL"),
     },
     stripe: {
       secret: flag("STRIPE_SECRET_KEY"),
@@ -31,6 +33,3 @@ export async function GET() {
   const ok = true; // never block DO readiness; surface detail in JSON instead
   return NextResponse.json({ ok, checks }, { status: 200 });
 }
-
-
-
