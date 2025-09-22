@@ -1,13 +1,11 @@
-#!/usr/bin/env node
-import "dotenv/config";
-import * as fs from "fs";
-import * as path from "path";
-import minimist from "minimist";
-import { getServiceSupabase } from "@/lib/supabase";
+import 'dotenv/config';
+import fs from 'fs';
+import path from 'path';
+import minimist from 'minimist';
 
-// These imports must exist in your repo per earlier logs:
-import { resolveDiagnosisCode } from "@/lib/checkins/diagnosis";
-import { sign, type CheckInDay, type CheckInValue } from "@/lib/checkins/token";
+import { getServiceSupabase } from '@/lib/supabase';
+import { resolveDiagnosisCode } from '@/lib/checkins/diagnosis';
+import { sign, type CheckInDay, type CheckInValue } from '@/lib/checkins/token';
 
 type Template = {
   key: string;
@@ -17,22 +15,44 @@ type Template = {
   cta_url: string | null;
   channel: string;
 };
+
 type Insert = {
   diagnosis_code: string;
   day: number;
   branch: string;
   insert_text: string;
 };
+
 type Encouragement = { text: string };
 
+const BRAND = {
+  name: 'PainOptix',
+  accent: '#0B5394',
+  accentDark: '#083A75',
+  background: '#F6F8FB',
+  card: '#FFFFFF',
+  border: '#E2E8F5',
+  text: '#1F2937',
+  muted: '#6B7280',
+};
+
+const CTA_PALETTE: Record<
+  CheckInValue,
+  { background: string; border: string; color: string }
+> = {
+  better: { background: '#0B5394', border: '#0B5394', color: '#FFFFFF' },
+  same: { background: '#F3F4F6', border: '#CBD5E1', color: '#111827' },
+  worse: { background: '#FEE2E2', border: '#FCA5A5', color: '#991B1B' },
+};
+
 const argv = minimist(process.argv.slice(2), {
-  string: ["assessment", "aid", "a", "branch", "b", "day", "d", "help", "h"],
-  alias: { assessment: ["aid", "a"], day: ["d"], branch: ["b"], help: ["h"] },
+  string: ['assessment', 'aid', 'a', 'branch', 'b', 'day', 'd', 'help', 'h'],
+  alias: { assessment: ['aid', 'a'], day: ['d'], branch: ['b'], help: ['h'] },
 });
 
-function help() {
+function help(): void {
   console.log(`
-Check-ins Email Preview Generator
+Coaching Check-ins Preview
 
 Usage:
   npm exec -- tsx scripts/checkins-preview.ts -- --assessment <uuid> --day <3|7|14> --branch <initial|better|same|worse>
@@ -41,188 +61,409 @@ Options:
   --assessment, -a, --aid   Assessment ID to preview
   --day, -d                 Day (3, 7, or 14)
   --branch, -b              initial | better | same | worse
-  --help, -h                Show help
+  --help, -h                Show this help text
 `);
 }
 
-async function main() {
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildParagraphs(raw: string, style: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+
+  return trimmed
+    .split(/\r?\n\r?\n+/)
+    .map((block) => {
+      const safe = escapeHtml(block).replace(/\r?\n/g, '<br>');
+      return `<p style="${style}">${safe}</p>`;
+    })
+    .join('');
+}
+
+function resolveLogoFragment(): string {
+  const brandingDir = path.resolve('public', 'branding');
+  const candidates = [
+    'painoptix-logo.png',
+    'painoptix-logo.jpg',
+    'painoptix-logo.jpeg',
+    'painoptix-logo.svg',
+  ];
+
+  for (const file of candidates) {
+    const abs = path.join(brandingDir, file);
+    if (fs.existsSync(abs)) {
+      const rel = path
+        .relative(path.resolve('public'), abs)
+        .replace(/\\/g, '/');
+      return `<img src="/${rel}" alt="PainOptix" width="148" style="display:block;height:auto;">`;
+    }
+  }
+
+  return `<span style="font-size:22px;font-weight:700;letter-spacing:0.06em;color:${BRAND.accent};">${BRAND.name}</span>`;
+}
+
+function buildInsertBlock(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+
+  const body = buildParagraphs(
+    trimmed,
+    'margin:0;font-size:16px;line-height:1.6;color:#0B356F;',
+  );
+
+  return `<div style="margin:0 0 20px;border:1px solid ${BRAND.accent}1A;background:#EFF5FF;border-radius:12px;padding:18px;">${body}</div>`;
+}
+
+function buildEncouragementBlock(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+
+  const safe = escapeHtml(trimmed).replace(/\r?\n/g, '<br>');
+  return `<div style="margin:0 0 20px;padding:18px;border-radius:12px;background:#FFFFFF;border:1px dashed ${BRAND.accent}55;font-size:15px;line-height:1.6;color:${BRAND.accentDark};"><strong style="display:block;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;">Encouragement</strong>${safe}</div>`;
+}
+
+function renderShell(
+  raw: string,
+  insertBlock: string,
+  encouragementBlock: string,
+): string {
+  const placeholderInsert = '__INSERT_BLOCK__';
+  const placeholderEnc = '__ENCOURAGEMENT_BLOCK__';
+
+  const normalized = raw
+    .replace(/\{\{\s*insert\s*\}\}/gi, placeholderInsert)
+    .replace(/\{\{\s*encouragement\s*\}\}/gi, placeholderEnc)
+    .trim();
+
+  const segments = normalized
+    .split(new RegExp(`(${placeholderInsert}|${placeholderEnc})`, 'g'))
+    .map((segment) => segment)
+    .filter((segment) => segment.length > 0);
+
+  const blocks: string[] = [];
+
+  for (const segment of segments) {
+    if (segment === placeholderInsert) {
+      if (insertBlock) blocks.push(insertBlock);
+      continue;
+    }
+
+    if (segment === placeholderEnc) {
+      if (encouragementBlock) blocks.push(encouragementBlock);
+      continue;
+    }
+
+    const paragraphs = segment
+      .split(/\r?\n\r?\n+/)
+      .map((paragraph) => paragraph.trim())
+      .filter((paragraph) => paragraph.length > 0);
+
+    for (const paragraph of paragraphs) {
+      const safe = escapeHtml(paragraph).replace(/\r?\n/g, '<br>');
+      blocks.push(
+        `<p style="margin:0 0 18px;font-size:16px;line-height:1.65;color:${BRAND.text};">${safe}</p>`,
+      );
+    }
+  }
+
+  if (!/\{\{\s*insert\s*\}\}/i.test(raw) && insertBlock) {
+    blocks.splice(Math.min(1, blocks.length), 0, insertBlock);
+  }
+
+  if (!/\{\{\s*encouragement\s*\}\}/i.test(raw) && encouragementBlock) {
+    blocks.push(encouragementBlock);
+  }
+
+  return blocks.join('');
+}
+
+function buildMetaTable(meta: Record<string, string>): string {
+  const rows = Object.entries(meta)
+    .map(([label, value]) => {
+      return `<tr>
+  <td style="padding:6px 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${BRAND.muted};">${escapeHtml(label)}</td>
+  <td style="padding:6px 12px;font-size:13px;color:${BRAND.text};">${escapeHtml(value)}</td>
+</tr>`;
+    })
+    .join('');
+
+  return `<table role="presentation" width="100%" style="margin-top:24px;border-collapse:collapse;background:${BRAND.background};border-radius:12px;">${rows}</table>`;
+}
+
+function buildCtaButtons(
+  assessmentId: string,
+  day: CheckInDay,
+  appUrl: string,
+): string {
+  const values: CheckInValue[] = ['better', 'same', 'worse'];
+
+  return values
+    .map((value) => {
+      const palette = CTA_PALETTE[value];
+      const token = sign(
+        { assessment_id: assessmentId, day, value },
+        24 * 60 * 60,
+      );
+      const url = `${appUrl}/c/i?token=${token}&source=checkin_d${day}`;
+      const label =
+        value === 'better'
+          ? 'Feeling Better'
+          : value === 'same'
+            ? 'About the Same'
+            : 'Feeling Worse';
+
+      return `<a href="${url}" style="display:inline-block;margin:0 12px 12px 0;padding:12px 20px;border-radius:999px;font-weight:600;font-size:15px;letter-spacing:0.02em;text-decoration:none;background:${palette.background};color:${palette.color};border:1px solid ${palette.border};">${label}</a>`;
+    })
+    .join('');
+}
+
+function renderEmail(options: {
+  subject: string;
+  templateKey: string;
+  diagnosisCode: string;
+  bodyHtml: string;
+  ctaHtml: string;
+  disclaimerHtml: string;
+  logoHtml: string;
+  meta: Record<string, string>;
+}): string {
+  const {
+    subject,
+    templateKey,
+    diagnosisCode,
+    bodyHtml,
+    ctaHtml,
+    disclaimerHtml,
+    logoHtml,
+    meta,
+  } = options;
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(subject)}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin:0;padding:24px;background:${BRAND.background};font-family:'Segoe UI', Roboto, Arial, sans-serif;color:${BRAND.text};">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;margin:0 auto;border-collapse:collapse;">
+    <tr>
+      <td style="padding:0;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+          <tr>
+            <td style="padding:0 0 16px 0;text-align:left;">
+              ${logoHtml}
+            </td>
+          </tr>
+        </table>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:${BRAND.card};border-radius:16px;box-shadow:0 16px 40px rgba(33, 56, 82, 0.08);border:1px solid ${BRAND.border};overflow:hidden;">
+          <tr>
+            <td style="padding:32px 32px 28px 32px;">
+              <h1 style="margin:0 0 12px 0;font-size:26px;line-height:1.3;color:${BRAND.accent};">${escapeHtml(subject)}</h1>
+              <p style="margin:0 0 24px 0;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;color:${BRAND.muted};">Template ${escapeHtml(templateKey)} | Diagnosis ${escapeHtml(diagnosisCode)}</p>
+              ${bodyHtml}
+              <div style="margin:12px 0 24px 0;">${ctaHtml}</div>
+              <div style="margin-top:28px;border-top:1px solid ${BRAND.border};padding-top:16px;">${disclaimerHtml}</div>
+            </td>
+          </tr>
+        </table>
+        ${buildMetaTable(meta)}
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+async function main(): Promise<void> {
   if (argv.help || argv.h) {
     help();
     process.exit(0);
   }
 
-  const assessmentId = (argv.assessment || argv.aid || argv.a) as
-    | string
-    | undefined;
-  const dayRaw = (argv.day || argv.d) as string | number | undefined;
-  const branchArg = (argv.branch || argv.b || "initial") as
-    | "initial"
-    | "better"
-    | "same"
-    | "worse";
+  const assessmentId = (argv.assessment ?? argv.aid ?? argv.a) as string | undefined;
+  const dayRaw = (argv.day ?? argv.d) as string | number | undefined;
+  const branch = (argv.branch ?? argv.b ?? 'initial') as
+    | 'initial'
+    | 'better'
+    | 'same'
+    | 'worse';
 
-  const dayNum =
-    typeof dayRaw === "string"
-      ? parseInt(dayRaw, 10)
-      : typeof dayRaw === "number"
+  const dayValue =
+    typeof dayRaw === 'string'
+      ? Number.parseInt(dayRaw, 10)
+      : typeof dayRaw === 'number'
         ? dayRaw
         : NaN;
-  if (
-    !assessmentId ||
-    !Number.isFinite(dayNum) ||
-    ![3, 7, 14].includes(Number(dayNum))
-  ) {
-    console.error("Error: --assessment and --day (3|7|14) are required.");
+
+  if (!assessmentId || !Number.isFinite(dayValue) || ![3, 7, 14].includes(Number(dayValue))) {
+    console.error('Error: --assessment and --day (3|7|14) are required.');
     help();
     process.exit(1);
   }
-  const day = Number(dayNum) as CheckInDay;
-  const branch = branchArg;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://painoptix.com";
-  const tokenSecret = process.env.CHECKINS_TOKEN_SECRET;
-  if (!tokenSecret) {
-    console.error(
-      "Error: CHECKINS_TOKEN_SECRET env is required for preview token signing.",
-    );
+  const day = Number(dayValue) as CheckInDay;
+
+  if (!process.env.CHECKINS_TOKEN_SECRET) {
+    console.error('Error: CHECKINS_TOKEN_SECRET env must be set for token signing.');
     process.exit(1);
   }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://painoptix.com';
 
   const supabase = getServiceSupabase();
 
-  // 1) Load assessment -> derive diagnosis_code
-  const { data: assessment, error: aErr } = await supabase
-    .from("assessments")
-    .select("id, guide_type, created_at")
-    .eq("id", assessmentId)
+  const { data: assessment, error: assessmentError } = await supabase
+    .from('assessments')
+    .select('id, guide_type, created_at')
+    .eq('id', assessmentId)
     .maybeSingle();
 
-  if (aErr || !assessment) {
-    console.error("Error: assessment not found or DB error.", aErr);
+  if (assessmentError || !assessment) {
+    console.error('Error: assessment not found or database error.', assessmentError);
     process.exit(1);
   }
 
-  // Your repo provides this mapper already.
-  const diagnosisCode =
-    resolveDiagnosisCode(assessment.guide_type) || "generic";
+  const diagnosisCode = resolveDiagnosisCode({ guide_type: assessment.guide_type }) || 'generic';
 
-  // 2) Load template (deterministic key: dayN.branch)
   const templateKey = `day${day}.${branch}`;
-  const { data: templates, error: tErr } = await supabase
-    .from("message_templates")
-    .select("key,subject,shell_text,disclaimer_text,cta_url,channel")
-    .eq("key", templateKey)
+  const { data: templateRows, error: templateError } = await supabase
+    .from('message_templates')
+    .select('key,subject,shell_text,disclaimer_text,cta_url,channel')
+    .eq('key', templateKey)
     .limit(1);
 
-  if (tErr || !templates || templates.length === 0) {
-    console.error(`Error: message_template ${templateKey} missing`);
+  if (templateError || !templateRows || templateRows.length === 0) {
+    console.error(`Error: message_template ${templateKey} missing.`);
     process.exit(1);
   }
-  const tpl = templates[0] as Template;
 
-  // 3) Load insert (specific -> generic fallback)
-  let insertText = "";
-  {
-    const { data: insSpecific } = await supabase
-      .from("diagnosis_inserts")
-      .select("diagnosis_code,day,branch,insert_text")
-      .eq("diagnosis_code", diagnosisCode)
-      .eq("day", day)
-      .eq("branch", branch)
-      .limit(1);
-    if (insSpecific && insSpecific.length) {
-      insertText = (insSpecific[0] as Insert).insert_text;
-    } else {
-      const { data: insGeneric } = await supabase
-        .from("diagnosis_inserts")
-        .select("diagnosis_code,day,branch,insert_text")
-        .eq("diagnosis_code", "generic")
-        .eq("day", day)
-        .eq("branch", branch)
+  const template = templateRows[0] as Template;
+
+  const branchSequence =
+    branch === 'initial' ? ['initial', 'same'] : [branch];
+  const diagnosisSequence = [diagnosisCode, 'generic'];
+
+  let insertText = '';
+
+  for (const diagnosisCandidate of diagnosisSequence) {
+    if (insertText) {
+      break;
+    }
+
+    for (const branchCandidate of branchSequence) {
+      const { data: insertRows, error: insertError } = await supabase
+        .from('diagnosis_inserts')
+        .select('diagnosis_code,day,branch,insert_text')
+        .eq('diagnosis_code', diagnosisCandidate)
+        .eq('day', day)
+        .eq('branch', branchCandidate)
         .limit(1);
-      insertText =
-        insGeneric && insGeneric.length
-          ? (insGeneric[0] as Insert).insert_text
-          : "(missing insert)";
+
+      if (insertError) {
+        console.error('Error: failed to load insert.', {
+          diagnosisCandidate,
+          branchCandidate,
+          error: insertError,
+        });
+        process.exit(1);
+      }
+
+      if (insertRows && insertRows.length > 0) {
+        insertText = (insertRows[0] as Insert).insert_text;
+        break;
+      }
     }
   }
 
-  // 4) Pick an encouragement (client-side random)
-  const { data: encourList } = await supabase
-    .from("encouragements")
-    .select("text")
+  const { data: encouragementRows, error: encouragementError } = await supabase
+    .from('encouragements')
+    .select('text')
     .limit(100);
+
+  if (encouragementError) {
+    console.error('Error: failed to load encouragements.', encouragementError);
+    process.exit(1);
+  }
+
   const encouragement =
-    encourList && encourList.length
-      ? (
-          encourList[
-            Math.floor(Math.random() * encourList.length)
-          ] as Encouragement
-        ).text
-      : "Keep going, you are making progress.";
+    encouragementRows && encouragementRows.length
+      ? (encouragementRows[
+          Math.floor(Math.random() * encouragementRows.length)
+        ] as Encouragement).text
+      : 'Keep going, you are making progress.';
 
-  // 5) Render body from shell with placeholders
-  const body =
-    tpl.shell_text
-      .replace("{{insert}}", insertText)
-      .replace("{{encouragement}}", encouragement) +
-    "\n\n" +
-    (tpl.disclaimer_text || "");
+  const insertBlock = buildInsertBlock(insertText);
+  const encouragementBlock = buildEncouragementBlock(encouragement);
+  const bodyHtml = renderShell(template.shell_text || '', insertBlock, encouragementBlock);
 
-  // 6) Build one-tap links (Better/Same/Worse) with signed tokens and source=checkin_d{day}
-  const values: CheckInValue[] = ["better", "same", "worse"];
-  const links = values
-    .map((value) => {
-      const token = sign(
-        {
-          assessment_id: assessmentId,
-          day,
-          value,
-          exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
-        },
-        tokenSecret,
-      );
-      const url = `${appUrl}/c/i?token=${token}&source=checkin_d${day}`;
-      const label = value[0].toUpperCase() + value.slice(1);
-      const cls =
-        value === "better"
-          ? "btn"
-          : value === "same"
-            ? "btn neutral"
-            : "btn danger";
-      return `<a href="${url}" class="${cls}">${label}</a>`;
-    })
-    .join(" ");
+  const disclaimerHtml = buildParagraphs(
+    template.disclaimer_text || 'Reply STOP to opt out of future messages.',
+    'margin:0;font-size:12px;line-height:1.6;color:' + BRAND.muted + ';',
+  );
 
-  // 7) Simple HTML preview
-  const html = `<!doctype html>
-<html><head><meta charset="utf-8">
-  <title>${tpl.subject ?? "Check-in"}</title>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; line-height:1.4; margin:24px; }
-    .btn{ padding:10px 14px; border-radius:8px; text-decoration:none; display:inline-block; margin-right:8px; border:1px solid #ddd; }
-    .neutral{ background:#f2f2f2; }
-    .danger{ background:#ffe8e8; border-color:#ffcccc;}
-    .meta{ color:#666; font-size:12px; margin-top:12px; }
-    pre{ background:#fafafa; padding:12px; border:1px solid #eee; border-radius:8px; overflow:auto;}
-  </style>
-</head>
-<body>
-  <h2>${tpl.subject ?? `Day ${day} check-in`}</h2>
-  <div class="meta">template: <code>${templateKey}</code>  diagnosis: <code>${diagnosisCode}</code></div>
-  <pre>${body.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</pre>
-  <p>${links}</p>
-</body></html>`;
+  const ctaHtml = buildCtaButtons(assessment.id, day, appUrl);
+  const logoHtml = resolveLogoFragment();
 
-  // 8) Write file
-  const outDir = path.resolve("tmp");
-  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+  const timezone = process.env.CHECKINS_DISPLAY_TZ || 'America/New_York';
+  const createdAt = assessment.created_at
+    ? new Date(assessment.created_at).toLocaleString('en-US', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : 'n/a';
+
+  const html = renderEmail({
+    subject: template.subject || `Quick day ${day} check-in`,
+    templateKey,
+    diagnosisCode,
+    bodyHtml,
+    ctaHtml,
+    disclaimerHtml,
+    logoHtml,
+    meta: {
+      'Assessment ID': assessment.id,
+      'Check-in Day': `Day ${day}`,
+      Branch: branch,
+      Diagnosis: diagnosisCode,
+      'Template Key': templateKey,
+      'Assessment Created': createdAt,
+    },
+  });
+
+  const outDir = path.resolve('tmp', 'checkins-previews');
+  if (!fs.existsSync(outDir)) {
+    fs.mkdirSync(outDir, { recursive: true });
+  }
+
   const outPath = path.join(outDir, `preview-day${day}-${branch}.html`);
-  fs.writeFileSync(outPath, html, "utf8");
-  console.log("PREVIEW:", outPath);
+  fs.writeFileSync(outPath, html, 'utf8');
+  console.log('PREVIEW:', outPath);
 }
 
-main().catch((e) => {
-  console.error("Preview generation failed:", e);
+main().catch((error) => {
+  console.error('Preview generation failed:', error);
   process.exit(1);
 });
+
+
+
+
+
+
+
+
+
+
+
