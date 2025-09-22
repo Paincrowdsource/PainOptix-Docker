@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -300,7 +300,7 @@ export default function DropoffAnalytics() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Problem Questions */}
               <div>
-                <h4 className="font-semibold mb-3 text-red-600">⚠️ Problem Questions</h4>
+                <h4 className="font-semibold mb-3 text-red-600">âš ï¸ Problem Questions</h4>
                 {stats.problemQuestions.length > 0 ? (
                   <ul className="space-y-2">
                     {stats.problemQuestions.map((q) => (
@@ -320,7 +320,7 @@ export default function DropoffAnalytics() {
 
               {/* Peak Drop-off Times */}
               <div>
-                <h4 className="font-semibold mb-3">🕐 Peak Drop-off Times</h4>
+                <h4 className="font-semibold mb-3">ðŸ• Peak Drop-off Times</h4>
                 <ul className="space-y-2">
                   {stats.peakDropoffTimes.map((time, index) => (
                     <li key={time.hour} className="text-sm">
@@ -333,7 +333,7 @@ export default function DropoffAnalytics() {
 
               {/* Recovery Opportunities */}
               <div className="md:col-span-2">
-                <h4 className="font-semibold mb-3">💡 Recovery Opportunities</h4>
+                <h4 className="font-semibold mb-3">ðŸ’¡ Recovery Opportunities</h4>
                 <p className="text-sm text-gray-600">
                   {stats.recentDropoffs.filter(d => {
                     const hoursSince = (Date.now() - new Date(d.lastActive).getTime()) / (1000 * 60 * 60)

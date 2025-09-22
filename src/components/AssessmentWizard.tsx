@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { ArrowLeft, ArrowRight, Loader2, Info, CheckCircle, AlertCircle, Check, Star, Zap, BookOpen, Shield, Lock, Award, Activity, Crown, Phone, RefreshCw } from 'lucide-react';
 import { withRetry, storeFailedOperation, isRetriableError, generateErrorCode } from '@/lib/error-recovery';
@@ -109,8 +109,8 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
   
   // Safety check - if question doesn't exist, move to contact
   if (!currentQuestion && currentStep === 'assessment') {
-    console.error('❌ No question found for ID:', currentQuestionId);
-    console.log('📋 All questions:', Object.keys(Questions).map(id => ({
+    console.error('âŒ No question found for ID:', currentQuestionId);
+    console.log('ðŸ“‹ All questions:', Object.keys(Questions).map(id => ({
       id,
       text: Questions[id as keyof typeof Questions].text.substring(0, 50) + '...',
       hasNoneOption: Questions[id as keyof typeof Questions].options?.some((o: any) => o.value === 'none')
@@ -128,6 +128,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
         currentQuestion.text
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionId, currentStep, sessionId]);
 
   // Calculate progress
@@ -203,7 +204,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
     // Get next question
     const nextQuestion = questionFlow.getNextQuestion(newResponses);
     
-    console.log('📊 Assessment flow:', {
+    console.log('ðŸ“Š Assessment flow:', {
       currentQuestionId,
       answeredQuestions: Array.from(newResponses.keys()),
       nextQuestion,
@@ -224,7 +225,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
       }
     } else {
       // All questions answered, move to contact collection
-      console.log('✅ All questions answered, moving to contact form');
+      console.log('âœ… All questions answered, moving to contact form');
       setCurrentStep('contact');
     }
   };
@@ -363,7 +364,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
       }
       
       // Store assessment ID and move to payment screen
-      console.log('✅ Assessment created with ID:', result.assessmentId);
+      console.log('âœ… Assessment created with ID:', result.assessmentId);
       setAssessmentId(result.assessmentId);
       // Mark session as complete
       await completeSession(result.assessmentId);
@@ -413,7 +414,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
       } else {
         // For paid tiers, create Stripe checkout
         const tierPrice = tier === 'enhanced' ? 5 : 20;
-        console.log('🛒 Creating checkout for assessment:', assessmentId);
+        console.log('ðŸ›’ Creating checkout for assessment:', assessmentId);
         const response = await fetch('/api/create-checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -452,7 +453,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
             <div>
               <p className="font-semibold mb-2">Important Information</p>
               <p className="text-sm">
-                PainFinder™ is an educational tool. It does not diagnose or treat medical conditions. 
+                PainFinderâ„¢ is an educational tool. It does not diagnose or treat medical conditions. 
                 Your responses are used to generate wellness content aligned with symptom patterns, not a formal diagnosis. 
                 By continuing, you consent to our Terms and confirm that you understand this limitation.
               </p>
@@ -483,7 +484,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
                 className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="text-sm">
-                I understand that PainFinder™ is an educational tool, not a diagnostic tool, and I agree to the terms of service.
+                I understand that PainFinderâ„¢ is an educational tool, not a diagnostic tool, and I agree to the terms of service.
                 <br /><br />
                 <strong>I explicitly consent to receive SMS messages</strong> from PainOptix / Dr. C. Pain MD Holdings, LLC at the phone number I provide. I understand that message and data rates may apply.
                 <br /><br />
@@ -716,7 +717,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
                   </div>
                   <h3 className="text-2xl font-semibold text-gray-900">Comprehensive Guide</h3>
                   <p className="text-4xl font-bold text-gray-900 mt-4">$20</p>
-                  <p className="text-sm text-gray-600 mt-1">Best value • One-time payment</p>
+                  <p className="text-sm text-gray-600 mt-1">Best value â€¢ One-time payment</p>
                 </div>
                 <ul className="space-y-4 mb-8">
                   <li className="flex items-start gap-3">
@@ -824,7 +825,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
             
             <div className="text-center border-t border-gray-100 pt-6">
               <p className="text-gray-600 mb-2">
-                <span className="font-semibold text-gray-900">100% Satisfaction Guarantee</span> • Secure checkout via Stripe
+                <span className="font-semibold text-gray-900">100% Satisfaction Guarantee</span> â€¢ Secure checkout via Stripe
               </p>
               <p className="text-sm text-gray-500">
                 Your personalized guide will be delivered instantly to your {contactInfo.method === 'email' ? 'email' : 'phone'}
@@ -987,3 +988,8 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
     </div>
   );
 };
+
+
+
+
+

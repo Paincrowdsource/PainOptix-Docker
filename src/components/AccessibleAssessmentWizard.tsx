@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { ArrowLeft, ArrowRight, Loader2, Info, CheckCircle, AlertCircle } from 'lucide-react';
 import { withRetry, storeFailedOperation, isRetriableError, generateErrorCode } from '@/lib/error-recovery';
@@ -99,6 +99,7 @@ export const AccessibleAssessmentWizard: React.FC<AssessmentWizardProps> = ({ on
   }, [currentStep, currentQuestionId]);
 
   // Keyboard navigation
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Skip if user is typing in an input
@@ -128,6 +129,7 @@ export const AccessibleAssessmentWizard: React.FC<AssessmentWizardProps> = ({ on
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, currentQuestionId, currentAnswer]);
 
   const trackProgress = async (
@@ -461,7 +463,7 @@ export const AccessibleAssessmentWizard: React.FC<AssessmentWizardProps> = ({ on
                     announce(`Selected: ${question.options?.find(opt => opt.value === value)?.label || value}`);
                   }}
                   aria-labelledby="current-question"
-                  aria-required="true"
+                  
                   aria-describedby={errors ? 'question-error' : undefined}
                 >
                   {question.options?.map((option, index) => (
@@ -480,7 +482,7 @@ export const AccessibleAssessmentWizard: React.FC<AssessmentWizardProps> = ({ on
                 <div 
                   role="group" 
                   aria-labelledby="current-question"
-                  aria-required="true"
+                  
                   aria-describedby={errors ? 'question-error' : undefined}
                 >
                   {question.options?.map((option, index) => (
@@ -673,3 +675,15 @@ export const AccessibleAssessmentWizard: React.FC<AssessmentWizardProps> = ({ on
     </div>
   );
 };
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -54,7 +54,7 @@ export default function ComprehensiveCareClient() {
         {/* Bundle Contents */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">What's Included</h2>
+            <h2 className="text-2xl font-bold text-gray-900">What&apos;s Included</h2>
             <div className="text-right">
               <div className="text-3xl font-bold text-purple-600">$350</div>
               <div className="text-sm text-gray-500">One-time payment</div>
@@ -71,11 +71,11 @@ export default function ComprehensiveCareClient() {
                 Our most comprehensive educational resource (normally $20)
               </p>
               <ul className="space-y-1 text-sm text-gray-500">
-                <li>• Medical illustrations for visual understanding</li>
-                <li>• Comprehensive guide to diagnostic imaging</li>
-                <li>• Evidence-based educational content</li>
-                <li>• Progress tracking guidance</li>
-                <li>• Communication templates for healthcare discussions</li>
+                <li>- Medical illustrations for visual understanding</li>
+                <li>- Comprehensive guide to diagnostic imaging</li>
+                <li>- Evidence-based educational content</li>
+                <li>- Progress tracking guidance</li>
+                <li>- Communication templates for healthcare discussions</li>
               </ul>
             </div>
 
@@ -88,11 +88,11 @@ export default function ComprehensiveCareClient() {
                 Weekly educational support to help you understand and implement recommendations
               </p>
               <ul className="space-y-1 text-sm text-gray-500">
-                <li>• Weekly educational check-ins</li>
-                <li>• Personalized implementation guidance</li>
-                <li>• Direct answers to your questions</li>
-                <li>• Accountability and motivation support</li>
-                <li>• Ongoing educational resources</li>
+                <li>- Weekly educational check-ins</li>
+                <li>- Personalized implementation guidance</li>
+                <li>- Direct answers to your questions</li>
+                <li>- Accountability and motivation support</li>
+                <li>- Ongoing educational resources</li>
               </ul>
             </div>
 
@@ -105,11 +105,11 @@ export default function ComprehensiveCareClient() {
                 Professional consultation with a qualified healthcare provider
               </p>
               <ul className="space-y-1 text-sm text-gray-500">
-                <li>• Review your assessment findings</li>
-                <li>• Discuss your specific situation</li>
-                <li>• Professional medical guidance</li>
-                <li>• Follow-up care recommendations</li>
-                <li>• Schedule within 7 days of purchase</li>
+                <li>- Review your assessment findings</li>
+                <li>- Discuss your specific situation</li>
+                <li>- Professional medical guidance</li>
+                <li>- Follow-up care recommendations</li>
+                <li>- Schedule within 7 days of purchase</li>
               </ul>
             </div>
           </div>
@@ -119,7 +119,7 @@ export default function ComprehensiveCareClient() {
             <h3 className="font-semibold text-gray-900 mb-2">Comprehensive Educational Value</h3>
             <p className="text-gray-600 text-sm">
               This bundle combines our premium educational materials with personalized support 
-              and professional consultation. It's designed for those seeking the most 
+              and professional consultation. It&apos;s designed for those seeking the most 
               comprehensive educational approach to understanding their condition.
             </p>
           </div>
@@ -130,21 +130,21 @@ export default function ComprehensiveCareClient() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Who This Bundle Is For</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-semibold text-green-600 mb-2">✓ Ideal For:</h3>
+              <h3 className="font-semibold text-green-600 mb-2"> Ideal For:</h3>
               <ul className="space-y-2 text-gray-600">
-                <li>• Those seeking comprehensive educational resources</li>
-                <li>• People who want professional medical guidance</li>
-                <li>• Anyone ready for structured educational support</li>
-                <li>• Those who value personalized guidance</li>
+                <li>- Those seeking comprehensive educational resources</li>
+                <li>- People who want professional medical guidance</li>
+                <li>- Anyone ready for structured educational support</li>
+                <li>- Those who value personalized guidance</li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-red-600 mb-2">✗ May Not Be Necessary If:</h3>
+              <h3 className="font-semibold text-red-600 mb-2">âœ— May Not Be Necessary If:</h3>
               <ul className="space-y-2 text-gray-600">
-                <li>• You prefer self-directed learning</li>
-                <li>• You already have regular medical care</li>
-                <li>• Your situation is improving</li>
-                <li>• You prefer minimal support</li>
+                <li>- You prefer self-directed learning</li>
+                <li>- You already have regular medical care</li>
+                <li>- Your situation is improving</li>
+                <li>- You prefer minimal support</li>
               </ul>
             </div>
           </div>
@@ -182,3 +182,8 @@ export default function ComprehensiveCareClient() {
     </div>
   );
 }
+
+
+
+
+
