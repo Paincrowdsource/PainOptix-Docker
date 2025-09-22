@@ -6,6 +6,9 @@ function flag(k: string) {
 
 export async function GET() {
   // Only environment presence checks. Do NOT create clients or call networks here.
+  const sendgridFlags = { emailFrom: flag("EMAIL_FROM"), sendgridFrom: flag("SENDGRID_FROM_EMAIL") };
+  console.info("[health] sendgrid flags", sendgridFlags);
+
   const checks = {
     supabase: {
       url: flag("NEXT_PUBLIC_SUPABASE_URL") || flag("SUPABASE_URL"),
@@ -28,4 +31,5 @@ export async function GET() {
   const ok = true; // never block DO readiness; surface detail in JSON instead
   return NextResponse.json({ ok, checks }, { status: 200 });
 }
+
 
