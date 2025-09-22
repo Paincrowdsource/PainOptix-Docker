@@ -3,6 +3,8 @@ import { verify, sign } from '@/lib/checkins/token';
 import { getServiceSupabase } from '@/lib/supabase';
 import { sourceTag } from '@/lib/checkins/attribution';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Get token from query params

@@ -3,6 +3,8 @@ import { getServiceSupabase } from '@/lib/supabase';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Method 1: Try Supabase Auth first
