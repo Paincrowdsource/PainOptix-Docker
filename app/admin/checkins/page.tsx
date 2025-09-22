@@ -129,29 +129,67 @@ export default function CheckInsPage() {
 
       const { data: queueData, error: queueError } = await supabase
         .from('check_in_queue')
-        .select(`
-          *,
-          assessment:assessments(email, phone_number, diagnosis_code)
-        `)
+        .select('*')
         .order('due_at', { ascending: true })
 
       if (queueError) {
         throw queueError
       }
-      setQueueItems((queueData || []) as CheckInQueueItem[])
+
+      // Fetch assessments data separately for queue items
+      const assessmentIds = Array.from(new Set(queueData?.map(item => item.assessment_id) || []))
+      let assessmentsMap: Record<string, any> = {}
+
+      if (assessmentIds.length > 0) {
+        const { data: assessmentsData } = await supabase
+          .from('assessments')
+          .select('id, email, phone_number, diagnosis_code')
+          .in('id', assessmentIds)
+
+        assessmentsMap = (assessmentsData || []).reduce((acc, assessment) => {
+          acc[assessment.id] = assessment
+          return acc
+        }, {} as Record<string, any>)
+      }
+
+      const enrichedQueueData = (queueData || []).map(item => ({
+        ...item,
+        assessment: assessmentsMap[item.assessment_id] || null
+      }))
+
+      setQueueItems(enrichedQueueData as CheckInQueueItem[])
 
       const { data: responseData, error: responseError } = await supabase
         .from('check_in_responses')
-        .select(`
-          *,
-          assessment:assessments(email, diagnosis_code, guide_type)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
 
       if (responseError) {
         throw responseError
       }
-      setResponses((responseData || []) as CheckInResponse[])
+
+      // Fetch assessments data separately for responses
+      const responseAssessmentIds = Array.from(new Set(responseData?.map(item => item.assessment_id) || []))
+      let responseAssessmentsMap: Record<string, any> = {}
+
+      if (responseAssessmentIds.length > 0) {
+        const { data: responseAssessmentsData } = await supabase
+          .from('assessments')
+          .select('id, email, diagnosis_code, guide_type')
+          .in('id', responseAssessmentIds)
+
+        responseAssessmentsMap = (responseAssessmentsData || []).reduce((acc, assessment) => {
+          acc[assessment.id] = assessment
+          return acc
+        }, {} as Record<string, any>)
+      }
+
+      const enrichedResponseData = (responseData || []).map(item => ({
+        ...item,
+        assessment: responseAssessmentsMap[item.assessment_id] || null
+      }))
+
+      setResponses(enrichedResponseData as CheckInResponse[])
 
       const { data: revenueData, error: revenueError } = await supabase
         .from('revenue_events')
