@@ -25,10 +25,10 @@ interface CheckInQueueItem {
   status: string
   last_error: string | null
   assessment?: {
-    email?: string | null
-    phone_number?: string | null
-    diagnosis_code?: string | null
-  } | null
+    email?: string | undefined
+    phone_number?: string | undefined
+    diagnosis_code?: string | undefined
+  } | undefined
 }
 
 interface CheckInResponse {

@@ -231,9 +231,9 @@ export default function TemplateManager({
                   <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
                     Message templates
                   </h3>
-                  <p className="text-xs text-gray-500">
-                    One shell per day/branch. Placeholders: {'{{insert}}'} and {'{{encouragement}}'}.
-                  </p>
+                    <p className="text-xs text-gray-500">
+                      One shell per day/branch. Placeholders: {"{{insert}}"} and {"{{encouragement}}"}.
+                    </p>
                 </div>
                 <input
                   type="search"
@@ -403,7 +403,7 @@ export default function TemplateManager({
 
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Shell text (includes {{insert}} & {{encouragement}})
+                    Shell text (includes {"{{insert}}"} & {"{{encouragement}}"})
                   </label>
                   <textarea
                     value={templateDraft.shell_text}

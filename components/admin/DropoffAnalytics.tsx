@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, TrendingDown, Clock, BarChart3, AlertCircle, Download, ChevronDown, ChevronUp } from 'lucide-react'
@@ -23,11 +23,7 @@ export default function DropoffAnalytics() {
   const [error, setError] = useState<string | null>(null)
   const [expandedInsights, setExpandedInsights] = useState(false)
 
-  useEffect(() => {
-    loadDropoffData()
-  }, [])
-
-  const loadDropoffData = async () => {
+  const loadDropoffData = useCallback(async () => {
     try {
       // Get sessions from last 30 days
       const thirtyDaysAgo = new Date()
@@ -59,7 +55,7 @@ export default function DropoffAnalytics() {
 
       // Get drop-offs by question
       const dropoffMap = new Map<string, { count: number; questionNumber: number; questionText: string }>()
-      
+
       for (const session of incompleteSessions) {
         if (session.drop_off_question_id) {
           const key = session.drop_off_question_id
@@ -120,7 +116,7 @@ export default function DropoffAnalytics() {
         acc[hour] = (acc[hour] || 0) + 1
         return acc
       }, {} as Record<number, number>)
-      
+
       const peakDropoffTimes = Object.entries(hourCounts)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 3)
@@ -146,7 +142,11 @@ export default function DropoffAnalytics() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    loadDropoffData()
+  }, [loadDropoffData])
 
   const exportData = () => {
     if (!stats) return
