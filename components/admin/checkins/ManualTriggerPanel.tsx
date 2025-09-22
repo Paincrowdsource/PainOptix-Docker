@@ -142,7 +142,7 @@ export default function ManualTriggerPanel({
             </p>
           </div>
           <Button onClick={() => onLoad()} disabled={loading} variant="outline">
-            {loading ? 'Loading…' : hasLoaded ? 'Refresh list' : 'Load recent assessments'}
+            {loading ? 'Loadingâ€¦' : hasLoaded ? 'Refresh list' : 'Load recent assessments'}
           </Button>
         </div>
 
@@ -204,7 +204,7 @@ export default function ManualTriggerPanel({
                     })}
                     {filteredAssessments.length === 0 && (
                       <li className="px-3 py-2 text-xs text-gray-500">
-                        No matches for "{search}".
+                        No matches for &quot;<span className="font-mono">{search}</span>&quot;.
                       </li>
                     )}
                   </ul>
@@ -271,10 +271,10 @@ export default function ManualTriggerPanel({
 
               <div className="flex flex-wrap items-center gap-3">
                 <Button onClick={handlePreview} disabled={!selectedAssessment || isPreviewing} variant="outline">
-                  {isPreviewing ? 'Generating preview…' : 'Preview message'}
+                  {isPreviewing ? 'Generating previewâ€¦' : 'Preview message'}
                 </Button>
                 <Button onClick={handleQueue} disabled={!selectedAssessment || isSubmitting}>
-                  {isSubmitting ? 'Queueing…' : 'Queue for dispatch'}
+                  {isSubmitting ? 'Queueingâ€¦' : 'Queue for dispatch'}
                 </Button>
               </div>
 
@@ -296,3 +296,4 @@ export default function ManualTriggerPanel({
     </div>
   )
 }
+
