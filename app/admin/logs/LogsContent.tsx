@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 import { Activity, AlertCircle, CheckCircle, XCircle, Clock, RefreshCw, Search, Filter } from 'lucide-react'
 
 interface CommunicationLog {
@@ -18,7 +18,7 @@ interface CommunicationLog {
 }
 
 export default function LogsContent() {
-  const supabase = useMemo(() => createClientComponentClient(), [])
+  const supabase = useMemo(() => createSupabaseBrowserClient(), [])
   const [logs, setLogs] = useState<CommunicationLog[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

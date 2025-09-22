@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 import Stats from './Stats'
 import CheckInsTable from './CheckInsTable'
 import OverviewPanel from '@/components/admin/checkins/OverviewPanel'
@@ -95,7 +95,7 @@ interface FlashMessage {
 }
 
 export default function CheckInsPage() {
-  const supabase = createClientComponentClient()
+  const supabase = createSupabaseBrowserClient()
 
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)

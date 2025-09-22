@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Menu, X, FileText, BarChart3, Users, MessageSquare, TestTube, ScrollText, LogOut, Activity } from 'lucide-react';
+import { createSupabaseBrowserClient } from '@/lib/supabase-client';
+import { Menu, X, FileText, BarChart3, Users, MessageSquare, TestTube, ScrollText, LogOut, Activity, CheckCircle } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 
 interface AdminLayoutClientProps {
@@ -17,7 +17,7 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-  const supabase = createClientComponentClient();
+  const supabase = createSupabaseBrowserClient();
 
   const checkAuthAndRedirect = useCallback(async () => {
     // Skip checks for login page
@@ -61,6 +61,7 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
     { href: '/admin/test-pdf', label: 'Test PDFs', icon: TestTube },
     { href: '/admin/assessments', label: 'Assessments', icon: FileText },
     { href: '/admin/communications', label: 'Communications', icon: MessageSquare },
+    { href: '/admin/checkins', label: 'Check-Ins', icon: CheckCircle },
     { href: '/admin/logs', label: 'Logs & Monitoring', icon: ScrollText },
     { href: '/admin/analytics', label: 'Analytics', icon: Activity },
   ];

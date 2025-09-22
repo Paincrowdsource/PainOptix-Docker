@@ -1,10 +1,9 @@
 import { redirect } from 'next/navigation';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createSupabaseServerClient } from '@/lib/supabase-ssr';
 import AdminDashboardClient from './AdminDashboardClient';
 
 export default async function AdminDashboard() {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createSupabaseServerClient();
   
   const { data: { user } } = await supabase.auth.getUser();
   

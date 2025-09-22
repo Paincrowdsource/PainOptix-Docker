@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createSupabaseRouteHandlerClient } from '@/lib/supabase-ssr';
 import * as dateFns from 'date-fns';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const { supabase } = await createSupabaseRouteHandlerClient(request);
     
     // Verify admin access
     const { data: { user } } = await supabase.auth.getUser();
@@ -133,7 +132,7 @@ export async function GET(request: NextRequest) {
 // Also support POST for exporting audit logs
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const { supabase } = await createSupabaseRouteHandlerClient(request);
     
     // Verify admin access
     const { data: { user } } = await supabase.auth.getUser();

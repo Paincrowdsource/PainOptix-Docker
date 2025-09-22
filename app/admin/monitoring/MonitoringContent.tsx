@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 import { 
   Activity, 
   TrendingUp, 
@@ -59,7 +59,7 @@ export default function MonitoringContent() {
   const fetchMonitoringData = async () => {
     try {
       setRefreshing(true)
-      const supabase = createClientComponentClient()
+      const supabase = createSupabaseBrowserClient()
       
       // Calculate date ranges
       const now = new Date()
