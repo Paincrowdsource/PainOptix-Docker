@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     // Fetch recent assessments for manual trigger
     const { data: assessments, error: assessmentsError } = await supabase
       .from('assessments')
-      .select('id, email, guide_type, diagnosis_code, created_at')
+      .select('id, email, guide_type, created_at')
       .order('created_at', { ascending: false })
       .limit(200);
 
