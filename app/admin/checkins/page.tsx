@@ -252,17 +252,17 @@ export default function CheckInsPage() {
   const handleAssessmentsLoad = useCallback(async () => {
     try {
       setLoadingAssessments(true)
-      const { data, error } = await supabase
-        .from('assessments')
-        .select('id, email, guide_type, diagnosis_code, created_at')
-        .order('created_at', { ascending: false })
-        .limit(200)
 
-      if (error) {
-        throw error
+      // Use server route instead of direct Supabase client
+      const response = await fetch('/api/admin/checkins/assessments/list')
+
+      if (!response.ok) {
+        throw new Error('Failed to load assessments')
       }
 
-      setAssessments((data || []) as AssessmentSummary[])
+      const { assessments } = await response.json()
+
+      setAssessments(assessments as AssessmentSummary[])
       setHasLoadedAssessments(true)
     } catch (error: any) {
       console.error('Error loading assessments for manual trigger:', error)
@@ -273,33 +273,23 @@ export default function CheckInsPage() {
     } finally {
       setLoadingAssessments(false)
     }
-  }, [supabase])
+  }, [])
 
   const handleTemplatesLoad = useCallback(async () => {
     try {
       setLoadingTemplates(true)
-      const [templatesResponse, insertsResponse] = await Promise.all([
-        supabase
-          .from('message_templates')
-          .select('*')
-          .order('key', { ascending: true }),
-        supabase
-          .from('diagnosis_inserts')
-          .select('*')
-          .order('diagnosis_code', { ascending: true })
-          .order('day', { ascending: true })
-          .order('branch', { ascending: true }),
-      ])
 
-      if (templatesResponse.error) {
-        throw templatesResponse.error
-      }
-      if (insertsResponse.error) {
-        throw insertsResponse.error
+      // Use server route instead of direct Supabase client
+      const response = await fetch('/api/admin/checkins/templates/list')
+
+      if (!response.ok) {
+        throw new Error('Failed to load templates')
       }
 
-      setTemplates((templatesResponse.data || []) as MessageTemplate[])
-      setInserts((insertsResponse.data || []) as DiagnosisInsert[])
+      const { templates, inserts } = await response.json()
+
+      setTemplates(templates as MessageTemplate[])
+      setInserts(inserts as DiagnosisInsert[])
       setHasLoadedTemplates(true)
     } catch (error: any) {
       console.error('Error loading templates/inserts:', error)
@@ -310,7 +300,7 @@ export default function CheckInsPage() {
     } finally {
       setLoadingTemplates(false)
     }
-  }, [supabase])
+  }, [])
 
   const handleTemplateUpdated = useCallback((updated: MessageTemplate) => {
     setTemplates((prev) => {
