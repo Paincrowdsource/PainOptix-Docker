@@ -4,6 +4,7 @@ import { sendEmail } from '@/lib/mailer/sendEmail';
 import { sign, type CheckInDay, type CheckInValue } from './token';
 import { isWithinSendWindow, isBeforeStartDate } from './time-utils';
 import { resolveDiagnosisCode } from './diagnosis';
+import { resolveLogoFragment } from './branding';
 import { createHash } from 'crypto';
 
 interface DispatchOptions {
@@ -298,6 +299,9 @@ function composeEmailHtml(params: {
   const { template, insert, encouragement, assessmentId, day } = params;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://painoptix.com';
 
+  // Get logo HTML with absolute URL
+  const logoHtml = resolveLogoFragment(appUrl);
+
   // Generate one-tap links with source tracking
   const values: CheckInValue[] = ['better', 'same', 'worse'];
   const links = values.map(value => {
@@ -311,48 +315,76 @@ function composeEmailHtml(params: {
       url: `${appUrl}/c/i?token=${token}&source=checkin_d${day}`,
       label: value === 'better' ? 'Feeling Better' :
              value === 'same' ? 'About the Same' :
-             'Feeling Worse',
-      className: value === 'better' ? 'btn' :
-                 value === 'same' ? 'btn neutral' :
-                 'btn caution'
+             'Feeling Worse'
     };
   });
 
-  // Build the HTML content
+  // Process the shell text with placeholders
   let content = template.shell_text || '';
-
-  // Replace placeholders
-  content = content.replace('{{insert}}', insert);
-  content = content.replace('{{encouragement}}', encouragement);
+  content = content.replace('{{insert}}', `<div style="margin: 20px 0; padding: 18px; border: 1px solid #0B539422; background: #EFF5FF; border-radius: 12px;">${insert}</div>`);
+  content = content.replace('{{encouragement}}', `<div style="margin: 20px 0; padding: 18px; border: 1px dashed #0B539455; background: #FFFFFF; border-radius: 12px;"><strong style="display:block;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;">Encouragement</strong>${encouragement}</div>`);
 
   // Convert to HTML with proper formatting
   const lines = content.split('\n');
   const htmlLines = lines.map((line: string) => {
-    if (line.trim() === '') return '<br>';
-    return `<p>${line}</p>`;
-  });
+    if (line.trim() === '') return '';
+    return `<p style="margin: 0 0 18px; font-size: 16px; line-height: 1.65; color: #1F2937;">${line}</p>`;
+  }).filter((line: string) => line);
 
   // Add the one-tap buttons
-  const buttonsHtml = `
-    <div style="text-align: center; margin: 30px 0;">
-      <h3 style="margin-bottom: 20px;">How are you feeling today?</h3>
-      ${links.map(link =>
-        `<a href="${link.url}" class="${link.className}" style="text-decoration: none;">${link.label}</a>`
-      ).join(' ')}
-    </div>
-  `;
+  const buttonsHtml = links.map(link =>
+    `<a href="${link.url}" style="display: inline-block; margin: 0 12px 12px 0; padding: 12px 20px; border-radius: 999px; font-weight: 600; font-size: 15px; letter-spacing: 0.02em; text-decoration: none; background: ${
+      link.value === 'better' ? '#0B5394' :
+      link.value === 'same' ? '#F3F4F6' :
+      '#FEE2E2'
+    }; color: ${
+      link.value === 'better' ? '#FFFFFF' :
+      link.value === 'same' ? '#111827' :
+      '#991B1B'
+    }; border: 1px solid ${
+      link.value === 'better' ? '#0B5394' :
+      link.value === 'same' ? '#CBD5E1' :
+      '#FCA5A5'
+    };">${link.label}</a>`
+  ).join('');
 
-  // Add disclaimer
-  const disclaimerHtml = `
-    <div class="disclaimer">
-      ${template.disclaimer_text || 'Educational use only. Not a diagnosis or treatment. If symptoms worsen or new symptoms develop, seek medical care.'}
-    </div>
-  `;
-
-  return `
-    <h2>Day ${day} Check-In</h2>
-    ${htmlLines.join('\n')}
-    ${buttonsHtml}
-    ${disclaimerHtml}
-  `;
+  // Full HTML email template matching preview style
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${template.subject || `Day ${day} Check-In`}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin: 0; padding: 24px; background: #F6F8FB; font-family: 'Segoe UI', Roboto, Arial, sans-serif; color: #1F2937;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 640px; margin: 0 auto; border-collapse: collapse;">
+    <tr>
+      <td style="padding: 0;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
+          <tr>
+            <td style="padding: 0 0 16px 0; text-align: left;">
+              ${logoHtml}
+            </td>
+          </tr>
+        </table>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse; background: #FFFFFF; border-radius: 16px; box-shadow: 0 16px 40px rgba(33, 56, 82, 0.08); border: 1px solid #E2E8F5; overflow: hidden;">
+          <tr>
+            <td style="padding: 32px 32px 28px 32px;">
+              <h1 style="margin: 0 0 24px 0; font-size: 26px; line-height: 1.3; color: #0B5394;">${template.subject || `Day ${day} Check-In`}</h1>
+              ${htmlLines.join('\n')}
+              <div style="margin: 24px 0;">
+                <h3 style="margin-bottom: 20px; font-size: 18px; color: #1F2937;">How are you feeling today?</h3>
+                ${buttonsHtml}
+              </div>
+              <div style="margin-top: 28px; border-top: 1px solid #E2E8F5; padding-top: 16px;">
+                <p style="margin: 0; font-size: 12px; line-height: 1.6; color: #6B7280;">${template.disclaimer_text || 'Educational use only. Not a diagnosis or treatment. If symptoms worsen or new symptoms develop, seek medical care.'}</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 }

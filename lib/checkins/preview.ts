@@ -1,6 +1,5 @@
-﻿import fs from 'fs'
-import path from 'path'
-import { sign, type CheckInDay, type CheckInValue } from '@/lib/checkins/token'
+﻿import { sign, type CheckInDay, type CheckInValue } from '@/lib/checkins/token'
+import { resolveLogoFragment } from '@/lib/checkins/branding'
 
 type BranchOption = 'initial' | 'better' | 'same' | 'worse'
 
@@ -52,22 +51,6 @@ function buildParagraphs(raw: string, style: string): string {
     .join('')
 }
 
-function resolveLogoFragment(): string {
-  const brandingDir = path.resolve(process.cwd(), 'public', 'branding')
-  const candidates = ['painoptix-logo.png', 'painoptix-logo.jpg', 'painoptix-logo.jpeg', 'painoptix-logo.svg']
-
-  for (const file of candidates) {
-    const absolute = path.join(brandingDir, file)
-    if (fs.existsSync(absolute)) {
-      const relative = path
-        .relative(path.resolve(process.cwd(), 'public'), absolute)
-        .replace(/\\/g, '/')
-      return `<img src="/${relative}" alt="PainOptix" width="148" style="display:block;height:auto;">`
-    }
-  }
-
-  return `<span style="font-size:22px;font-weight:700;letter-spacing:0.06em;color:${BRAND.accent};">${BRAND.name}</span>`
-}
 
 function buildInsertBlock(insert: string): string {
   const trimmed = insert.trim()
@@ -212,7 +195,7 @@ export function renderCheckInEmailHTML(options: {
     'margin:0;font-size:12px;line-height:1.6;color:' + BRAND.muted + ';',
   )
   const ctaHtml = buildCtaButtons(assessmentId, day, appUrl)
-  const logoHtml = resolveLogoFragment()
+  const logoHtml = resolveLogoFragment(appUrl)
 
   let assessmentCreatedLabel = 'n/a'
   if (assessmentCreatedAt) {
