@@ -224,16 +224,10 @@ export function renderCheckInEmailHTML(options: {
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;margin:0 auto;border-collapse:collapse;">
     <tr>
       <td style="padding:0;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
-          <tr>
-            <td style="padding:0 0 16px 0;text-align:left;">
-              ${logoHtml}
-            </td>
-          </tr>
-        </table>
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:${BRAND.card};border-radius:16px;box-shadow:0 16px 40px rgba(33, 56, 82, 0.08);border:1px solid ${BRAND.border};overflow:hidden;">
           <tr>
             <td style="padding:32px 32px 28px 32px;">
+              <div style="margin:0 0 20px 0;text-align:center;">${logoHtml}</div>
               <h1 style="margin:0 0 12px 0;font-size:26px;line-height:1.3;color:${BRAND.accent};">${escapeHtml(template.subject || `Quick day ${day} check-in`)}</h1>
               <p style="margin:0 0 24px 0;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;color:${BRAND.muted};">Template ${escapeHtml(template.key)} | Branch ${escapeHtml(branch)} | Diagnosis ${escapeHtml(diagnosisCode)}</p>
               ${bodyHtml}

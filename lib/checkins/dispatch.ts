@@ -360,16 +360,10 @@ function composeEmailHtml(params: {
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 640px; margin: 0 auto; border-collapse: collapse;">
     <tr>
       <td style="padding: 0;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
-          <tr>
-            <td style="padding: 0 0 16px 0; text-align: left;">
-              ${logoHtml}
-            </td>
-          </tr>
-        </table>
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse; background: #FFFFFF; border-radius: 16px; box-shadow: 0 16px 40px rgba(33, 56, 82, 0.08); border: 1px solid #E2E8F5; overflow: hidden;">
           <tr>
             <td style="padding: 32px 32px 28px 32px;">
+              <div style="margin: 0 0 20px 0; text-align: center;">${logoHtml}</div>
               <h1 style="margin: 0 0 24px 0; font-size: 26px; line-height: 1.3; color: #0B5394;">${template.subject || `Day ${day} Check-In`}</h1>
               ${htmlLines.join('\n')}
               <div style="margin: 24px 0;">
