@@ -16,7 +16,7 @@ This guide provides a step-by-step process for safely rolling out the check-ins 
 - [ ] Brad's 81 micro-inserts imported and validated
 - [ ] All inserts ≤25 words
 - [ ] No forbidden medical phrases
-- [ ] Fallback generic messages for all day/branch combinations
+- [ ] First-message default is 'same' variant per diagnosis (no 'generic' fallback)
 
 ## Staging Deployment
 
@@ -287,6 +287,30 @@ Month 1:
 - **Content Issues**: Brad
 - **Email Deliverability**: SendGrid support
 - **Emergency**: On-call engineer
+
+## Verification
+
+### Admin Routes
+
+#### Test Coverage Check
+```bash
+# Check for missing inserts and templates
+curl -X GET https://localhost:3000/api/admin/checkins/coverage \
+  -H "Cookie: admin_auth_token=<token>"
+
+# Should return:
+# { "missingInserts": [], "missingTemplates": [] }
+```
+
+#### Test Red-Flag Webhook
+```bash
+# Send test webhook (requires ALERT_WEBHOOK env var)
+curl -X POST https://localhost:3000/api/admin/checkins/test/red-flag \
+  -H "Cookie: admin_auth_token=<token>"
+
+# Should return:
+# { "ok": true }
+```
 
 ## Post-Launch Tasks
 
