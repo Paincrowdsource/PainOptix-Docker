@@ -35,20 +35,7 @@ Next step options below.`,
   channel: 'email' as const,
 });
 
-const genericInsert = (day: number, branch: typeof BRANCHES[number]) => {
-  const map: Record<typeof BRANCHES[number], string> = {
-    initial: 'Try brief, gentle movement breaks today.',
-    better:  'Great—keep the same gentle routine and progress slowly.',
-    same:    'Plateaus happen—light mobility and pacing can help.',
-    worse:   'Ease off intensity today and focus on comfortable range.',
-  };
-  return {
-    diagnosis_code: 'generic',
-    day,
-    branch,
-    insert_text: map[branch],
-  };
-};
+// Generic inserts removed - strict diagnosis-only behavior
 
 const encouragements = [
   'Small steps compound—nice work showing up.',
@@ -87,29 +74,15 @@ async function upsertEncouragements() {
   return rows.length;
 }
 
-async function upsertGenericInserts() {
-  const rows = [];
-  for (const d of DAYS) for (const b of BRANCHES) {
-    const ins = genericInsert(d, b);
-    if (!safe(ins.insert_text)) {
-      console.warn(`Insert rejected by lint: generic d${d} ${b}`);
-      continue;
-    }
-    rows.push(ins);
-  }
-  const { error } = await supabase.from('diagnosis_inserts')
-    .upsert(rows, { onConflict: 'diagnosis_code,day,branch' as any });
-  if (error) throw error;
-  return rows.length;
-}
+// Generic inserts function removed - strict diagnosis-only behavior
 
 (async () => {
   try {
     console.log('Seeding check-ins…');
     const t = await upsertTemplates();
     const e = await upsertEncouragements();
-    const i = await upsertGenericInserts();
-    console.log(`OK: templates=${t} encouragements=${e} inserts=${i}`);
+    // Generic inserts removed - strict diagnosis-only
+    console.log(`OK: templates=${t} encouragements=${e}`);
     process.exit(0);
   } catch (err: any) {
     console.error('Seed failed:', err.message || err);

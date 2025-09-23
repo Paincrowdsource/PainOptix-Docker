@@ -17,17 +17,17 @@
  * - 'si_joint_dysfunction' → 'si_joint_dysfunction'
  * - 'canal_stenosis' → 'canal_stenosis'
  * - 'central_disc_bulge' → 'central_disc_bulge'
- * - null/undefined/unknown → 'generic'
+ * - null/undefined/unknown → null (no generic fallback)
  *
  * @param assessment Assessment record with guide_type field
- * @returns Diagnosis code for check-in content selection
+ * @returns Diagnosis code for check-in content selection, or null if not found
  */
-export function resolveDiagnosisCode(assessment: { guide_type?: string | null }): string {
+export function resolveDiagnosisCode(assessment: { guide_type?: string | null }): string | null {
   const guideType = assessment.guide_type?.toLowerCase().trim();
 
   if (!guideType) {
-    console.info('[Diagnosis] No guide_type found, using generic');
-    return 'generic';
+    console.warn('[Diagnosis] No guide_type found, returning null (strict diagnosis-only)');
+    return null;
   }
 
   // Direct mapping for most guide types
@@ -45,8 +45,8 @@ export function resolveDiagnosisCode(assessment: { guide_type?: string | null })
   const diagnosisCode = DIAGNOSIS_MAP[guideType];
 
   if (!diagnosisCode) {
-    console.info(`[Diagnosis] Unknown guide_type '${guideType}', using generic`);
-    return 'generic';
+    console.warn(`[Diagnosis] Unknown guide_type '${guideType}', returning null (strict diagnosis-only)`);
+    return null;
   }
 
   console.info(`[Diagnosis] Mapped guide_type '${guideType}' to diagnosis_code '${diagnosisCode}'`);
@@ -56,6 +56,7 @@ export function resolveDiagnosisCode(assessment: { guide_type?: string | null })
 /**
  * Get all valid diagnosis codes
  * Used for validation and testing
+ * Note: 'generic' removed - strict diagnosis-only
  */
 export function getValidDiagnosisCodes(): string[] {
   return [
@@ -66,7 +67,6 @@ export function getValidDiagnosisCodes(): string[] {
     'upper_lumbar_radiculopathy',
     'si_joint_dysfunction',
     'canal_stenosis',
-    'central_disc_bulge',
-    'generic'
+    'central_disc_bulge'
   ];
 }

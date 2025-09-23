@@ -13,34 +13,33 @@ async function pickInsertText(
   diagnosisCode: string,
   day: number,
   branch: BranchOption,
-): Promise<string> {
+): Promise<string | null> {
   const supabase = getServiceSupabase()
   const branchCandidates: BranchOption[] =
     branch === 'initial' ? ['initial', 'same'] : [branch]
-  const diagnosisCandidates = [diagnosisCode, 'generic']
 
-  for (const diagnosisCandidate of diagnosisCandidates) {
-    for (const branchCandidate of branchCandidates) {
-      const { data, error } = await supabase
-        .from('diagnosis_inserts')
-        .select('insert_text')
-        .eq('diagnosis_code', diagnosisCandidate)
-        .eq('day', day)
-        .eq('branch', branchCandidate)
-        .maybeSingle()
+  // Strict diagnosis-only lookup (no generic fallback)
+  for (const branchCandidate of branchCandidates) {
+    const { data, error } = await supabase
+      .from('diagnosis_inserts')
+      .select('insert_text')
+      .eq('diagnosis_code', diagnosisCode)
+      .eq('day', day)
+      .eq('branch', branchCandidate)
+      .maybeSingle()
 
-      if (error) {
-        console.error('Insert lookup error', error)
-        continue
-      }
+    if (error) {
+      console.error('Insert lookup error', error)
+      continue
+    }
 
-      if (data?.insert_text) {
-        return data.insert_text
-      }
+    if (data?.insert_text) {
+      return data.insert_text
     }
   }
 
-  return ''
+  // Return null if no diagnosis-specific insert found
+  return null
 }
 
 async function pickEncouragement(): Promise<string> {
@@ -130,8 +129,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Template not found for ${templateKey}` }, { status: 422 })
   }
 
-  const diagnosisCode = resolveDiagnosisCode({ guide_type: assessment.guide_type }) || 'generic'
+  const diagnosisCode = resolveDiagnosisCode({ guide_type: assessment.guide_type })
+
+  if (!diagnosisCode) {
+    return NextResponse.json({
+      error: 'Unable to determine diagnosis from assessment'
+    }, { status: 422 })
+  }
+
   const insertText = await pickInsertText(diagnosisCode, day, branch)
+
+  if (!insertText) {
+    return NextResponse.json({
+      error: `No diagnosis insert found for ${diagnosisCode} day ${day} branch ${branch}`
+    }, { status: 422 })
+  }
+
   const encouragementText = await pickEncouragement()
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://painoptix.com'
 

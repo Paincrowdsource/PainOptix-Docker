@@ -114,8 +114,28 @@ export async function dispatchDue(
         // Resolve diagnosis code from guide_type
         const diagnosisCode = resolveDiagnosisCode(assessment);
 
-        // Get diagnosis insert (with fallback to generic)
-        let { data: diagnosisInsert } = await supabase
+        if (!diagnosisCode) {
+          log("dispatch_missing_diagnosis", {
+            messageId: message.id,
+            assessmentId: message.assessment_id,
+            guideType: assessment.guide_type
+          }, "warn");
+
+          // Mark as failed with clear error
+          await supabase
+            .from('check_in_queue')
+            .update({
+              status: 'failed',
+              last_error: `missing_diagnosis_mapping: guide_type=${assessment.guide_type}`
+            })
+            .eq('id', message.id);
+
+          result.skipped++;
+          continue;
+        }
+
+        // Get diagnosis insert (strict diagnosis-only, no generic fallback)
+        const { data: diagnosisInsert } = await supabase
           .from('diagnosis_inserts')
           .select('insert_text')
           .eq('diagnosis_code', diagnosisCode)
@@ -123,16 +143,26 @@ export async function dispatchDue(
           .eq('branch', 'initial')
           .single();
 
-        // Fallback to generic if specific diagnosis not found
+        // Skip if no diagnosis-specific insert found
         if (!diagnosisInsert) {
-          const { data: genericInsert } = await supabase
-            .from('diagnosis_inserts')
-            .select('insert_text')
-            .eq('diagnosis_code', 'generic')
-            .eq('day', message.day)
-            .eq('branch', 'initial')
-            .single();
-          diagnosisInsert = genericInsert;
+          log("dispatch_missing_insert", {
+            messageId: message.id,
+            diagnosisCode,
+            day: message.day,
+            branch: 'initial'
+          }, "warn");
+
+          // Mark as failed with clear error
+          await supabase
+            .from('check_in_queue')
+            .update({
+              status: 'failed',
+              last_error: `missing_diagnosis_insert: ${diagnosisCode} day${message.day} initial`
+            })
+            .eq('id', message.id);
+
+          result.skipped++;
+          continue;
         }
 
         // Get random encouragement
