@@ -1,22 +1,42 @@
-﻿name: Checkins Dispatch (cron)
+﻿name: Check-ins Dispatcher
+
 on:
   schedule:
-    - cron: "*/15 * * * *"
-  workflow_dispatch: {}
+    # Run every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch:  # Allow manual trigger for testing
+
 jobs:
   dispatch:
     runs-on: ubuntu-latest
-    env:
-      APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
-      DISPATCH_TOKEN: ${{ secrets.CHECKINS_DISPATCH_TOKEN }}
+
     steps:
-      - name: Skip when secrets missing
-        if: ${{ !env.APP_BASE_URL || !env.DISPATCH_TOKEN }}
+      - name: Trigger Check-ins Dispatch
+        id: dispatch
         run: |
-          echo "Checkins dispatch skipped: APP_BASE_URL or CHECKINS_DISPATCH_TOKEN not configured for this repo."
-      - name: Call dispatcher (dry-run, safe)
-        if: ${{ env.APP_BASE_URL && env.DISPATCH_TOKEN }}
-        run: |
-          curl -s -X POST "$APP_BASE_URL/api/checkins/dispatch?dryRun=1" \
-            -H "X-Dispatch-Token: $DISPATCH_TOKEN" \
-            -H "Content-Type: application/json"
+          response=$(curl -s -X POST https://painoptix.com/api/checkins/dispatch \
+            -H "Authorization: Bearer ${{ secrets.DISPATCH_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -w "\nHTTP_STATUS:%{http_code}")
+
+          # Extract body and status
+          body=$(echo "$response" | sed -n '1,/^HTTP_STATUS:/p' | sed '$d')
+          status=$(echo "$response" | grep "HTTP_STATUS:" | cut -d: -f2)
+
+          echo "Response body: $body"
+          echo "HTTP status: $status"
+
+          # Check for success
+          if [ "$status" != "200" ]; then
+            echo "::error::Dispatch failed with status $status"
+            exit 1
+          fi
+
+          # Verify ok:true in response
+          if echo "$body" | grep -q '"ok":true'; then
+            echo "✅ Dispatch successful"
+          else
+            echo "::error::Dispatch returned ok:false"
+            echo "$body"
+            exit 1
+          fi
