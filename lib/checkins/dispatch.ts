@@ -224,11 +224,10 @@ export async function dispatchDue(
     }
 
     log("dispatch_complete", {
-      queued: result.queued,
       sent: result.sent,
-      skipped: result.skipped,
       failed: result.failed,
-      errorCount: result.errors?.length || 0
+      skipped: result.skipped,
+      errors: result.errors?.length || 0
     });
     return result;
   } catch (error: any) {

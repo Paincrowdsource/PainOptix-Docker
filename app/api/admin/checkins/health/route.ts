@@ -138,7 +138,7 @@ export async function GET(req: NextRequest) {
           hasTokenSecret: tokenSecretConfigured,
           hasDispatchToken: flags.dispatchTokenSet,
           hasContent: true, // We verified this in investigation
-          isConfigured: tokenSecretConfigured && flags.dispatchTokenSet
+          isConfigured: tokenSecretConfigured // Only token secret required (admin proxy handles dispatch)
         }
       }
     };

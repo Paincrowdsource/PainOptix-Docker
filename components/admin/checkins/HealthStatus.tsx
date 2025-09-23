@@ -226,9 +226,13 @@ export default function HealthStatus() {
               {health.configuration.readiness.hasDispatchToken ? (
                 <CheckCircle className="h-3 w-3 text-green-500" />
               ) : (
-                <XCircle className="h-3 w-3 text-red-500" />
+                <AlertCircle className="h-3 w-3 text-yellow-500" />
               )}
-              <span className="text-xs text-gray-700">Dispatch Token</span>
+              <span className="text-xs text-gray-700">
+                {health.configuration.readiness.hasDispatchToken
+                  ? 'Dispatch Token'
+                  : 'Admin Proxy (Token Optional)'}
+              </span>
             </div>
           </div>
         </div>
@@ -242,7 +246,7 @@ export default function HealthStatus() {
               <li>• Set CHECKINS_TOKEN_SECRET environment variable</li>
             )}
             {!health.configuration.readiness.hasDispatchToken && (
-              <li>• Set CHECKINS_DISPATCH_TOKEN environment variable</li>
+              <li>• Set CHECKINS_DISPATCH_TOKEN (optional - admin proxy available)</li>
             )}
             {!health.configuration.flags.enabled && (
               <li>• Set CHECKINS_ENABLED=1 to activate the system</li>
