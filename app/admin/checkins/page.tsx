@@ -405,8 +405,8 @@ export default function CheckInsPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        body: JSON.stringify({ dryRun: true }),
         },
+        body: JSON.stringify({ dryRun: true }),
       })
 
       if (!response.ok) {
@@ -441,7 +441,6 @@ export default function CheckInsPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ dryRun: false }),
-        },
       })
 
       if (!response.ok) {

@@ -45,8 +45,8 @@ function loadRedFlagTerms(): string[] {
         ).filter(Boolean);
         lastLoaded = now;
 
-        console.log(`[redFlags] Loaded ${cachedTerms.length} terms from YAML`);
-        return cachedTerms;
+        console.log(`[redFlags] Loaded ${cachedTerms?.length || 0} terms from YAML`);
+        return cachedTerms || [];
       }
     }
   } catch (error) {

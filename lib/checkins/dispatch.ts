@@ -223,7 +223,13 @@ export async function dispatchDue(
       }
     }
 
-    log("dispatch_complete", result);
+    log("dispatch_complete", {
+      queued: result.queued,
+      sent: result.sent,
+      skipped: result.skipped,
+      failed: result.failed,
+      errorCount: result.errors?.length || 0
+    });
     return result;
   } catch (error: any) {
     log("dispatch_error", { err: error.message }, "error");
