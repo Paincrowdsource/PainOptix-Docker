@@ -1,3 +1,4 @@
+import { log } from '@/lib/logger';
 import { getServiceSupabase } from '@/lib/supabase';
 import { sendEmail } from '@/lib/mailer/sendEmail';
 import { sign, type CheckInDay, type CheckInValue } from './token';
@@ -48,18 +49,18 @@ export async function dispatchDue(
       .limit(limit);
 
     if (queryError) {
-      console.error('Failed to query due messages:', queryError);
+      log("dispatch_query_error", { err: queryError.message }, "error");
       result.errors?.push('Failed to query due messages');
       return result;
     }
 
     if (!dueMessages || dueMessages.length === 0) {
-      console.info('No due messages to dispatch');
+      log("dispatch_no_due_messages");
       return result;
     }
 
     result.queued = dueMessages.length;
-    console.info(`Found ${result.queued} due messages to dispatch`);
+    log("dispatch_start", { count: result.queued });
 
     // Process each message
     for (const message of dueMessages) {
@@ -71,7 +72,7 @@ export async function dispatchDue(
 
         // Check if before start date
         if (isBeforeStartDate(new Date(), startAt)) {
-          console.info(`Message ${message.id} is before CHECKINS_START_AT (${startAt}), leaving queued`);
+          log("dispatch_skip_before_start", { messageId: message.id, startAt });
           continue; // Leave as queued, don't mark as skipped
         }
 
@@ -79,7 +80,7 @@ export async function dispatchDue(
         if (sendWindow) {
           const windowCheck = isWithinSendWindow(new Date(), timezone, sendWindow);
           if (!windowCheck.allowed) {
-            console.info(`Message ${message.id} outside send window:`, windowCheck.reason);
+            log("dispatch_skip_window", { messageId: message.id, reason: windowCheck.reason });
             continue; // Leave as queued, don't mark as skipped
           }
         }
@@ -92,7 +93,7 @@ export async function dispatchDue(
           .single();
 
         if (!assessment?.email) {
-          console.error(`No email found for assessment ${message.assessment_id}`);
+          log("dispatch_no_email", { assessmentId: message.assessment_id }, "warn");
           result.failed++;
           continue;
         }
@@ -105,7 +106,7 @@ export async function dispatchDue(
           .single();
 
         if (!template) {
-          console.error(`Template not found: ${message.template_key}`);
+          log("dispatch_template_not_found", { templateKey: message.template_key }, "error");
           result.failed++;
           continue;
         }
@@ -199,7 +200,7 @@ export async function dispatchDue(
               .eq('id', message.id);
 
             result.sent++;
-            console.info(`Sent check-in for assessment ${message.assessment_id.substring(0, 8)}, day ${message.day}`);
+            log("dispatch_sent", { assessmentId: message.assessment_id.substring(0, 8), day: message.day });
           } catch (sendError: any) {
             // Mark as failed
             await supabase
@@ -212,20 +213,20 @@ export async function dispatchDue(
 
             result.failed++;
             result.errors?.push(`Send failed for ${message.id}: ${sendError.message}`);
-            console.error(`Failed to send check-in:`, sendError);
+            log("dispatch_send_error", { messageId: message.id, err: sendError.message }, "error");
           }
         }
       } catch (error: any) {
-        console.error(`Error processing message ${message.id}:`, error);
+        log("dispatch_message_error", { messageId: message.id, err: error.message }, "error");
         result.failed++;
         result.errors?.push(`Processing error for ${message.id}: ${error.message}`);
       }
     }
 
-    console.info(`Dispatch complete:`, result);
+    log("dispatch_complete", result);
     return result;
   } catch (error: any) {
-    console.error('Dispatch error:', error);
+    log("dispatch_error", { err: error.message }, "error");
     result.errors?.push(`Dispatch error: ${error.message}`);
     return result;
   }

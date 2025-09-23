@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase";
 import { log } from "@/lib/logger";
 import { verify, type CheckInDay } from "@/lib/checkins/token";
+import { scanRedFlags } from "@/lib/checkins/redFlags";
 
 type AckBody = {
   token?: string;
@@ -13,29 +14,12 @@ type AckBody = {
 
 const NOTE_LIMIT = 280;
 const ALLOWED_DAYS: CheckInDay[] = [3, 7, 14];
-const RED_FLAG_KEYWORDS = [
-  "bladder",
-  "bowel",
-  "saddle",
-  "numbness",
-  "fever",
-  "trauma",
-  "progressive weakness",
-  "loss of control",
-  "incontinence",
-];
 
 function parseDay(raw: AckBody["day"]): CheckInDay | undefined {
   if (raw === undefined || raw === null) return undefined;
   const numeric = Number(raw);
   if (!Number.isFinite(numeric)) return undefined;
   return ALLOWED_DAYS.find((day) => day === numeric);
-}
-
-function scanRedFlags(text: string | undefined): string[] {
-  if (!text) return [];
-  const lower = text.toLowerCase();
-  return RED_FLAG_KEYWORDS.filter((term) => lower.includes(term));
 }
 
 export async function POST(req: NextRequest) {

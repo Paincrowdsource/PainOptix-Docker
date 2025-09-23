@@ -9,6 +9,7 @@ import ManualTriggerPanel from '@/components/admin/checkins/ManualTriggerPanel'
 import ResponsesPanel from '@/components/admin/checkins/ResponsesPanel'
 import TemplateManager from '@/components/admin/checkins/TemplateManager'
 import AnalyticsPanel from '@/components/admin/checkins/AnalyticsPanel'
+import HealthStatus from "@/components/admin/checkins/HealthStatus"
 import { AlertCircle, CheckCircle } from 'lucide-react'
 
 type CheckInValue = 'better' | 'same' | 'worse'
@@ -400,11 +401,11 @@ export default function CheckInsPage() {
 
   const handleDispatchDryRun = useCallback(async () => {
     try {
-      const response = await fetch('/api/checkins/dispatch?dryRun=1', {
+      const response = await fetch('/api/admin/checkins/dispatch', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-password': process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '',
+        body: JSON.stringify({ dryRun: true }),
         },
       })
 
@@ -434,11 +435,12 @@ export default function CheckInsPage() {
     }
 
     try {
-      const response = await fetch('/api/checkins/dispatch', {
+      const response = await fetch('/api/admin/checkins/dispatch', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-admin-password': process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '',
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ dryRun: false }),
         },
       })
 
@@ -588,6 +590,7 @@ export default function CheckInsPage() {
         <>
           {activeTab === 'overview' && (
             <div className="space-y-6">
+              <HealthStatus />
               <Stats {...stats} />
               <OverviewPanel
                 queueItems={queueItems}
