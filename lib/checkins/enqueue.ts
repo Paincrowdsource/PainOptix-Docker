@@ -79,12 +79,13 @@ export async function enqueueCheckinsForAssessment(
     }
 
     // Prepare queue entries for days 3, 7, and 14
+    // Using 'same' variant as default for first check-in (more neutral than 'initial')
     const days: CheckInDay[] = [3, 7, 14];
     const queueEntries = days.map(day => ({
       assessment_id: assessmentId,
       day,
       due_at: computeDueAt(assessment.created_at, day).toISOString(),
-      template_key: `day${day}.initial`,
+      template_key: `day${day}.same`,
       channel,
       status: 'queued'
     }));

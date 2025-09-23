@@ -134,14 +134,31 @@ export async function dispatchDue(
           continue;
         }
 
+        // Extract branch from template_key (e.g., "day3.initial" -> "initial", "day3.same" -> "same")
+        const templateKeyParts = message.template_key.split('.');
+        const branch = templateKeyParts[1] || 'same'; // Default to 'same' if parsing fails
+
         // Get diagnosis insert (strict diagnosis-only, no generic fallback)
-        const { data: diagnosisInsert } = await supabase
+        // For legacy 'initial' templates, try 'same' as fallback within same diagnosis
+        let { data: diagnosisInsert } = await supabase
           .from('diagnosis_inserts')
           .select('insert_text')
           .eq('diagnosis_code', diagnosisCode)
           .eq('day', message.day)
-          .eq('branch', 'initial')
+          .eq('branch', branch)
           .single();
+
+        // If 'initial' branch not found, try 'same' as fallback (for legacy queued rows)
+        if (!diagnosisInsert && branch === 'initial') {
+          const { data: sameBranchInsert } = await supabase
+            .from('diagnosis_inserts')
+            .select('insert_text')
+            .eq('diagnosis_code', diagnosisCode)
+            .eq('day', message.day)
+            .eq('branch', 'same')
+            .single();
+          diagnosisInsert = sameBranchInsert;
+        }
 
         // Skip if no diagnosis-specific insert found
         if (!diagnosisInsert) {
@@ -149,15 +166,16 @@ export async function dispatchDue(
             messageId: message.id,
             diagnosisCode,
             day: message.day,
-            branch: 'initial'
+            branch: branch === 'initial' ? 'same (fallback from initial)' : branch
           }, "warn");
 
           // Mark as failed with clear error
+          const effectiveBranch = branch === 'initial' ? 'same' : branch;
           await supabase
             .from('check_in_queue')
             .update({
               status: 'failed',
-              last_error: `missing_diagnosis_insert: ${diagnosisCode} day${message.day} initial`
+              last_error: `missing_diagnosis_insert: ${diagnosisCode} day${message.day} ${effectiveBranch}`
             })
             .eq('id', message.id);
 
