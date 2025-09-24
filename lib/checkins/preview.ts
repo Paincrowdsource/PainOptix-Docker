@@ -72,7 +72,7 @@ function buildEncouragementBlock(text: string): string {
     return ''
   }
   const safe = escapeHtml(trimmed).replace(/\r?\n/g, '<br>')
-  return `<div style="margin:0 0 20px;padding:18px;border-radius:12px;background:#FFFFFF;border:1px dashed ${BRAND.accent}55;font-size:15px;line-height:1.6;color:${BRAND.accentDark};"><strong style="display:block;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;">Encouragement</strong>${safe}</div>`
+  return `<div style="margin:0 0 20px;padding:20px;border-radius:14px;background:#F7FAFF;border:1px solid ${BRAND.accent}33;font-size:15px;line-height:1.6;color:${BRAND.accentDark};"><strong style="display:block;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:8px;color:${BRAND.accent};">Encouragement</strong>${safe}</div>`
 }
 
 function renderShell(raw: string, insertBlock: string, encouragementBlock: string): string {
@@ -227,9 +227,9 @@ export function renderCheckInEmailHTML(options: {
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:${BRAND.card};border-radius:16px;box-shadow:0 16px 40px rgba(33, 56, 82, 0.08);border:1px solid ${BRAND.border};overflow:hidden;">
           <tr>
             <td style="padding:32px 32px 28px 32px;">
-              <div style="margin:0 0 20px 0;text-align:center;">${logoHtml}</div>
-              <h1 style="margin:0 0 12px 0;font-size:26px;line-height:1.3;color:${BRAND.accent};">${escapeHtml(template.subject || `Quick day ${day} check-in`)}</h1>
-              <p style="margin:0 0 24px 0;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;color:${BRAND.muted};">Template ${escapeHtml(template.key)} | Branch ${escapeHtml(branch)} | Diagnosis ${escapeHtml(diagnosisCode)}</p>
+              <div style="margin:0 0 14px 0;text-align:center;">${logoHtml}</div>
+              <h1 style="margin:0 0 10px 0;font-size:28px;line-height:1.28;color:${BRAND.accent};">${escapeHtml(template.subject || `Quick day ${day} check-in`)}</h1>
+              <p style="margin:0 0 26px 0;font-size:14px;letter-spacing:0.15em;text-transform:uppercase;color:${BRAND.accent}CC;">Template ${escapeHtml(template.key)} | Branch ${escapeHtml(branch)} | Diagnosis ${escapeHtml(diagnosisCode)}</p>
               ${bodyHtml}
               <div style="margin:12px 0 24px 0;">${ctaHtml}</div>
               <div style="margin-top:28px;border-top:1px solid ${BRAND.border};padding-top:16px;">${disclaimerHtml}</div>

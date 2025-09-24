@@ -199,7 +199,8 @@ export async function dispatchDue(
           insert: diagnosisInsert?.insert_text || 'Continue with gentle movement today.',
           encouragement,
           assessmentId: message.assessment_id,
-          day: message.day as CheckInDay
+          day: message.day as CheckInDay,
+          branch: branch
         });
 
         // Check if dry run or sandbox mode
@@ -295,8 +296,9 @@ function composeEmailHtml(params: {
   encouragement: string;
   assessmentId: string;
   day: CheckInDay;
+  branch: string;
 }): string {
-  const { template, insert, encouragement, assessmentId, day } = params;
+  const { template, insert, encouragement, assessmentId, day, branch } = params;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://painoptix.com';
 
   // Get logo HTML with absolute URL
@@ -322,7 +324,7 @@ function composeEmailHtml(params: {
   // Process the shell text with placeholders
   let content = template.shell_text || '';
   content = content.replace('{{insert}}', `<div style="margin: 20px 0; padding: 18px; border: 1px solid #0B539422; background: #EFF5FF; border-radius: 12px;">${insert}</div>`);
-  content = content.replace('{{encouragement}}', `<div style="margin: 20px 0; padding: 18px; border: 1px dashed #0B539455; background: #FFFFFF; border-radius: 12px;"><strong style="display:block;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;">Encouragement</strong>${encouragement}</div>`);
+  content = content.replace('{{encouragement}}', `<div style="margin: 20px 0; padding: 20px; border: 1px solid #0B539433; background: #F7FAFF; border-radius: 14px;"><strong style="display:block;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:8px;color:#0B5394;">Encouragement</strong>${encouragement}</div>`);
 
   // Convert to HTML with proper formatting
   const lines = content.split('\n');
@@ -363,8 +365,9 @@ function composeEmailHtml(params: {
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse; background: #FFFFFF; border-radius: 16px; box-shadow: 0 16px 40px rgba(33, 56, 82, 0.08); border: 1px solid #E2E8F5; overflow: hidden;">
           <tr>
             <td style="padding: 32px 32px 28px 32px;">
-              <div style="margin: 0 0 20px 0; text-align: center;">${logoHtml}</div>
-              <h1 style="margin: 0 0 24px 0; font-size: 26px; line-height: 1.3; color: #0B5394;">${template.subject || `Day ${day} Check-In`}</h1>
+              <div style="margin: 0 0 14px 0; text-align: center;">${logoHtml}</div>
+              <h1 style="margin: 0 0 10px 0; font-size: 28px; line-height: 1.28; color: #0B5394;">${template.subject || `Day ${day} Check-In`}</h1>
+              <p style="margin: 0 0 26px 0; font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; color: #0B5394CC;">Template ${template.key} | Branch ${branch} | Diagnosis ${resolveDiagnosisCode({ guide_type: template.key }) || ''}</p>
               ${htmlLines.join('\n')}
               <div style="margin: 24px 0;">
                 <h3 style="margin-bottom: 20px; font-size: 18px; color: #1F2937;">How are you feeling today?</h3>
