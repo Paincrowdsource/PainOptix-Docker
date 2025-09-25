@@ -377,3 +377,32 @@ doctl apps update <APP_ID> --env CHECKINS_AUTOWIRE=1
   - `docker-repo/app/api/admin/checkins/assessments/list/route.ts`
 - Deployment: In progress (started 16:48 UTC)
 - Will return: `{ assessments: [...] }` with id, email, guide_type, created_at
+
+## 11. Repository State (2025-09-25)
+
+### Main Repository
+- **Status:** Clean at commit `5596708`
+- **Branch:** `feature/checkins-safe-rollout`
+- **Commit:** `docs: correct deployment documentation with painoptix-clean app name`
+- **Modified:** Only `docker-repo` submodule (expected - points to latest commit)
+
+### Docker Repository (Production)
+- **Status:** Clean at commit `64226e1`
+- **Branch:** `main`
+- **Commit:** `docs: correct deployment documentation - this IS the production repo`
+- **Auto-deploys to:** DigitalOcean app `painoptix-clean`
+- **GitHub:** `Paincrowdsource/PainOptix-Docker`
+
+### Deployment Architecture
+- Development work happens in main repo (`painoptix-app`)
+- Production deployments use `docker-repo` subdirectory
+- Changes flow: main repo → `docker-repo` → GitHub → DigitalOcean
+- DigitalOcean auto-deploys from `PainOptix-Docker` repo on push to `main`
+
+### Handoff Notes
+- Check-ins system fully verified and documented
+- Structured logging implemented (no PII logged)
+- All safety flags enabled (CHECKINS_ENABLED=0, SANDBOX=1, AUTOWIRE=0)
+- GitHub Actions scheduler running successfully every 15 minutes
+- Red-flag webhook awaiting clinic endpoint URL
+- System ready for controlled production rollout when needed
