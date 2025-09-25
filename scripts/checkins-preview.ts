@@ -242,8 +242,7 @@ function renderEmail(options: {
           <tr>
             <td style="padding:32px 32px 28px 32px;">
               <div style="margin:0 0 14px 0;text-align:center;">${logoHtml}</div>
-              <h1 style="margin:0 0 10px 0;font-size:28px;line-height:1.28;color:${BRAND.accent};">${escapeHtml(subject)}</h1>
-              <p style="margin:0 0 26px 0;font-size:14px;letter-spacing:0.15em;text-transform:uppercase;color:${BRAND.accent}CC;">Template ${escapeHtml(templateKey)} | Branch ${escapeHtml(branch)} | Diagnosis ${escapeHtml(diagnosisCode)}</p>
+              <h1 style="margin:0 0 26px 0;font-size:28px;line-height:1.28;color:${BRAND.accent};">${escapeHtml(subject)}</h1>
               ${bodyHtml}
               <div style="margin:12px 0 24px 0;">${ctaHtml}</div>
               <div style="margin-top:28px;border-top:1px solid ${BRAND.border};padding-top:16px;">${disclaimerHtml}</div>
