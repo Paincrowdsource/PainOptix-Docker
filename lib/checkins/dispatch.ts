@@ -366,8 +366,7 @@ function composeEmailHtml(params: {
           <tr>
             <td style="padding: 32px 32px 28px 32px;">
               <div style="margin: 0 0 14px 0; text-align: center;">${logoHtml}</div>
-              <h1 style="margin: 0 0 10px 0; font-size: 28px; line-height: 1.28; color: #0B5394;">${template.subject || `Day ${day} Check-In`}</h1>
-              <p style="margin: 0 0 26px 0; font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; color: #0B5394CC;">Template ${template.key} | Branch ${branch} | Diagnosis ${resolveDiagnosisCode({ guide_type: template.key }) || ''}</p>
+              <h1 style="margin: 0 0 26px 0; font-size: 28px; line-height: 1.28; color: #0B5394;">${template.subject || `Day ${day} Check-In`}</h1>
               ${htmlLines.join('\n')}
               <div style="margin: 24px 0;">
                 <h3 style="margin-bottom: 20px; font-size: 18px; color: #1F2937;">How are you feeling today?</h3>
