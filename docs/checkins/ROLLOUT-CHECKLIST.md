@@ -14,7 +14,7 @@
 - [x] `CHECKINS_TOKEN_SECRET` configured (verified in .env.local.checkins)
 - [x] `CHECKINS_DISPATCH_TOKEN` configured (verified in .env.local.checkins)
 - [x] SendGrid API key configured
-- [ ] `ALERT_WEBHOOK` configured (optional for red-flag notifications)
+- [ ] `ALERT_WEBHOOK` not configured (optional - awaiting clinic endpoint)
 
 ### 3. Code Changes Applied
 - [x] Admin dispatch proxy (`/api/admin/checkins/dispatch`)
@@ -157,9 +157,10 @@ This stops:
 
 ### Red Flags Not Alerting
 1. Verify `docs/checkins/red-flags.yml` exists
-2. Check `ALERT_WEBHOOK` if using external alerts
+2. `ALERT_WEBHOOK` is optional - if not set, alerts only go to database
 3. Review `alerts` table for inserted records
 4. Check logs for `red_flag_alert_insert_error`
+5. Admin test will show "ALERT_WEBHOOK not configured" if unset
 
 ## Final Checklist Before Go-Live ✓
 
