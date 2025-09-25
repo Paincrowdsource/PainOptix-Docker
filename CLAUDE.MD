@@ -41,17 +41,18 @@ Development Status
 []Diagnostic engine ported
 []V1.2 flow implemented
 ## DEPLOYMENT NOTICE
-**⚠️ IMPORTANT: This repository is NOT directly deployed to production**
+**⚠️ IMPORTANT: This repository IS the production deployment**
 
-- **Production deployment**: Use `docker-repo` subdirectory
-- **GitHub**: `docker-repo` pushes to `Paincrowdsource/PainOptix-Docker`
+- **Production deployment**: This docker-repo directory
+- **GitHub**: Pushes to `Paincrowdsource/PainOptix-Docker`
+- **DigitalOcean App**: `painoptix-clean` (auto-deploys on push to main)
 - **Why**: DigitalOcean requires specific Docker configuration
 
 ### To Deploy Changes:
-1. Test in this repo first
-2. Copy changes to `docker-repo`
-3. Commit and push from `docker-repo`
-4. DigitalOcean auto-deploys from PainOptix-Docker repo
+1. Test in parent repo first
+2. Copy changes to this `docker-repo`
+3. Commit and push from here
+4. DigitalOcean auto-deploys to painoptix-clean app
 
 ### Current Production Features:
 - Enhanced V2 PDF formatting (feature-flagged)
