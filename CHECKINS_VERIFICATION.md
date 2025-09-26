@@ -326,7 +326,33 @@ doctl apps update <APP_ID> --env CHECKINS_AUTOWIRE=1
 
 ---
 
-## 9. Preview QA (Logo v2) ✅
+## 9. Landing Page Refresh ✅
+
+### Landing Page Updates
+**Date:** 2025-09-26
+**Implementation:** Branded check-in confirmation pages with CTAs
+
+### Key Features
+1. **Branded styling**: PainOptix logo using trimmed PNG at 180px
+2. **Smart CTAs**: Links target `/guide/{id}/upgrade` for tier upgrades
+3. **Note submission**: Optional feedback form with token validation
+4. **Conditional messaging**: Content varies by status (better/same/worse) and day
+5. **Removed mailto fallback**: All CTAs now use web URLs
+
+### Files Updated
+- `lib/checkins/landingPage.ts` - Main renderer with branded HTML
+- `app/c/i/route.ts` - Landing page route handler (unchanged)
+- `__tests__/checkins/landing.test.ts` - Test coverage for CTAs and feature flags
+
+### Verification ✅
+- Tests passing: 6/6 including CTA URL validation
+- Preview HTML generated: `tmp/checkin-landing-preview-*.html`
+- Logo asset: `painoptix_logo_bg_removed.png` (better trimming)
+- Build successful with new HTML structure
+
+---
+
+## 10. Preview QA (Logo v2) ✅
 
 ### Logo Integration Status
 **Date:** 2025-09-23
@@ -406,3 +432,62 @@ doctl apps update <APP_ID> --env CHECKINS_AUTOWIRE=1
 - GitHub Actions scheduler running successfully every 15 minutes
 - Red-flag webhook awaiting clinic endpoint URL
 - System ready for controlled production rollout when needed
+
+## 12. Deployment Readiness Checklist
+
+### Current Production State
+- **Feature Flags:** All safety features OFF
+  - `CHECKINS_ENABLED=0` (system disabled)
+  - `CHECKINS_SANDBOX=1` (dry-run mode)
+  - `CHECKINS_AUTOWIRE=0` (manual enrollment only)
+- **Alert Webhook:** Not configured (optional - awaiting endpoint from Dr. Carpentier)
+- **GitHub Actions Scheduler:** Running every 15 minutes successfully
+- **Docker Repository:** Main at commit `c02ae03` auto-deploys to `painoptix-clean` app
+
+### Go-Live Commands
+For detailed go-live instructions, see `scripts/checkins-go-live.sh`
+
+#### Quick Reference:
+```bash
+# Phase 1: Enable system (keep sandbox)
+doctl apps update painoptix-clean --env CHECKINS_ENABLED=1
+
+# Phase 2: Start sending (exit sandbox)
+doctl apps update painoptix-clean --env CHECKINS_SANDBOX=0
+
+# Phase 3: Auto-enrollment
+doctl apps update painoptix-clean --env CHECKINS_AUTOWIRE=1
+```
+
+### Production Monitoring
+- Health endpoint: `https://painoptix.com/api/health`
+- Admin dashboard: `https://painoptix.com/admin/checkins`
+
+### Release Summary (2025-09-25)
+- **Main commits shipped:**
+  - Structured logging implementation (no PII in logs)
+  - ALERT_WEBHOOK documentation and integration prep
+  - Deployment readiness checklist with go-live commands
+  - Feature branch `feature/checkins-safe-rollout` successfully merged
+- **Current production state:**
+  - All safety flags OFF (CHECKINS_ENABLED=0, SANDBOX=1, AUTOWIRE=0)
+  - Alert webhook pending configuration (awaiting clinic endpoint)
+  - Docker-repo at commit c02ae03 auto-deploying to painoptix-clean app
+  - GitHub Actions scheduler running successfully every 15 minutes
+- **TODOs before go-live:**
+  - Configure ALERT_WEBHOOK when clinic provides endpoint URL
+  - Run phased go-live script (`scripts/checkins-go-live.sh`)
+  - Execute staged test assessments to verify end-to-end flow
+  - Monitor logs and admin dashboard during rollout
+- Dispatcher logs: Check GitHub Actions runs
+- Red-flag alerts: Will be sent to webhook when configured
+
+### Final Verification
+- ✅ All code merged to main branch
+- ✅ Tests passing (lint clean, build successful)
+- ✅ Documentation complete
+- ✅ Safety flags preventing accidental sends
+- ✅ System ready for controlled activation
+
+**Last Updated:** 2025-09-25
+**Status:** READY FOR PRODUCTION ROLLOUT
