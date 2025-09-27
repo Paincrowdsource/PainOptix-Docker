@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -39,151 +39,164 @@ export default function ComprehensiveCareClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Comprehensive Care Bundle
+            Professional Consultation with Dr. Carpentier
           </h1>
           <p className="text-xl text-gray-600">
-            Complete educational resources, personalized support, and professional consultation
+            Get personalized medical guidance from an experienced healthcare provider
           </p>
         </div>
 
-        {/* Bundle Contents */}
+        {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">What&apos;s Included</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Telehealth Consultation</h2>
             <div className="text-right">
-              <div className="text-3xl font-bold text-purple-600">$350</div>
-              <div className="text-sm text-gray-500">One-time payment</div>
+              <div className="text-3xl font-bold text-blue-600">$350</div>
+              <div className="text-sm text-gray-500">One-time consultation</div>
             </div>
           </div>
 
           <div className="space-y-6">
-            {/* Monograph */}
-            <div className="border-l-4 border-purple-600 pl-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Complete Educational Monograph
-              </h3>
-              <p className="text-gray-600 mb-2">
-                Our most comprehensive educational resource (normally $20)
-              </p>
-              <ul className="space-y-1 text-sm text-gray-500">
-                <li>- Medical illustrations for visual understanding</li>
-                <li>- Comprehensive guide to diagnostic imaging</li>
-                <li>- Evidence-based educational content</li>
-                <li>- Progress tracking guidance</li>
-                <li>- Communication templates for healthcare discussions</li>
-              </ul>
-            </div>
-
-            {/* Coaching */}
+            {/* Consultation Details */}
             <div className="border-l-4 border-blue-600 pl-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                3-Month Educational Support Program
+                45-Minute Phone Consultation
               </h3>
-              <p className="text-gray-600 mb-2">
-                Weekly educational support to help you understand and implement recommendations
+              <p className="text-gray-600 mb-4">
+                Direct phone consultation with Dr. Carpentier to discuss your specific situation
+                and receive professional medical guidance.
               </p>
-              <ul className="space-y-1 text-sm text-gray-500">
-                <li>- Weekly educational check-ins</li>
-                <li>- Personalized implementation guidance</li>
-                <li>- Direct answers to your questions</li>
-                <li>- Accountability and motivation support</li>
-                <li>- Ongoing educational resources</li>
+              <ul className="space-y-2 text-gray-600">
+                <li className="flex items-start">
+                  <span className="text-blue-600 mr-2">✓</span>
+                  <span>Review your PainOptix assessment results in detail</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-600 mr-2">✓</span>
+                  <span>Discuss your specific symptoms and medical history</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-600 mr-2">✓</span>
+                  <span>Receive personalized medical recommendations</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-600 mr-2">✓</span>
+                  <span>Get answers to your specific questions</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-600 mr-2">✓</span>
+                  <span>Understand next steps for your care</span>
+                </li>
               </ul>
             </div>
 
-            {/* Telehealth */}
-            <div className="border-l-4 border-green-600 pl-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                45-Minute Professional Consultation
-              </h3>
-              <p className="text-gray-600 mb-2">
-                Professional consultation with a qualified healthcare provider
-              </p>
-              <ul className="space-y-1 text-sm text-gray-500">
-                <li>- Review your assessment findings</li>
-                <li>- Discuss your specific situation</li>
-                <li>- Professional medical guidance</li>
-                <li>- Follow-up care recommendations</li>
-                <li>- Schedule within 7 days of purchase</li>
-              </ul>
+            {/* How It Works */}
+            <div className="bg-gray-50 rounded-lg p-6">
+              <h3 className="font-semibold text-gray-900 mb-3">How It Works</h3>
+              <ol className="space-y-3 text-gray-600">
+                <li className="flex">
+                  <span className="font-semibold text-blue-600 mr-3">1.</span>
+                  <span>Complete your purchase through our secure payment system</span>
+                </li>
+                <li className="flex">
+                  <span className="font-semibold text-blue-600 mr-3">2.</span>
+                  <span>Receive confirmation email with Dr. Carpentier&apos;s contact information</span>
+                </li>
+                <li className="flex">
+                  <span className="font-semibold text-blue-600 mr-3">3.</span>
+                  <span>Call to schedule your consultation at a convenient time</span>
+                </li>
+                <li className="flex">
+                  <span className="font-semibold text-blue-600 mr-3">4.</span>
+                  <span>Have your assessment results ready for the consultation</span>
+                </li>
+              </ol>
             </div>
-          </div>
 
-          {/* Value Proposition */}
-          <div className="mt-8 p-6 bg-purple-50 rounded-lg">
-            <h3 className="font-semibold text-gray-900 mb-2">Comprehensive Educational Value</h3>
-            <p className="text-gray-600 text-sm">
-              This bundle combines our premium educational materials with personalized support 
-              and professional consultation. It&apos;s designed for those seeking the most 
-              comprehensive educational approach to understanding their condition.
-            </p>
+            {/* About Dr. Carpentier */}
+            <div className="border-t pt-6">
+              <h3 className="font-semibold text-gray-900 mb-3">About Dr. Carpentier</h3>
+              <p className="text-gray-600">
+                Dr. Carpentier is an experienced healthcare provider specializing in musculoskeletal
+                conditions and pain management. He brings years of clinical experience to help you
+                understand your condition and develop an effective treatment approach.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Who This Is For */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Who This Bundle Is For</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Is This Consultation Right for You?</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-semibold text-green-600 mb-2"> Ideal For:</h3>
+              <h3 className="font-semibold text-green-600 mb-3">✓ Ideal For:</h3>
               <ul className="space-y-2 text-gray-600">
-                <li>- Those seeking comprehensive educational resources</li>
-                <li>- People who want professional medical guidance</li>
-                <li>- Anyone ready for structured educational support</li>
-                <li>- Those who value personalized guidance</li>
+                <li>• You want professional medical guidance</li>
+                <li>• Your symptoms are complex or persistent</li>
+                <li>• You have specific questions about your condition</li>
+                <li>• You want personalized treatment recommendations</li>
+                <li>• You&apos;re not improving with current approaches</li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-red-600 mb-2">âœ— May Not Be Necessary If:</h3>
+              <h3 className="font-semibold text-amber-600 mb-3">Consider If:</h3>
               <ul className="space-y-2 text-gray-600">
-                <li>- You prefer self-directed learning</li>
-                <li>- You already have regular medical care</li>
-                <li>- Your situation is improving</li>
-                <li>- You prefer minimal support</li>
+                <li>• You already have a treating physician</li>
+                <li>• Your symptoms are mild and improving</li>
+                <li>• You prefer in-person consultations</li>
+                <li>• You need immediate emergency care</li>
+                <li>• You&apos;re looking for a second opinion</li>
               </ul>
             </div>
           </div>
         </div>
 
         {/* CTA Section */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl shadow-xl p-8 text-center text-white">
-          <h2 className="text-2xl font-bold mb-4">Ready for Comprehensive Support?</h2>
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-xl p-8 text-center text-white">
+          <h2 className="text-2xl font-bold mb-4">Ready to Get Professional Guidance?</h2>
           <p className="mb-6">
-            Get everything you need for comprehensive educational support.
+            Schedule your consultation with Dr. Carpentier and get the answers you need.
           </p>
           <button
             onClick={handlePurchase}
             disabled={loading}
-            className="bg-white text-purple-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Processing...' : 'Get the Comprehensive Bundle - $350'}
+            {loading ? 'Processing...' : 'Book Consultation - $350'}
           </button>
           <p className="mt-4 text-sm opacity-90">
-            Secure payment via Stripe. Immediate access to educational materials.
+            Secure payment via Stripe. Consultation details sent immediately.
           </p>
         </div>
 
+        {/* Important Information */}
+        <div className="mt-8 p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="font-semibold text-gray-900 mb-2">Important Information</p>
+          <ul className="space-y-2 text-sm text-gray-700">
+            <li>• This is a telehealth consultation conducted via phone</li>
+            <li>• Consultation must be scheduled within 30 days of purchase</li>
+            <li>• Have your PainOptix assessment results available during the call</li>
+            <li>• For emergencies, always call 911 or visit your nearest emergency room</li>
+          </ul>
+        </div>
+
         {/* Medical Disclaimer */}
-        <div className="mt-8 p-6 bg-gray-50 rounded-lg text-center text-sm text-gray-600">
-          <p className="font-semibold mb-2">Educational Disclaimer</p>
+        <div className="mt-6 p-6 bg-gray-50 rounded-lg text-center text-sm text-gray-600">
+          <p className="font-semibold mb-2">Medical Disclaimer</p>
           <p>
-            This bundle provides educational materials and support services. The professional 
-            consultation is with a licensed healthcare provider. This educational bundle is 
-            designed to support your understanding. Always work with your healthcare 
-            providers for medical decisions.
+            This consultation provides professional medical advice based on your individual situation.
+            Dr. Carpentier will review your case and provide recommendations, but this consultation
+            does not establish an ongoing doctor-patient relationship. For continuous care,
+            please follow up with a local healthcare provider.
           </p>
         </div>
       </div>
     </div>
   );
 }
-
-
-
-
-

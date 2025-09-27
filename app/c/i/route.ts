@@ -51,8 +51,18 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Render confirmation page based on value
-    const html = renderConfirmationHtml(value, day, assessment_id);
+    // Fetch the user's payment tier to show appropriate CTAs
+    const { data: assessment } = await supabase
+      .from('assessments')
+      .select('payment_tier, payment_completed')
+      .eq('id', assessment_id)
+      .single();
+
+    // Determine the user's current tier
+    const userTier = assessment?.payment_completed ? assessment.payment_tier : 'free';
+
+    // Render confirmation page based on value and user's existing purchases
+    const html = renderConfirmationHtml(value, day, assessment_id, userTier);
 
     return new NextResponse(html, {
       status: 200,
