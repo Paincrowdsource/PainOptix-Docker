@@ -161,7 +161,34 @@ export async function deliverEducationalGuide(assessmentId: string) {
           to: assessment.phone_number,
           message: smsMessage
         })
-        
+
+        // Log SMS delivery attempt
+        if (deliverySuccess) {
+          await logCommunication({
+            assessmentId: assessment.id,
+            templateKey: 'guide_sms_delivery',
+            status: 'sent',
+            channel: 'sms',
+            recipient: assessment.phone_number,
+            message: smsMessage.substring(0, 500)
+          })
+
+          await logEvent('sms_sent_initial_assessment', {
+            assessmentId: assessment.id
+          })
+        } else {
+          // Log failed SMS attempt
+          await logCommunication({
+            assessmentId: assessment.id,
+            templateKey: 'guide_sms_delivery',
+            status: 'failed',
+            channel: 'sms',
+            recipient: assessment.phone_number,
+            message: smsMessage.substring(0, 500),
+            errorMessage: 'SMS delivery failed'
+          })
+        }
+
         // If SMS fails and we have an email, try email as fallback
         if (!deliverySuccess && assessment.email) {
           console.log('SMS delivery failed, falling back to email')
