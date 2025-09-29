@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     const incompleteSessions = sessions?.filter(s => s.completed_at === null) || [];
     const sessionIds = incompleteSessions.map(s => s.session_id);
 
-    let progressData = [];
+    let progressData: any[] = [];
     if (sessionIds.length > 0) {
       const { data: progress, error: progressError } = await supabaseService
         .from('assessment_progress')
