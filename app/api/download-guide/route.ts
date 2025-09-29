@@ -20,12 +20,15 @@ async function checkFileExists(filePath: string): Promise<boolean> {
 }
 
 export async function POST(req: NextRequest) {
+  const startTime = Date.now();
+  let pdfLogId: string | null = null;
+
   try {
     // Check query params first (for admin tests)
     const { searchParams } = new URL(req.url);
     let assessmentId = searchParams.get('assessmentId');
     let requestedTier = searchParams.get('tier');
-    
+
     // If not in query params, try to parse body
     if (!assessmentId) {
       try {
@@ -101,6 +104,27 @@ export async function POST(req: NextRequest) {
     const guideType = assessmentData.guide_type;
     console.info(`Generating PDF: guideType=${guideType}, tier=${actualTier}`);
 
+    // Create PDF generation log entry if not admin test
+    if (!assessmentId.startsWith('admin-test-')) {
+      const supabase = getServiceSupabase();
+      const { data: logEntry } = await supabase
+        .from('pdf_generation_logs')
+        .insert({
+          assessment_id: assessmentId,
+          tier: actualTier,
+          status: 'started',
+          started_at: new Date().toISOString(),
+          requested_by: 'api',
+          ip_address: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || null
+        })
+        .select('id')
+        .single();
+
+      if (logEntry) {
+        pdfLogId = logEntry.id;
+      }
+    }
+
     // Map tier to content directory (comprehensive -> monograph)
     const contentDir = actualTier === 'comprehensive' ? 'monograph' : actualTier;
     const puppeteerTier = actualTier === 'comprehensive' ? 'monograph' : actualTier as 'free' | 'enhanced' | 'monograph';
@@ -165,10 +189,26 @@ export async function POST(req: NextRequest) {
     // Log PDF size for debugging
     const pdfSizeMB = (pdfBuffer.length / (1024 * 1024)).toFixed(2);
     console.info(`PDF generated successfully. Size: ${pdfSizeMB}MB`);
-    
+
     // Check if PDF is too large (Netlify has a 10MB limit for synchronous functions)
     if (pdfBuffer.length > 10 * 1024 * 1024) {
       console.warn(`Warning: PDF size (${pdfSizeMB}MB) exceeds recommended limit`);
+    }
+
+    // Update PDF generation log with success
+    if (pdfLogId) {
+      const supabase = getServiceSupabase();
+      const duration = Date.now() - startTime;
+      await supabase
+        .from('pdf_generation_logs')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          duration_ms: duration,
+          file_size_bytes: pdfBuffer.length,
+          page_count: null // Would need to extract from PDF metadata
+        })
+        .eq('id', pdfLogId);
     }
     
     // Return the PDF with proper body type for Node runtime
@@ -184,6 +224,22 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('--- CRITICAL ERROR in download-guide API ---');
     console.error(error);
+
+    // Update PDF generation log with failure
+    if (pdfLogId) {
+      const supabase = getServiceSupabase();
+      const duration = Date.now() - startTime;
+      await supabase
+        .from('pdf_generation_logs')
+        .update({
+          status: 'failed',
+          completed_at: new Date().toISOString(),
+          duration_ms: duration,
+          error_message: error.message || 'Unknown error'
+        })
+        .eq('id', pdfLogId);
+    }
+
     return new Response(JSON.stringify({ message: 'An unexpected error occurred.', error: error.message }), { status: 500 });
   }
 }

@@ -6,6 +6,7 @@ import { isWithinSendWindow, isBeforeStartDate } from './time-utils';
 import { resolveDiagnosisCode } from './diagnosis';
 import { resolveLogoFragment } from './branding';
 import { createHash } from 'crypto';
+import { logCommunication } from '@/lib/comm/communication-logs';
 
 interface DispatchOptions {
   dryRun?: boolean;
@@ -238,6 +239,17 @@ export async function dispatchDue(
               to: assessment.email,
               subject: template.subject || `Quick check-in (Day ${message.day})`,
               html
+            });
+
+            // Log the communication
+            await logCommunication({
+              assessmentId: message.assessment_id,
+              templateKey: `checkin_day${message.day}`,
+              status: 'sent',
+              channel: 'email',
+              recipient: assessment.email,
+              subject: template.subject || `Quick check-in (Day ${message.day})`,
+              message: html.substring(0, 500)
             });
 
             // Mark as sent

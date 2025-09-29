@@ -163,6 +163,21 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // CRITICAL FIX: Also update all assessment_progress records with the assessment_id
+    if (assessmentId) {
+      const { error: progressUpdateError } = await supabase
+        .from("assessment_progress")
+        .update({ assessment_id: assessmentId })
+        .eq("session_id", sessionId);
+
+      if (progressUpdateError) {
+        console.error("Error updating assessment_progress with assessment_id:", progressUpdateError);
+        // Don't fail the request, but log the error
+      } else {
+        console.log(`Updated assessment_progress records for session ${sessionId} with assessment ${assessmentId}`);
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Complete session error:", error);
