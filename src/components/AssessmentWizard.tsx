@@ -8,6 +8,7 @@ import ProgressBar from './ProgressBar';
 import { FieldGroup, FormLabel, FormRadioGroup, FormRadioItem, FormCheckbox } from './FieldGroup';
 import { ContactCollection } from './ContactCollection';
 import { CheckYourInbox } from './CheckYourInbox';
+import { BasicResultsScreen } from './BasicResultsScreen';
 
 // Algorithm imports
 import { Questions, EducationalGuide } from '@/types/algorithm';
@@ -18,7 +19,7 @@ interface AssessmentWizardProps {
   onComplete?: (guideType: EducationalGuide, sessionId: string) => void;
 }
 
-type WizardStep = 'disclaimer' | 'assessment' | 'contact' | 'payment' | 'complete';
+type WizardStep = 'disclaimer' | 'assessment' | 'results' | 'contact' | 'payment' | 'complete';
 
 export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState<WizardStep>('disclaimer');
@@ -224,9 +225,24 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
         );
       }
     } else {
-      // All questions answered, move to contact collection
-      console.log('âœ… All questions answered, moving to contact form');
-      setCurrentStep('contact');
+      // All questions answered, calculate diagnosis and show results
+      console.log('All questions answered, calculating diagnosis...');
+      const selectedGuide = guideSelector.selectEducationalGuide();
+      const session = guideSelector.getSession();
+
+      setSelectedGuide(selectedGuide);
+      setDisclosures(session.disclosures);
+
+      // Track results screen view
+      await trackProgress(
+        'RESULTS_PREVIEW_VIEW',
+        currentStepNumber + 1,
+        'User viewing results screen',
+        { diagnosis: selectedGuide }
+      );
+
+      console.log('Diagnosis calculated:', selectedGuide);
+      setCurrentStep('results');
     }
   };
 
@@ -249,13 +265,27 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
     }
   };
 
+  // Handle results screen continue button
+  const handleResultsContinue = async () => {
+    // Track CTA click
+    await trackProgress(
+      'RESULTS_PREVIEW_CTA_CLICK',
+      responses.size + 2,
+      'User clicked Get Complete Guide CTA',
+      { diagnosis: selectedGuide }
+    );
+
+    // Move to contact collection
+    setCurrentStep('contact');
+  };
+
   // Handle contact submission
   const handleContactSubmit = async (data: any) => {
     setIsSubmitting(true);
-    
+
     try {
-      // Get the selected educational guide
-      const selectedGuide = guideSelector.selectEducationalGuide();
+      // selectedGuide and disclosures are already set from results screen
+      // Just get the session for any additional data
       const session = guideSelector.getSession();
       
       // Store contact info
@@ -285,9 +315,11 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
         throw new Error('No valid responses found. Please complete the assessment.');
       }
 
-      // Store selected guide and disclosures
-      setSelectedGuide(selectedGuide);
-      setDisclosures(session.disclosures);
+      // selectedGuide and disclosures are already set from results screen
+      // Verify we have them
+      if (!selectedGuide) {
+        throw new Error('No diagnosis found. Please restart the assessment.');
+      }
       
       // Submit to API to create assessment record with retry
       const submitData = {
@@ -453,8 +485,8 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
             <div>
               <p className="font-semibold mb-2">Important Information</p>
               <p className="text-sm">
-                PainFinderâ„¢ is an educational tool. It does not diagnose or treat medical conditions. 
-                Your responses are used to generate wellness content aligned with symptom patterns, not a formal diagnosis. 
+                PainFinder™ is an educational tool. It does not diagnose or treat medical conditions.
+                Your responses are used to generate wellness content aligned with symptom patterns, not a formal diagnosis.
                 By continuing, you consent to our Terms and confirm that you understand this limitation.
               </p>
             </div>
@@ -484,7 +516,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
                 className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="text-sm">
-                I understand that PainFinderâ„¢ is an educational tool, not a diagnostic tool, and I agree to the terms of service.
+                I understand that PainFinder™ is an educational tool, not a diagnostic tool, and I agree to the terms of service.
                 <br /><br />
                 <strong>I explicitly consent to receive SMS messages</strong> from PainOptix / Dr. C. Pain MD Holdings, LLC at the phone number I provide. I understand that message and data rates may apply.
                 <br /><br />
@@ -534,12 +566,30 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
     );
   }
   
+  if (currentStep === 'results') {
+    if (!selectedGuide) {
+      // Safety fallback - should never happen
+      console.error('No diagnosis selected, redirecting to assessment');
+      setCurrentStep('assessment');
+      return null;
+    }
+
+    return (
+      <div className="max-w-2xl mx-auto p-4 md:p-6">
+        <BasicResultsScreen
+          diagnosis={selectedGuide}
+          onContinue={handleResultsContinue}
+        />
+      </div>
+    );
+  }
+
   if (currentStep === 'contact') {
     return (
       <div className="max-w-2xl mx-auto p-4 md:p-6">
         <ContactCollection
           onSubmit={handleContactSubmit}
-          onBack={() => setCurrentStep('assessment')}
+          onBack={() => setCurrentStep('results')}
         />
       </div>
     );
@@ -717,7 +767,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
                   </div>
                   <h3 className="text-2xl font-semibold text-gray-900">Comprehensive Guide</h3>
                   <p className="text-4xl font-bold text-gray-900 mt-4">$20</p>
-                  <p className="text-sm text-gray-600 mt-1">Best value â€¢ One-time payment</p>
+                  <p className="text-sm text-gray-600 mt-1">Best value • One-time payment</p>
                 </div>
                 <ul className="space-y-4 mb-8">
                   <li className="flex items-start gap-3">
@@ -825,7 +875,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
             
             <div className="text-center border-t border-gray-100 pt-6">
               <p className="text-gray-600 mb-2">
-                <span className="font-semibold text-gray-900">100% Satisfaction Guarantee</span> â€¢ Secure checkout via Stripe
+                <span className="font-semibold text-gray-900">100% Satisfaction Guarantee</span> • Secure checkout via Stripe
               </p>
               <p className="text-sm text-gray-500">
                 Your personalized guide will be delivered instantly to your {contactInfo.method === 'email' ? 'email' : 'phone'}
