@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { createSupabaseBrowserClient } from '@/lib/supabase-client';
-import { Menu, X, FileText, BarChart3, Users, MessageSquare, TestTube, ScrollText, LogOut, Activity, CheckCircle } from 'lucide-react';
+import { Menu, X, FileText, BarChart3, Users, MessageSquare, TestTube, ScrollText, LogOut, Activity, CheckCircle, TrendingUp } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 
 interface AdminLayoutClientProps {
@@ -62,6 +62,7 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
     { href: '/admin/assessments', label: 'Assessments', icon: FileText },
     { href: '/admin/communications', label: 'Communications', icon: MessageSquare },
     { href: '/admin/checkins', label: 'Check-Ins', icon: CheckCircle },
+    { href: '/admin/conversion-metrics', label: 'Conversion Metrics', icon: TrendingUp },
     { href: '/admin/logs', label: 'Logs & Monitoring', icon: ScrollText },
     { href: '/admin/analytics', label: 'Analytics', icon: Activity },
   ];
