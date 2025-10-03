@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object
-        const { assessmentId, tierPrice, tierName, guideType, email, phone, initial_pain_score } = session.metadata
+        const { assessmentId, tierPrice, tierName, guideType, email, phone, initial_pain_score, source } = session.metadata
 
         // Update assessment with payment info
         const { error: updateError } = await supabase
@@ -63,29 +63,76 @@ export async function POST(req: NextRequest) {
           throw updateError
         }
 
-        // Get assessment results for email template
-        const { data: assessmentData } = await supabase
+        // Track revenue attribution if source starts with 'checkin_'
+        if (source && source.startsWith('checkin_')) {
+          const amountCents = session.amount_total || (tierPrice ? tierPrice * 100 : 0);
+
+          const { error: revenueError } = await supabase
+            .from('revenue_events')
+            .insert({
+              assessment_id: assessmentId,
+              source: source,
+              stripe_id: session.id,
+              amount_cents: amountCents
+            });
+
+          if (revenueError) {
+            logger.error('Failed to track revenue attribution', revenueError);
+            // Don't throw - this is non-critical
+          } else {
+            await logEvent('revenue_attributed', {
+              assessmentId,
+              source,
+              amountCents
+            });
+          }
+        }
+
+        // Check if this is a consultation purchase
+        const productType = session.metadata?.productType
+        const isConsultation = tierName === 'consultation' || productType === 'consultation'
+
+        if (isConsultation) {
+          // Consultation purchase ($350) - NO email sent, user redirected to success page
+          await logEvent('consultation_purchased', {
+            assessmentId,
+            amountCents: session.amount_total || 35000
+          })
+
+          // Note: We do NOT cancel check-ins for consultation purchasers
+          // We want their longitudinal data for research purposes
+          // Check-in landing pages will detect consultation tier and adjust CTAs accordingly
+
+          logger.info('Consultation purchase completed', {
+            assessmentId,
+            noEmailSent: true,
+            checkInsRemainActive: true
+          })
+        }
+
+        // Get assessment results for email template (skip for consultations)
+        const { data: assessmentData } = !isConsultation ? await supabase
           .from('assessments')
           .select('*, assessment_results(*)')
           .eq('id', assessmentId)
-          .single()
+          .single() : { data: null }
 
-        const assessmentResults = {
+        const assessmentResults = assessmentData ? {
           assessmentId,
           diagnosis: assessmentData?.assessment_results?.primary_diagnosis,
           severity: assessmentData?.assessment_results?.severity,
           duration: assessmentData?.assessment_results?.duration,
           ...assessmentData?.assessment_results
-        }
+        } : null
 
         // Determine product from session
-        const productPriceId = session.line_items?.data?.[0]?.price?.id || 
+        const productPriceId = session.line_items?.data?.[0]?.price?.id ||
                               session.metadata?.product_id ||
-                              (tierPrice === '5' ? process.env.STRIPE_PRICE_ENHANCED : 
+                              (tierPrice === '5' ? process.env.STRIPE_PRICE_ENHANCED :
                                tierPrice === '20' ? process.env.STRIPE_PRICE_MONOGRAPH : null)
 
-        // Send confirmation email and schedule follow-up based on tier
-        if (productPriceId === process.env.STRIPE_PRICE_ENHANCED || tierPrice === '5') {
+        // Send confirmation email and schedule follow-up based on tier (skip for consultations)
+        if (!isConsultation && (productPriceId === process.env.STRIPE_PRICE_ENHANCED || tierPrice === '5')) {
           // Enhanced ($5) purchase
           if (email) {
             await sendEmail(
@@ -137,7 +184,7 @@ export async function POST(req: NextRequest) {
           await logEvent('email_followup_scheduled', { assessmentId, type: 'enhanced_d4' })
         }
 
-        if (productPriceId === process.env.STRIPE_PRICE_MONOGRAPH || tierPrice === '20') {
+        if (!isConsultation && (productPriceId === process.env.STRIPE_PRICE_MONOGRAPH || tierPrice === '20')) {
           // Monograph ($20) purchase
           if (email) {
             await sendEmail(

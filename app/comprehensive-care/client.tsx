@@ -57,15 +57,32 @@ export default function ComprehensiveCareClient() {
             <h2 className="text-2xl font-bold text-gray-900">Telehealth Consultation</h2>
             <div className="text-right">
               <div className="text-3xl font-bold text-blue-600">$350</div>
-              <div className="text-sm text-gray-500">One-time consultation</div>
+              <div className="text-sm text-gray-500">Includes Monograph ($20 value)</div>
             </div>
           </div>
 
           <div className="space-y-6">
+            {/* What's Included */}
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                What&apos;s Included
+              </h3>
+              <ul className="space-y-2 text-gray-700">
+                <li className="flex items-start">
+                  <span className="text-blue-600 mr-2">✓</span>
+                  <span><strong>45-Minute Phone Consultation</strong> with Dr. Carpentier</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-600 mr-2">✓</span>
+                  <span><strong>Comprehensive Monograph</strong> - Complete educational guide with professional illustrations ($20 value)</span>
+                </li>
+              </ul>
+            </div>
+
             {/* Consultation Details */}
             <div className="border-l-4 border-blue-600 pl-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                45-Minute Phone Consultation
+                Professional Medical Consultation
               </h3>
               <p className="text-gray-600 mb-4">
                 Direct phone consultation with Dr. Carpentier to discuss your specific situation
@@ -105,7 +122,7 @@ export default function ComprehensiveCareClient() {
                 </li>
                 <li className="flex">
                   <span className="font-semibold text-blue-600 mr-3">2.</span>
-                  <span>Receive confirmation email with Dr. Carpentier&apos;s contact information</span>
+                  <span>View Dr. Carpentier&apos;s contact information on the confirmation page</span>
                 </li>
                 <li className="flex">
                   <span className="font-semibold text-blue-600 mr-3">3.</span>

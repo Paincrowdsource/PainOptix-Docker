@@ -239,8 +239,8 @@ SELECT
   ) as last_30d_overall_conversion,
 
   -- Time on results screen stats
-  ROUND(avg_time_seconds, 2) as avg_time_on_results_seconds,
-  ROUND(median_time_seconds, 2) as median_time_on_results_seconds,
+  ROUND(avg_time_seconds::numeric, 2) as avg_time_on_results_seconds,
+  ROUND(median_time_seconds::numeric, 2) as median_time_on_results_seconds,
   sessions_with_time_data
 
 FROM time_stats;

@@ -1,11 +1,12 @@
 /**
  * Tier name mapping utilities
- * 
+ *
  * The database uses 'comprehensive' but URLs and user-facing text use 'monograph'
+ * 'consultation' tier includes monograph access (consultation purchasers get both)
  * These utilities ensure consistent mapping between the two
  */
 
-export type DbTier = 'free' | 'enhanced' | 'comprehensive';
+export type DbTier = 'free' | 'enhanced' | 'comprehensive' | 'consultation';
 export type UrlTier = 'free' | 'enhanced' | 'monograph';
 
 /**
@@ -22,17 +23,18 @@ export function mapUrlTierToDb(urlTier: string): DbTier {
  * Map database tier name to URL parameter tier name
  */
 export function mapDbTierToUrl(dbTier: string): UrlTier {
-  if (dbTier === 'comprehensive') return 'monograph';
+  if (dbTier === 'comprehensive' || dbTier === 'consultation') return 'monograph';
   if (dbTier === 'free' || dbTier === 'enhanced') return dbTier as UrlTier;
   // Default to free for invalid values
   return 'free';
 }
 
 /**
- * Check if a tier is the highest (monograph/comprehensive) tier
+ * Check if a tier is the highest (monograph/comprehensive/consultation) tier
+ * Note: consultation tier includes monograph access
  */
 export function isHighestTier(tier: string): boolean {
-  return tier === 'comprehensive' || tier === 'monograph';
+  return tier === 'comprehensive' || tier === 'monograph' || tier === 'consultation';
 }
 
 /**
@@ -47,6 +49,8 @@ export function getTierDisplayName(tier: string): string {
     case 'comprehensive':
     case 'monograph':
       return 'Comprehensive Monograph';
+    case 'consultation':
+      return 'Consultation + Monograph';
     default:
       return 'Guide';
   }
@@ -64,6 +68,8 @@ export function getTierPrice(tier: string): number {
     case 'comprehensive':
     case 'monograph':
       return 20;
+    case 'consultation':
+      return 350; // Consultation includes monograph
     default:
       return 0;
   }
