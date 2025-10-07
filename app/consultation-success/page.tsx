@@ -57,7 +57,7 @@ export default function ConsultationSuccessPage() {
           {/* Phone Number Section */}
           <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
             <p className="text-gray-700 mb-4 text-lg">
-              Please call Dr. Carpentier's office to schedule your 45-minute phone consultation:
+              Please call Dr. Carpentier&apos;s office to schedule your 45-minute phone consultation:
             </p>
             <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-blue-300">
               <div className="flex items-center gap-3">

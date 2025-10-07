@@ -1,7 +1,6 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 import Stats from './Stats'
 import CheckInsTable from './CheckInsTable'
 import OverviewPanel from '@/components/admin/checkins/OverviewPanel'
@@ -96,8 +95,6 @@ interface FlashMessage {
 }
 
 export default function CheckInsPage() {
-  const supabase = createSupabaseBrowserClient()
-
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [flash, setFlash] = useState<FlashMessage | null>(null)
@@ -128,89 +125,38 @@ export default function CheckInsPage() {
       const now = new Date()
       const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
-      const { data: queueData, error: queueError } = await supabase
-        .from('check_in_queue')
-        .select('*')
-        .order('due_at', { ascending: true })
-
-      if (queueError) {
-        throw queueError
+      // Fetch queue data from API endpoint (bypasses RLS)
+      const queueResponse = await fetch('/api/admin/checkins/queue')
+      if (!queueResponse.ok) {
+        throw new Error('Failed to fetch queue items')
       }
+      const { queueItems: queueData } = await queueResponse.json()
+      setQueueItems(queueData as CheckInQueueItem[])
 
-      // Fetch assessments data separately for queue items
-      const assessmentIds = Array.from(new Set(queueData?.map(item => item.assessment_id) || []))
-      let assessmentsMap: Record<string, any> = {}
-
-      if (assessmentIds.length > 0) {
-        const { data: assessmentsData } = await supabase
-          .from('assessments')
-          .select('id, email, phone_number, diagnosis_code')
-          .in('id', assessmentIds)
-
-        assessmentsMap = (assessmentsData || []).reduce((acc, assessment) => {
-          acc[assessment.id] = assessment
-          return acc
-        }, {} as Record<string, any>)
+      // Fetch responses from API endpoint (bypasses RLS)
+      const responsesResponse = await fetch('/api/admin/checkins/responses')
+      if (!responsesResponse.ok) {
+        throw new Error('Failed to fetch responses')
       }
+      const { responses: responseData } = await responsesResponse.json()
+      setResponses(responseData as CheckInResponse[])
 
-      const enrichedQueueData = (queueData || []).map(item => ({
-        ...item,
-        assessment: assessmentsMap[item.assessment_id] || null
-      }))
-
-      setQueueItems(enrichedQueueData as CheckInQueueItem[])
-
-      const { data: responseData, error: responseError } = await supabase
-        .from('check_in_responses')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (responseError) {
-        throw responseError
+      // Fetch revenue from API endpoint (bypasses RLS)
+      const revenueResponse = await fetch('/api/admin/checkins/revenue')
+      if (!revenueResponse.ok) {
+        throw new Error('Failed to fetch revenue')
       }
-
-      // Fetch assessments data separately for responses
-      const responseAssessmentIds = Array.from(new Set(responseData?.map(item => item.assessment_id) || []))
-      let responseAssessmentsMap: Record<string, any> = {}
-
-      if (responseAssessmentIds.length > 0) {
-        const { data: responseAssessmentsData } = await supabase
-          .from('assessments')
-          .select('id, email, diagnosis_code, guide_type')
-          .in('id', responseAssessmentIds)
-
-        responseAssessmentsMap = (responseAssessmentsData || []).reduce((acc, assessment) => {
-          acc[assessment.id] = assessment
-          return acc
-        }, {} as Record<string, any>)
-      }
-
-      const enrichedResponseData = (responseData || []).map(item => ({
-        ...item,
-        assessment: responseAssessmentsMap[item.assessment_id] || null
-      }))
-
-      setResponses(enrichedResponseData as CheckInResponse[])
-
-      const { data: revenueData, error: revenueError } = await supabase
-        .from('revenue_events')
-        .select('*')
-        .like('source', 'checkin_%')
-        .order('created_at', { ascending: false })
-
-      if (revenueError) {
-        throw revenueError
-      }
-      setRevenue((revenueData || []) as RevenueEvent[])
+      const { revenue: revenueData } = await revenueResponse.json()
+      setRevenue(revenueData as RevenueEvent[])
 
       const dueNow =
         queueData?.filter(
-          (item) => item.status === 'queued' && new Date(item.due_at) <= now,
+          (item: CheckInQueueItem) => item.status === 'queued' && new Date(item.due_at) <= now,
         ).length || 0
 
       const sent24h =
         queueData?.filter(
-          (item) =>
+          (item: CheckInQueueItem) =>
             item.status === 'sent' &&
             item.sent_at &&
             new Date(item.sent_at) >= twentyFourHoursAgo,
@@ -218,7 +164,7 @@ export default function CheckInsPage() {
 
       const failed24h =
         queueData?.filter(
-          (item) =>
+          (item: CheckInQueueItem) =>
             item.status === 'failed' &&
             item.sent_at &&
             new Date(item.sent_at) >= twentyFourHoursAgo,
@@ -226,13 +172,13 @@ export default function CheckInsPage() {
 
       const responses24h =
         responseData?.filter(
-          (item) => new Date(item.created_at) >= twentyFourHoursAgo,
+          (item: CheckInResponse) => new Date(item.created_at) >= twentyFourHoursAgo,
         ).length || 0
 
       const revenue24h =
         revenueData
-          ?.filter((item) => new Date(item.created_at) >= twentyFourHoursAgo)
-          .reduce((sum, item) => sum + (item.amount_cents || 0), 0) || 0
+          ?.filter((item: RevenueEvent) => new Date(item.created_at) >= twentyFourHoursAgo)
+          .reduce((sum: number, item: RevenueEvent) => sum + (item.amount_cents || 0), 0) || 0
 
       setStats({
         dueNow,
@@ -247,7 +193,7 @@ export default function CheckInsPage() {
     } finally {
       setLoading(false)
     }
-  }, [supabase])
+  }, [])
 
   const handleAssessmentsLoad = useCallback(async () => {
     try {

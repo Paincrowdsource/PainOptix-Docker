@@ -13,6 +13,15 @@ export const BasicResultsScreen: React.FC<BasicResultsScreenProps> = ({ diagnosi
   const preview = getDiagnosisPreview(diagnosis);
   const isUrgent = diagnosis === 'urgent_symptoms';
 
+  // Helper to truncate tip to first sentence or ~60 characters
+  const getTipPreview = (tip: string): string => {
+    const firstSentence = tip.split(/[.!?]/)[0];
+    if (firstSentence.length > 60) {
+      return firstSentence.substring(0, 60) + '...';
+    }
+    return firstSentence + '...';
+  };
+
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-white via-gray-50/30 to-white -m-8">
       {/* Subtle pattern overlay */}
@@ -60,11 +69,16 @@ export const BasicResultsScreen: React.FC<BasicResultsScreenProps> = ({ diagnosi
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           {/* Header with gradient - Different color for urgent */}
           <div className={`${isUrgent ? 'bg-gradient-to-r from-orange-600 to-red-600' : 'bg-gradient-to-r from-[#0B5394] to-[#084074]'} px-8 py-5 text-center`}>
-            <p className="text-white text-lg">
+            <p className="text-white text-lg font-medium">
               {isUrgent
-                ? "Your responses indicate symptoms that require immediate medical attention."
-                : "Based on your responses, we've identified your pain pattern and immediate relief strategies."}
+                ? "⚠️ Your responses indicate symptoms requiring immediate medical attention"
+                : "✓ Assessment Complete - Your FREE Personalized Guide is Ready"}
             </p>
+            {!isUrgent && (
+              <p className="text-white/90 text-sm mt-1">
+                Preview below • Enter email to receive your complete guide
+              </p>
+            )}
           </div>
 
           {/* Content */}
@@ -72,13 +86,18 @@ export const BasicResultsScreen: React.FC<BasicResultsScreenProps> = ({ diagnosi
             {/* Diagnosis Name */}
             <div className="text-center pb-6 border-b border-gray-100">
               <div className={`inline-block px-6 py-3 rounded-full ${isUrgent ? 'bg-orange-50 text-orange-900' : 'bg-blue-50 text-[#0B5394]'} mb-4`}>
-                <span className="text-sm font-medium uppercase tracking-wide">Identified Pattern</span>
+                <span className="text-sm font-medium uppercase tracking-wide">Preview - Identified Pattern</span>
               </div>
               <h3 className="text-3xl font-bold text-gray-900 mb-2">
                 {preview.displayName}
               </h3>
+              <p className="text-sm text-gray-600">
+                {isUrgent
+                  ? "Detailed emergency protocols in your free guide"
+                  : "Full explanation and medical details in your complete FREE guide"}
+              </p>
               {isUrgent && (
-                <p className="text-red-600 font-medium">
+                <p className="text-red-600 font-medium mt-2">
                   Please seek medical attention as soon as possible
                 </p>
               )}
@@ -102,11 +121,11 @@ export const BasicResultsScreen: React.FC<BasicResultsScreenProps> = ({ diagnosi
               </div>
             </div>
 
-            {/* Tips Section */}
+            {/* Tips Section - Preview with continuation */}
             <div>
               <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Activity className={`w-5 h-5 ${isUrgent ? 'text-orange-500' : 'text-[#0B5394]'}`} />
-                {isUrgent ? "Immediate actions:" : "What you can try today:"}
+                {isUrgent ? "Immediate actions (preview):" : "Quick start strategies (preview):"}
               </h4>
               <div className="space-y-3">
                 {preview.tips.map((tip, index) => (
@@ -114,7 +133,14 @@ export const BasicResultsScreen: React.FC<BasicResultsScreenProps> = ({ diagnosi
                     <div className={`flex-shrink-0 w-8 h-8 rounded-full ${isUrgent ? 'bg-orange-500' : 'bg-[#0B5394]'} text-white flex items-center justify-center font-semibold text-sm mt-0.5`}>
                       {index + 1}
                     </div>
-                    <p className="text-gray-800 leading-relaxed font-medium">{tip}</p>
+                    <div className="flex-1">
+                      <p className="text-gray-800 leading-relaxed">
+                        {getTipPreview(tip)}
+                      </p>
+                      <p className="text-sm text-gray-600 italic mt-1">
+                        See full strategy in your complete guide →
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -124,13 +150,13 @@ export const BasicResultsScreen: React.FC<BasicResultsScreenProps> = ({ diagnosi
             <div className={`p-6 rounded-xl ${isUrgent ? 'bg-orange-50 border-2 border-orange-200' : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200'}`}>
               <h4 className="text-lg font-semibold text-gray-900 mb-3">
                 {isUrgent
-                  ? "Get Emergency Guidance & Resources"
-                  : "Want Your Complete Recovery Guide?"}
+                  ? "Get Your Complete FREE Emergency Guide"
+                  : "Get Your Complete FREE Recovery Guide"}
               </h4>
               <p className="text-gray-700 mb-4 leading-relaxed">
                 {isUrgent
-                  ? "Receive detailed emergency guidance, questions to ask your doctor, and what to expect during urgent evaluation."
-                  : "Get your personalized educational guide with detailed explanations, exercises, and a 14-day progress tracker to monitor your recovery."}
+                  ? "This is just a preview. Enter your email to receive your complete personalized emergency guide with detailed protocols, questions for your doctor, and critical next steps—absolutely free."
+                  : "This is just a preview. Enter your email to receive your complete personalized guide with full recovery strategies, exercises, tracking tools, and 14-day follow-up support—absolutely free."}
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-sm text-gray-700">
@@ -157,13 +183,13 @@ export const BasicResultsScreen: React.FC<BasicResultsScreenProps> = ({ diagnosi
               onClick={onContinue}
               className={`w-full px-8 py-4 ${isUrgent ? 'bg-orange-600 hover:bg-orange-700' : 'bg-[#0B5394] hover:bg-[#084074]'} text-white rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 font-semibold shadow-lg flex items-center justify-center gap-2 text-lg`}
             >
-              {isUrgent ? "Get Emergency Guidance" : "Get My Complete Guide"}
+              {isUrgent ? "Get My Free Emergency Guide" : "Get My Free Recovery Guide"}
               <ChevronRight className="w-6 h-6" />
             </button>
 
             {/* Privacy Note */}
             <p className="text-center text-sm text-gray-500">
-              We&apos;ll send your personalized guide to your email or phone. Your information is secure and HIPAA compliant.
+              100% free. Just enter your email on the next screen to receive your complete guide and activate progress tracking.
             </p>
           </div>
         </div>
@@ -191,9 +217,9 @@ export const BasicResultsScreen: React.FC<BasicResultsScreenProps> = ({ diagnosi
 
         {/* Additional Note for Non-Urgent */}
         {!isUrgent && (
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
-              Not ready yet? That&apos;s okay. You can always complete this assessment again later.
+          <div className="mt-6 text-center bg-white rounded-lg border border-gray-200 p-4">
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold">What&apos;s in your complete FREE guide:</span> Full recovery strategies with step-by-step instructions • Illustrated exercises • Pain tracking charts • 4-week recovery timeline • 14-day follow-up support
             </p>
           </div>
         )}
