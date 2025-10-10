@@ -49,7 +49,7 @@ export async function enqueueCheckinsForAssessment(
     // Get assessment details
     const { data: assessment, error: assessmentError } = await supabase
       .from('assessments')
-      .select('id, created_at, email, phone, diagnosis_code')
+      .select('id, created_at, email, phone')
       .eq('id', assessmentId)
       .single();
 
