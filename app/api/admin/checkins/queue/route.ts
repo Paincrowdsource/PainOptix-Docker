@@ -29,11 +29,14 @@ export async function GET(req: NextRequest) {
     if (assessmentIds.length > 0) {
       const { data: assessmentsData } = await supabase
         .from('assessments')
-        .select('id, email, phone_number, diagnosis_code')
+        .select('id, email, phone')
         .in('id', assessmentIds);
 
       assessmentsMap = (assessmentsData || []).reduce((acc, assessment) => {
-        acc[assessment.id] = assessment;
+        acc[assessment.id] = {
+          email: assessment.email,
+          phone_number: assessment.phone // Map 'phone' to 'phone_number' for consistency
+        };
         return acc;
       }, {} as Record<string, any>);
     }

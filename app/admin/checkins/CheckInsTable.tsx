@@ -55,13 +55,10 @@ export default function CheckInsTable({ items, onDispatchDryRun, onDispatchNow, 
     )
   }
 
-  const maskContact = (contact: string | undefined) => {
-    if (!contact) return 'N/A'
-    if (contact.includes('@')) {
-      const [username, domain] = contact.split('@')
-      return `${username.substring(0, 2)}***@${domain}`
-    }
-    return `***${contact.slice(-4)}`
+  const formatContact = (email: string | undefined, phone: string | undefined) => {
+    if (email) return email
+    if (phone) return phone
+    return 'N/A'
   }
 
   return (
@@ -169,8 +166,8 @@ export default function CheckInsTable({ items, onDispatchDryRun, onDispatchNow, 
                   <td className="px-4 py-3 text-sm text-gray-900">
                     Day {item.day}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {maskContact(item.assessment?.email || item.assessment?.phone_number)}
+                  <td className="px-4 py-3 text-sm text-gray-600 font-mono">
+                    {formatContact(item.assessment?.email, item.assessment?.phone_number)}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     <span className="capitalize">{item.channel}</span>
