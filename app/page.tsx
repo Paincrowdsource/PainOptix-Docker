@@ -94,21 +94,21 @@ export default function LandingPage() {
 
           {/* Main headline - refined medical typography */}
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-normal tracking-tight text-gray-900 leading-[1.1]" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
-            Understand Your
-            <span className="block text-[#0B5394] font-light">Back Pain</span>
-            <span className="block text-gray-900">in Minutes</span>
+            Make Sense of Your
+            <span className="block text-[#0B5394] font-light">Back Pain.</span>
+            <span className="block text-gray-900">Fast!</span>
           </h1>
 
           {/* Subheadline */}
           <p className="mt-6 text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Get personalized educational guides based on your symptoms. 
-            Developed by medical experts using evidence-based guidelines.
+            Take a free, two-minute educational check to see which back-pain type most closely matches your symptoms.
+            We&apos;ll email your results instantly. No payment or signup required!
           </p>
 
           {/* CTA Section */}
           <div className="mt-10">
             <button onClick={handleStartAssessment} className="inline-flex px-8 py-3 bg-[#0B5394] text-white text-lg font-medium rounded shadow-sm hover:bg-[#084074] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
-              Start Free Assessment
+              Start Free Check
               <ArrowRight className="inline-block ml-2 w-5 h-5" />
             </button>
             
@@ -302,7 +302,7 @@ export default function LandingPage() {
             Get your personalized assessment in just 2 minutes
           </p>
           <button onClick={handleStartAssessment} className="inline-flex px-8 py-3 bg-[#0B5394] text-white text-lg font-medium rounded shadow-sm hover:bg-[#084074] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
-            Start Free Assessment
+            Start Free Check
             <ArrowRight className="inline-block ml-2 w-5 h-5" />
           </button>
         </div>

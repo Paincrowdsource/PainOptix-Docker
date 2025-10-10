@@ -8,7 +8,6 @@ import ProgressBar from './ProgressBar';
 import { FieldGroup, FormLabel, FormRadioGroup, FormRadioItem, FormCheckbox } from './FieldGroup';
 import { ContactCollection } from './ContactCollection';
 import { CheckYourInbox } from './CheckYourInbox';
-import { BasicResultsScreen } from './BasicResultsScreen';
 
 // Algorithm imports
 import { Questions, EducationalGuide } from '@/types/algorithm';
@@ -19,7 +18,7 @@ interface AssessmentWizardProps {
   onComplete?: (guideType: EducationalGuide, sessionId: string) => void;
 }
 
-type WizardStep = 'disclaimer' | 'assessment' | 'results' | 'contact' | 'payment' | 'complete';
+type WizardStep = 'disclaimer' | 'assessment' | 'contact' | 'payment' | 'complete';
 
 export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState<WizardStep>('disclaimer');
@@ -225,24 +224,9 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
         );
       }
     } else {
-      // All questions answered, calculate diagnosis and show results
-      console.log('All questions answered, calculating diagnosis...');
-      const selectedGuide = guideSelector.selectEducationalGuide();
-      const session = guideSelector.getSession();
-
-      setSelectedGuide(selectedGuide);
-      setDisclosures(session.disclosures);
-
-      // Track results screen view
-      await trackProgress(
-        'RESULTS_PREVIEW_VIEW',
-        currentStepNumber + 1,
-        'User viewing results screen',
-        { diagnosis: selectedGuide }
-      );
-
-      console.log('Diagnosis calculated:', selectedGuide);
-      setCurrentStep('results');
+      // All questions answered, move to contact collection
+      console.log('✅ All questions answered, moving to contact form');
+      setCurrentStep('contact');
     }
   };
 
@@ -265,27 +249,13 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
     }
   };
 
-  // Handle results screen continue button
-  const handleResultsContinue = async () => {
-    // Track CTA click
-    await trackProgress(
-      'RESULTS_PREVIEW_CTA_CLICK',
-      responses.size + 2,
-      'User clicked Get Complete Guide CTA',
-      { diagnosis: selectedGuide }
-    );
-
-    // Move to contact collection
-    setCurrentStep('contact');
-  };
-
   // Handle contact submission
   const handleContactSubmit = async (data: any) => {
     setIsSubmitting(true);
 
     try {
-      // selectedGuide and disclosures are already set from results screen
-      // Just get the session for any additional data
+      // Get the selected educational guide
+      const selectedGuide = guideSelector.selectEducationalGuide();
       const session = guideSelector.getSession();
       
       // Store contact info
@@ -315,11 +285,9 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
         throw new Error('No valid responses found. Please complete the assessment.');
       }
 
-      // selectedGuide and disclosures are already set from results screen
-      // Verify we have them
-      if (!selectedGuide) {
-        throw new Error('No diagnosis found. Please restart the assessment.');
-      }
+      // Store selected guide and disclosures
+      setSelectedGuide(selectedGuide);
+      setDisclosures(session.disclosures);
       
       // Submit to API to create assessment record with retry
       const submitData = {
@@ -565,31 +533,12 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
       </div>
     );
   }
-  
-  if (currentStep === 'results') {
-    if (!selectedGuide) {
-      // Safety fallback - should never happen
-      console.error('No diagnosis selected, redirecting to assessment');
-      setCurrentStep('assessment');
-      return null;
-    }
-
-    return (
-      <div className="max-w-2xl mx-auto p-4 md:p-6">
-        <BasicResultsScreen
-          diagnosis={selectedGuide}
-          onContinue={handleResultsContinue}
-        />
-      </div>
-    );
-  }
-
   if (currentStep === 'contact') {
     return (
       <div className="max-w-2xl mx-auto p-4 md:p-6">
         <ContactCollection
           onSubmit={handleContactSubmit}
-          onBack={() => setCurrentStep('results')}
+          onBack={() => setCurrentStep('assessment')}
         />
       </div>
     );
