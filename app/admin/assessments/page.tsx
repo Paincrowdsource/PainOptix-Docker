@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
-import { Search, Download, Eye, Mail, MessageSquare, CheckCircle, XCircle, Trash2 } from 'lucide-react'
+import { Search, Download, Eye, Mail, MessageSquare, CheckCircle, XCircle, Trash2, RefreshCw } from 'lucide-react'
 import { useSearchParams, usePathname, useRouter } from 'next/navigation'
 import DeleteConfirmationModal from '@/components/admin/DeleteConfirmationModal'
 
@@ -54,6 +54,7 @@ export default function AssessmentsPage() {
       // Use API route that has service role access
       // Include credentials to send cookies
       const response = await fetch('/api/admin/assessments', {
+        cache: 'no-store', // Force fresh data, never use cached responses
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -196,13 +197,27 @@ export default function AssessmentsPage() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Assessments</h1>
-        <button
-          onClick={exportToCSV}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Export CSV
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              setLoading(true);
+              loadAssessments();
+            }}
+            disabled={loading}
+            className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
+            title="Refresh data"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <button
+            onClick={exportToCSV}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Search */}

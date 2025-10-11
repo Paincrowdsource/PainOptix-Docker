@@ -41,6 +41,7 @@ export default function CommunicationsPage() {
     try {
       // Use API endpoint to fetch data with service role permissions
       const response = await fetch('/api/admin/communications', {
+        cache: 'no-store', // Force fresh data, never use cached responses
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -129,16 +130,30 @@ export default function CommunicationsPage() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Communications</h1>
-        {activeTab === 'failed' && (
+        <div className="flex gap-3">
           <button
-            onClick={handleRetryFailed}
-            disabled={retrying}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            onClick={() => {
+              setLoading(true);
+              loadData();
+            }}
+            disabled={loading}
+            className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
+            title="Refresh data"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${retrying ? 'animate-spin' : ''}`} />
-            {retrying ? 'Retrying...' : 'Retry Failed Emails'}
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
           </button>
-        )}
+          {activeTab === 'failed' && (
+            <button
+              onClick={handleRetryFailed}
+              disabled={retrying}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${retrying ? 'animate-spin' : ''}`} />
+              {retrying ? 'Retrying...' : 'Retry Failed Emails'}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
