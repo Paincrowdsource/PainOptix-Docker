@@ -88,13 +88,31 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching communication logs:', commError)
     }
 
-    return NextResponse.json({
-      deliveryLogs: deliveryLogs || [],
-      optOuts: optOuts || [],
-      communicationLogs: commLogs || []
-    })
+    // Return with aggressive no-cache headers to prevent stale data
+    return NextResponse.json(
+      {
+        deliveryLogs: deliveryLogs || [],
+        optOuts: optOuts || [],
+        communicationLogs: commLogs || []
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
+    )
   } catch (error) {
     console.error('Communications API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      {
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        }
+      }
+    )
   }
 }
