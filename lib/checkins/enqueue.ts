@@ -49,13 +49,19 @@ export async function enqueueCheckinsForAssessment(
     // Get assessment details
     const { data: assessment, error: assessmentError } = await supabase
       .from('assessments')
-      .select('id, created_at, email, phone_number')
+      .select('id, created_at, email, phone_number, guide_type')
       .eq('id', assessmentId)
       .single();
 
     if (assessmentError || !assessment) {
       console.error('Assessment not found:', assessmentId);
       return { created: 0, skippedReason: 'assessment_not_found' };
+    }
+
+    // Skip check-ins for urgent_symptoms assessments (these users need immediate medical attention)
+    if (assessment.guide_type === 'urgent_symptoms') {
+      console.info(`Skipping check-ins for ${assessmentId}: urgent_symptoms guide type`);
+      return { created: 0, skippedReason: 'urgent_symptoms' };
     }
 
     // Check if user has made any purchases (should suppress check-ins)
