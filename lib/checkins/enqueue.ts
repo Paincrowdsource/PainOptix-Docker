@@ -49,7 +49,7 @@ export async function enqueueCheckinsForAssessment(
     // Get assessment details
     const { data: assessment, error: assessmentError } = await supabase
       .from('assessments')
-      .select('id, created_at, email, phone')
+      .select('id, created_at, email, phone_number')
       .eq('id', assessmentId)
       .single();
 
@@ -71,7 +71,7 @@ export async function enqueueCheckinsForAssessment(
     }
 
     // Determine channel (prefer email over SMS)
-    const channel = assessment.email ? 'email' : assessment.phone ? 'sms' : null;
+    const channel = assessment.email ? 'email' : assessment.phone_number ? 'sms' : null;
 
     if (!channel) {
       console.error('No contact method available for assessment:', assessmentId);
