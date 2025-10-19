@@ -8,11 +8,11 @@
   },
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "node -e \"if (!process.env.NEXT_PUBLIC_SUPABASE_URL) { console.log('Skipping build - no env vars'); process.exit(0); }\" && next build",
+    "build": "sh -c 'if [ -z \"$NEXT_PUBLIC_SUPABASE_URL\" ]; then echo \"[BUILD] Skipping Next.js build - env vars not available (job context)\"; exit 0; fi && next build'",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "prepare": "husky || true",
+    "prepare": "sh -c 'if [ -d \".git\" ]; then husky || true; else echo \"[PREPARE] Skipping husky - not a git repo\"; fi'",
     "scan-secrets": "tsx scripts/scan-secrets.ts",
     "db:push": "supabase db push",
     "db:generate": "supabase gen types typescript --local > types/supabase.ts",
