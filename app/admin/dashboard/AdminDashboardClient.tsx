@@ -41,7 +41,7 @@ export default function AdminDashboardClient() {
         headers: {
           'Content-Type': 'application/json',
           // Add admin password as fallback auth
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+          'x-admin-password': 'PainOptix2025Admin!'
         }
       })
 
