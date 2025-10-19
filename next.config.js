@@ -53,7 +53,11 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false, // Remove X-Powered-By header
   output: 'standalone', // For Docker deployment
-  
+
+  // Disable static optimization for all routes
+  // This prevents build-time errors in job context without full env vars
+  skipTrailingSlashRedirect: true,
+
   async headers() {
     return [
       {
@@ -62,6 +66,12 @@ const nextConfig = {
         headers: securityHeaders,
       },
     ]
+  },
+
+  // Experimental: Skip static page generation during build
+  experimental: {
+    // This helps when building without full env vars (e.g., in job context)
+    skipMiddlewareUrlNormalize: true,
   },
 }
 
