@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 
+// Force dynamic rendering to prevent build-time static generation
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/metrics/value-first
  *

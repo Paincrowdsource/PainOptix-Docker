@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { logger } from '@/lib/logger'
 
+// Force dynamic rendering to prevent build-time static generation
+export const dynamic = 'force-dynamic';
+
 // Twilio webhook handler for SMS STOP requests
 export async function POST(req: NextRequest) {
   try {
