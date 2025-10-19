@@ -1,0 +1,28 @@
+# Minimal Dockerfile for check-ins dispatcher job
+# This doesn't build Next.js - just runs the dispatch script
+
+FROM node:20-slim
+
+WORKDIR /app
+
+# Install only the bare minimum packages needed for the dispatch script
+# tsx is needed to run TypeScript files directly
+RUN npm install -g tsx
+
+# Copy only the dispatch script - no need for the full app
+COPY scripts/dispatch-cron.ts scripts/
+
+# Set production environment
+ENV NODE_ENV=production
+
+# The dispatch script only needs these 3 env vars (provided by DO at runtime):
+# - APP_BASE_URL
+# - CHECKINS_DISPATCH_TOKEN
+# - DRY_RUN
+
+# Health check (simple check that Node.js is running)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=2 \
+    CMD node -e "process.exit(0)"
+
+# Run the dispatch script
+CMD ["tsx", "scripts/dispatch-cron.ts"]
