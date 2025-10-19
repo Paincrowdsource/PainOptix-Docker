@@ -85,6 +85,18 @@ export async function POST(req: NextRequest) {
     // Trigger guide delivery
     await deliverEducationalGuide(assessment.id)
 
+    // Auto-enqueue check-ins if enabled
+    if (process.env.CHECKINS_AUTOWIRE === '1' && process.env.CHECKINS_ENABLED === '1') {
+      try {
+        const { enqueueCheckinsForAssessment } = await import('@/lib/checkins/enqueue');
+        await enqueueCheckinsForAssessment(assessment.id);
+        logger.info('Check-ins auto-enqueued', { assessmentId: assessment.id });
+      } catch (err) {
+        // Don't fail assessment creation if check-in enqueue fails
+        logger.error('Failed to auto-enqueue check-ins', { assessmentId: assessment.id, error: err });
+      }
+    }
+
     return NextResponse.json({
       success: true,
       assessmentId: assessment.id,
