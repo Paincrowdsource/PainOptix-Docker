@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase";
 import { logger } from "@/lib/logger";
+import { isBuildTime, getBuildTimeMockResponse } from "@/lib/build-time";
 import fs from "fs";
 import path from "path";
 
@@ -219,6 +220,12 @@ function getNextVersion(): string {
 }
 
 export async function GET(request: Request) {
+  // Return mock response during build time (when env vars are unavailable)
+  if (isBuildTime()) {
+    console.log('[BUILD] Skipping status check - returning mock response');
+    return NextResponse.json(getBuildTimeMockResponse('Status unavailable at build time'));
+  }
+
   try {
     // Get components status
     const components = await getComponentStatus();

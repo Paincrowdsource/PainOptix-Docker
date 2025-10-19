@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
+import { isBuildTime, getBuildTimeMockResponse } from '@/lib/build-time';
 
 // Force dynamic rendering to prevent build-time static generation
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,12 @@ export const dynamic = 'force-dynamic';
  * - format: 'json' or 'text' (default: 'json')
  */
 export async function GET(request: Request) {
+  // Return mock response during build time (when env vars are unavailable)
+  if (isBuildTime()) {
+    console.log('[BUILD] Skipping value-first metrics - returning mock response');
+    return NextResponse.json(getBuildTimeMockResponse('Metrics unavailable at build time'));
+  }
+
   const supabase = getServiceSupabase();
   const { searchParams } = new URL(request.url);
   const days = Math.min(parseInt(searchParams.get('days') || '14'), 90);
