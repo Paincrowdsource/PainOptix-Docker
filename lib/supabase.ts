@@ -101,7 +101,9 @@ export function getSupabaseAnon(): SupabaseClient {
     const key =
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
     if (!key) {
-      throw new Error('Supabase anon env missing');
+      // Return mock client when env is missing (e.g., during job builds)
+      console.warn('⚠️  Supabase anon env missing - using mock client for build');
+      return createMockSupabaseClient() as SupabaseClient;
     }
     anonClient = createClient(getSupabaseUrl(), key);
   }
@@ -110,7 +112,9 @@ export function getSupabaseAnon(): SupabaseClient {
 
 export function getBrowserSupabase(): SupabaseClient {
   if (typeof window === 'undefined') {
-    throw new Error('getBrowserSupabase is browser-only');
+    // During build, return mock instead of throwing
+    console.warn('⚠️  getBrowserSupabase called during build - using mock client');
+    return createMockSupabaseClient() as SupabaseClient;
   }
   return getSupabaseAnon();
 }
