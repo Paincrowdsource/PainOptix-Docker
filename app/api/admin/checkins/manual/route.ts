@@ -4,6 +4,7 @@ import { resolveDiagnosisCode } from '@/lib/checkins/diagnosis'
 import { renderCheckInEmailHTML } from '@/lib/checkins/preview'
 import { isAdminRequest } from '@/lib/admin/auth'
 
+export const dynamic = 'force-dynamic';
 const VALID_BRANCHES = new Set(['initial', 'better', 'same', 'worse'])
 const VALID_DAYS = new Set([3, 7, 14])
 

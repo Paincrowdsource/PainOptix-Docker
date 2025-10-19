@@ -4,6 +4,8 @@ import { isAdminRequest } from "@/lib/admin/auth";
 import { getServiceSupabase } from "@/lib/supabase";
 import { log } from "@/lib/logger";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   // Check admin auth
   const isAdmin = await isAdminRequest(req);

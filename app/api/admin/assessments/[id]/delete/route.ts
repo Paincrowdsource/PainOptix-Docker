@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireAdminAuth, logAdminAction } from '@/lib/middleware/admin-auth';
 import { logger } from '@/lib/logger';
 
+export const dynamic = 'force-dynamic';
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

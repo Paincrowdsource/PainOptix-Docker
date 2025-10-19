@@ -2,6 +2,7 @@
 import { getServiceSupabase } from '@/lib/supabase'
 import { isAdminRequest } from '@/lib/admin/auth'
 
+export const dynamic = 'force-dynamic';
 export async function PUT(request: NextRequest) {
   if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

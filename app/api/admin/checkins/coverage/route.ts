@@ -5,6 +5,7 @@ import { getServiceSupabase } from "@/lib/supabase";
 import { getValidDiagnosisCodes } from "@/lib/checkins/diagnosis";
 import { log } from "@/lib/logger";
 
+export const dynamic = 'force-dynamic';
 interface MissingInsert {
   diagnosis_code: string;
   day: number;

@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin/auth";
 import { getServiceSupabase } from "@/lib/supabase";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const isAdmin = await isAdminRequest(req);
   if (!isAdmin) {

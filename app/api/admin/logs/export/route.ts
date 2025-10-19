@@ -3,6 +3,7 @@ import { createSupabaseRouteHandlerClient } from '@/lib/supabase-ssr';
 import * as dateFns from 'date-fns';
 import { logger } from '@/lib/logger';
 
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const { supabase } = await createSupabaseRouteHandlerClient(request);

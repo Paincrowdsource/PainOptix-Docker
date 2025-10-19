@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin/auth";
 import { log } from "@/lib/logger";
 
+export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   // Check admin auth
   const isAdmin = await isAdminRequest(req);

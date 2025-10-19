@@ -4,6 +4,7 @@ import { isAdminRequest } from "@/lib/admin/auth";
 import { dispatchDue } from "@/lib/checkins/dispatch";
 import { log } from "@/lib/logger";
 
+export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   // Check admin auth using existing helper
   const isAdmin = await isAdminRequest(req);
