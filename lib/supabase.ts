@@ -3,6 +3,10 @@
 function getSupabaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
   if (!url) {
+    // During build time (e.g., in job context without env vars), return placeholder
+    if (process.env.NODE_ENV === 'production' && !process.env.RUNTIME_PHASE) {
+      return 'https://placeholder.supabase.co';
+    }
     throw new Error('Supabase URL env missing');
   }
   return url;
@@ -13,6 +17,12 @@ export function getSupabaseAdmin(): SupabaseClient {
   if (!adminClient) {
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!key) {
+      // During build time (e.g., in job context without env vars), return a stub client
+      // This allows Next.js to analyze routes without actual database access
+      if (process.env.NODE_ENV === 'production' && !process.env.RUNTIME_PHASE) {
+        console.warn('⚠️  Supabase admin env missing - using stub client for build');
+        return {} as SupabaseClient; // Stub client for build-time analysis
+      }
       throw new Error('Supabase admin env missing');
     }
     adminClient = createClient(getSupabaseUrl(), key, {
