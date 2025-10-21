@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { getBrowserSupabase } from '@/lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
 import { Search, Download, Eye, Mail, MessageSquare, CheckCircle, XCircle, Trash2, RefreshCw } from 'lucide-react'
 import { useSearchParams, usePathname, useRouter } from 'next/navigation'
@@ -22,8 +22,11 @@ interface Assessment {
 }
 
 export default function AssessmentsPage() {
+  const supabase = useMemo(() => getBrowserSupabase(), [])
   const [assessments, setAssessments] = useState<Assessment[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null)
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; assessment: Assessment | null }>({
@@ -47,36 +50,41 @@ export default function AssessmentsPage() {
 
   useEffect(() => {
     loadAssessments()
+    // Auto-refresh every 30 seconds to keep data fresh
+    const interval = setInterval(loadAssessments, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   const loadAssessments = async () => {
     try {
+      setRefreshing(true)
       // Use API route that has service role access
       // Include credentials to send cookies
       const response = await fetch('/api/admin/assessments', {
-        cache: 'no-store', // Force fresh data, never use cached responses
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           // Add admin password as fallback auth
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+          'x-admin-password': 'PainOptix2025Admin!'
         }
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         console.error('API Error:', error);
         throw new Error(error.error || 'Failed to load assessments');
       }
-      
+
       const { assessments } = await response.json();
       setAssessments(assessments || [])
+      setLastUpdated(new Date().toISOString())
     } catch (err) {
       console.error('Error loading assessments:', err)
       // Show error to user
       alert('Failed to load assessments. Please check if you are logged in as admin.');
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -189,7 +197,7 @@ export default function AssessmentsPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !refreshing) {
     return <div className="flex items-center justify-center h-64">Loading assessments...</div>
   }
 
@@ -197,17 +205,13 @@ export default function AssessmentsPage() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Assessments</h1>
-        <div className="flex gap-3">
+        <div className="flex items-center space-x-3">
           <button
-            onClick={() => {
-              setLoading(true);
-              loadAssessments();
-            }}
-            disabled={loading}
+            onClick={loadAssessments}
+            disabled={refreshing}
             className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
-            title="Refresh data"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </button>
           <button
@@ -430,6 +434,13 @@ export default function AssessmentsPage() {
           onConfirm={handleDeleteConfirm}
           assessment={deleteModal.assessment}
         />
+      )}
+
+      {/* Last Updated Timestamp */}
+      {lastUpdated && (
+        <div className="mt-4 text-center text-sm text-gray-500">
+          Last updated: {new Date(lastUpdated).toLocaleString()}
+        </div>
       )}
     </div>
   )
