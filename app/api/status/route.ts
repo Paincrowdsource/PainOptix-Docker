@@ -5,6 +5,9 @@ import { isBuildTime, getBuildTimeMockResponse } from "@/lib/build-time";
 import fs from "fs";
 import path from "path";
 
+// Force dynamic rendering to prevent build-time static generation
+export const dynamic = 'force-dynamic';
+
 interface SystemStatus {
   timestamp: string;
   status: "operational" | "degraded" | "outage";
