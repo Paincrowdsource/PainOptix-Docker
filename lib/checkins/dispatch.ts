@@ -235,7 +235,7 @@ export async function dispatchDue(
         } else {
           // Actually send the email
           try {
-            await sendEmail({
+            const emailResult = await sendEmail({
               to: assessment.email,
               subject: template.subject || `Quick check-in (Day ${message.day})`,
               html
@@ -247,6 +247,7 @@ export async function dispatchDue(
               templateKey: `checkin_day${message.day}`,
               status: 'sent',
               channel: 'email',
+              providerId: emailResult.id,
               recipient: assessment.email,
               subject: template.subject || `Quick check-in (Day ${message.day})`,
               message: html.substring(0, 500)

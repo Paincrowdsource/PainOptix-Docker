@@ -77,14 +77,15 @@ export async function POST(req: Request) {
     }
     
     // Send the email
-    await sendEmail(email, subject, html);
-    
+    const emailResult = await sendEmail(email, subject, html);
+
     // Log to communication_logs for Admin dashboard
     await logCommunication({
       assessmentId,
       templateKey: emailType,
       status: 'sent',
       channel: 'email',
+      providerId: emailResult.messageId,
       recipient: email,
       subject,
       message: html.substring(0, 500)

@@ -108,17 +108,23 @@ export async function deliverEducationalGuide(assessmentId: string) {
         console.error(errorMessage)
       } else {
         // Try sending with retries
+        let messageId: string | undefined
         while (deliveryAttempts < maxRetries && !deliverySuccess) {
           deliveryAttempts++
-          
+
           try {
-            deliverySuccess = await sendEmail({
+            const result = await sendEmail({
               to: assessment.email,
               subject: emailTemplate.subject,
               html: emailTemplate.html,
               text: emailTemplate.text
             })
-            
+
+            deliverySuccess = result.success
+            if (result.messageId) {
+              messageId = result.messageId
+            }
+
             if (!deliverySuccess && deliveryAttempts < maxRetries) {
               // Wait before retry (exponential backoff)
               await new Promise(resolve => setTimeout(resolve, 1000 * deliveryAttempts))
@@ -128,24 +134,25 @@ export async function deliverEducationalGuide(assessmentId: string) {
             console.error(`Email attempt ${deliveryAttempts} failed:`, errorMessage)
           }
         }
-        
+
         // Log the communication if successful
         if (deliverySuccess) {
           await logCommunication({
             assessmentId: assessment.id,
-            templateKey: tier === 'monograph' ? 'monograph_confirmation' : 
-                        tier === 'enhanced' ? 'enhanced_confirmation' : 
+            templateKey: tier === 'monograph' ? 'monograph_confirmation' :
+                        tier === 'enhanced' ? 'enhanced_confirmation' :
                         'free_tier_welcome',
             status: 'sent',
             channel: 'email',
+            providerId: messageId,
             recipient: assessment.email,
             subject: emailTemplate.subject,
             message: emailTemplate.html.substring(0, 500)
           })
-          
-          await logEvent('email_sent_initial_assessment', { 
-            assessmentId: assessment.id, 
-            tier 
+
+          await logEvent('email_sent_initial_assessment', {
+            assessmentId: assessment.id,
+            tier
           })
         }
       }
@@ -239,30 +246,33 @@ export async function deliverEducationalGuide(assessmentId: string) {
             }
           }
           
-          deliverySuccess = await sendEmail({
+          const result = await sendEmail({
             to: assessment.email,
             subject: emailTemplate.subject,
             html: emailTemplate.html,
             text: emailTemplate.text
           })
-          
+
+          deliverySuccess = result.success
+
           // Log the SMS fallback email if successful
           if (deliverySuccess) {
             await logCommunication({
               assessmentId: assessment.id,
-              templateKey: tier === 'monograph' ? 'monograph_confirmation' : 
-                          tier === 'enhanced' ? 'enhanced_confirmation' : 
+              templateKey: tier === 'monograph' ? 'monograph_confirmation' :
+                          tier === 'enhanced' ? 'enhanced_confirmation' :
                           'free_tier_welcome',
               status: 'sent',
               channel: 'email',
+              providerId: result.messageId,
               recipient: assessment.email,
               subject: emailTemplate.subject,
               message: emailTemplate.html.substring(0, 500)
             })
-            
-            await logEvent('email_sent_sms_fallback', { 
-              assessmentId: assessment.id, 
-              tier 
+
+            await logEvent('email_sent_sms_fallback', {
+              assessmentId: assessment.id,
+              tier
             })
           }
         }

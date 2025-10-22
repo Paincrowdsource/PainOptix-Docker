@@ -47,13 +47,13 @@ interface SendSMSParams {
   skipOptOutCheck?: boolean // For system messages like opt-out confirmations
 }
 
-export async function sendEmail(params: SendEmailParams): Promise<boolean> {
+export async function sendEmail(params: SendEmailParams): Promise<{ success: boolean; messageId?: string }> {
   try {
     if (!process.env.SENDGRID_API_KEY) {
       logger.warn('SendGrid not configured, skipping email:', params.to)
       throw new Error('SendGrid API key not configured')
     }
-    
+
     initSendGrid()
 
     // Validate email format
@@ -73,17 +73,21 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
       html: params.html,
     }
 
-    await sgMail.send(msg)
-    logger.info('Email sent successfully', { to: params.to })
-    return true
+    const [response] = await sgMail.send(msg)
+
+    // Extract message ID from SendGrid response headers
+    const messageId = response.headers?.['x-message-id'] as string | undefined
+
+    logger.info('Email sent successfully', { to: params.to, messageId })
+    return { success: true, messageId }
   } catch (error: any) {
-    logger.error('Email send error', { 
+    logger.error('Email send error', {
       to: params.to,
       error: error.message,
       code: error.code,
       response: error.response?.body
     })
-    
+
     // Throw error with detailed message for better error tracking
     if (error.response?.body?.errors?.[0]) {
       const sgError = error.response.body.errors[0]

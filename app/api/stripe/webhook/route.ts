@@ -135,25 +135,26 @@ export async function POST(req: NextRequest) {
         if (!isConsultation && (productPriceId === process.env.STRIPE_PRICE_ENHANCED || tierPrice === '5')) {
           // Enhanced ($5) purchase
           if (email) {
-            await sendEmail(
+            const emailResult = await sendEmail(
               email,
               'Your Enhanced Educational Report is Ready',
               getEnhancedConfirmationTemplate({ assessmentResults, userTier: 'enhanced' })
             )
-            
+
             // Log to communication_logs
             await logCommunication({
               assessmentId,
               templateKey: 'enhanced_confirmation',
               status: 'sent',
               channel: 'email',
+              providerId: emailResult.messageId,
               recipient: email,
               subject: 'Your Enhanced Educational Report is Ready'
             })
-            
-            await logEvent('email_sent_stripe_confirmation', { 
-              assessmentId, 
-              tier: 'enhanced' 
+
+            await logEvent('email_sent_stripe_confirmation', {
+              assessmentId,
+              tier: 'enhanced'
             })
           }
 
@@ -187,25 +188,26 @@ export async function POST(req: NextRequest) {
         if (!isConsultation && (productPriceId === process.env.STRIPE_PRICE_MONOGRAPH || tierPrice === '20')) {
           // Monograph ($20) purchase
           if (email) {
-            await sendEmail(
+            const emailResult = await sendEmail(
               email,
               'Your Complete Educational Monograph is Ready',
               getMonographConfirmationTemplate({ assessmentResults, userTier: 'monograph' })
             )
-            
+
             // Log to communication_logs
             await logCommunication({
               assessmentId,
               templateKey: 'monograph_confirmation',
               status: 'sent',
               channel: 'email',
+              providerId: emailResult.messageId,
               recipient: email,
               subject: 'Your Complete Educational Monograph is Ready'
             })
-            
-            await logEvent('email_sent_stripe_confirmation', { 
-              assessmentId, 
-              tier: 'monograph' 
+
+            await logEvent('email_sent_stripe_confirmation', {
+              assessmentId,
+              tier: 'monograph'
             })
           }
 
