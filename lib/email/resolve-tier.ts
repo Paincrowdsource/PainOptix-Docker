@@ -59,37 +59,28 @@ export async function resolveTierAndFlags(
     }
   }
 
-  // Check purchases table for highest tier (overrides payment_tier)
+  // Check payment_logs table for highest tier (overrides payment_tier)
   try {
-    const { data: purchases } = await supabase
-      .from('purchases')
-      .select('price_id, product_id')
-      .eq('assessment_id', assessmentId);
-    
-    if (purchases && purchases.length > 0) {
-      const priceIds = purchases.map(p => p.price_id || p.product_id);
-      
-      // Check for monograph first (highest tier)
-      if (priceIds.includes(process.env.STRIPE_PRICE_MONOGRAPH!)) {
+    const { data: payments } = await supabase
+      .from('payment_logs')
+      .select('tier')
+      .eq('assessment_id', assessmentId)
+      .eq('status', 'succeeded')
+      .order('created_at', { ascending: false });
+
+    if (payments && payments.length > 0) {
+      // Get the most recent successful payment tier
+      const paymentTier = payments[0].tier;
+
+      // Payment tier overrides assessment tier (monograph > enhanced > free)
+      if (paymentTier === 'monograph') {
         tier = 'monograph';
-      } else if (priceIds.includes(process.env.STRIPE_PRICE_ENHANCED!)) {
+      } else if (paymentTier === 'enhanced') {
         tier = 'enhanced';
-      }
-      
-      // Also check legacy price IDs if different
-      if (process.env.STRIPE_PRICE_MONOGRAPH_LEGACY) {
-        if (priceIds.includes(process.env.STRIPE_PRICE_MONOGRAPH_LEGACY)) {
-          tier = 'monograph';
-        }
-      }
-      if (process.env.STRIPE_PRICE_ENHANCED_LEGACY) {
-        if (priceIds.includes(process.env.STRIPE_PRICE_ENHANCED_LEGACY)) {
-          tier = 'enhanced';
-        }
       }
     }
   } catch (err) {
-    // Continue with tier from payment_tier if purchases fails
+    // Continue with tier from payment_tier if payment_logs query fails
   }
 
   return { tier, redFlag };

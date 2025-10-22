@@ -66,9 +66,10 @@ export async function enqueueCheckinsForAssessment(
 
     // Check if user has made any purchases (should suppress check-ins)
     const { data: purchases, error: purchasesError } = await supabase
-      .from('purchases')
+      .from('payment_logs')
       .select('id')
       .eq('assessment_id', assessmentId)
+      .eq('status', 'succeeded')
       .limit(1);
 
     if (!purchasesError && purchases && purchases.length > 0) {
