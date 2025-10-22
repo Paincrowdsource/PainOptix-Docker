@@ -129,7 +129,7 @@ export function getFreeTierWelcomeTemplate(ctx: { assessmentResults: any; userTi
                 </div>
 
                 <div style="text-align: center; margin-top: 20px;">
-                  <a href="${appUrl}/upgrade?assessment=${assessmentResults?.assessmentId}"
+                  <a href="${appUrl}/guide/${assessmentResults?.assessmentId}/upgrade"
                      style="display: inline-block; padding: 12px 28px; background: #0B5394; color: #FFFFFF; text-decoration: none; border-radius: 999px; font-weight: 600; font-size: 15px; letter-spacing: 0.02em;">
                     View Upgrade Options
                   </a>
