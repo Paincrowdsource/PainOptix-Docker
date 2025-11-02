@@ -26,6 +26,7 @@ export default function AdminDashboardClient() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [unauthorized, setUnauthorized] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'dropoffs'>('overview')
 
   useEffect(() => {
@@ -35,23 +36,44 @@ export default function AdminDashboardClient() {
   const loadDashboardData = async () => {
     try {
       setError(null) // Clear previous errors
-      // Use API endpoint to fetch data with service role permissions
+      setUnauthorized(false) // Clear unauthorized state
+
+      // Use redirect: 'manual' to prevent browser-level redirects
       const response = await fetch('/api/admin/dashboard', {
-        credentials: 'include',
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          // Add admin password as fallback auth
-          'x-admin-password': 'PainOptix2025Admin!'
-        }
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        cache: 'no-store',
+        redirect: 'manual'
       })
+
+      const contentType = response.headers.get('content-type') || ''
+
+      // Debug log for troubleshooting
+      console.debug('[AdminDashboard fetch]', {
+        status: response.status,
+        type: response.type,
+        contentType
+      })
+
+      // Check for unauthorized conditions
+      if (
+        response.type === 'opaqueredirect' ||
+        (response.status >= 300 && response.status < 400) ||
+        response.status === 401 ||
+        response.status === 403 ||
+        !contentType.includes('application/json')
+      ) {
+        setUnauthorized(true)
+        return
+      }
 
       if (!response.ok) {
         const errorData = await response.json()
         console.error('Dashboard API Error:', errorData)
-        const errorMessage = response.status === 401
-          ? 'Admin session invalid - please contact support or check your credentials'
-          : errorData.error || 'Failed to fetch dashboard data';
-        throw new Error(errorMessage)
+        throw new Error(errorData.error || 'Failed to fetch dashboard data')
       }
 
       const data = await response.json()
@@ -71,7 +93,6 @@ export default function AdminDashboardClient() {
         },
         recentAssessments: data.recentAssessments || []
       })
-      setError(null) // Clear error on success
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -81,6 +102,25 @@ export default function AdminDashboardClient() {
 
   if (loading) {
     return <div className="flex items-center justify-center h-64">Loading dashboard...</div>
+  }
+
+  if (unauthorized) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="bg-amber-50 border border-amber-300 rounded-lg p-6 max-w-md">
+          <div className="flex-1">
+            <h3 className="text-sm font-medium text-amber-900">Unauthorized</h3>
+            <p className="text-sm text-amber-800 mt-1 opacity-80">
+              Your session might have expired. Please{' '}
+              <a href="/admin/login" className="underline hover:text-amber-900">
+                sign in
+              </a>{' '}
+              again.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (error) {
