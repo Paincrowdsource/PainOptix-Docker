@@ -117,11 +117,48 @@ export async function logAdminAction(
 }
 
 /**
+ * Timing-safe string comparison to prevent timing attacks
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false
+  }
+
+  let result = 0
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+
+  return result === 0
+}
+
+/**
  * Middleware function to protect admin routes
  */
 export async function adminMiddleware(req: NextRequest) {
+  // First check for password header authentication (simpler, faster)
+  const passwordHeader = req.headers.get('x-admin-password');
+
+  if (passwordHeader) {
+    const currentPassword = process.env.ADMIN_PASSWORD;
+    const legacyPassword = process.env.ADMIN_PASSWORD_LEGACY;
+
+    // Accept current password
+    if (currentPassword && timingSafeEqual(passwordHeader, currentPassword)) {
+      // Allow the request to proceed (no audit log for password-based auth)
+      return null;
+    }
+
+    // Accept legacy password (temporary - remove after client migration)
+    if (legacyPassword && timingSafeEqual(passwordHeader, legacyPassword)) {
+      // Allow the request to proceed (no audit log for password-based auth)
+      return null;
+    }
+  }
+
+  // Fall back to session-based authentication
   const admin = await verifyAdmin(req);
-  
+
   if (!admin) {
     // Log unauthorized access attempt
     logger.warn('Unauthorized admin access attempt', {

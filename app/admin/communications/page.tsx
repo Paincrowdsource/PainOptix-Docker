@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState, useEffect, useMemo } from 'react'
+import { getBrowserSupabase } from '@/lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
 import { Mail, MessageSquare, CheckCircle, XCircle, RefreshCw, AlertCircle } from 'lucide-react'
 
@@ -27,9 +27,11 @@ interface OptOut {
 }
 
 export default function CommunicationsPage() {
+  const supabase = useMemo(() => getBrowserSupabase(), [])
   const [deliveryLogs, setDeliveryLogs] = useState<DeliveryLog[]>([])
   const [optOuts, setOptOuts] = useState<OptOut[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [retrying, setRetrying] = useState(false)
   const [activeTab, setActiveTab] = useState<'all' | 'failed' | 'optouts'>('all')
 
@@ -39,34 +41,40 @@ export default function CommunicationsPage() {
 
   const loadData = async () => {
     try {
+      setError(null) // Clear previous errors
       // Use API endpoint to fetch data with service role permissions
       const response = await fetch('/api/admin/communications', {
-        cache: 'no-store', // Force fresh data, never use cached responses
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           // Add admin password as fallback auth
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+          'x-admin-password': 'PainOptix2025Admin!'
         }
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        console.error('API Error:', error)
-        throw new Error(error.error || 'Failed to fetch communications data')
+        const errorData = await response.json()
+        console.error('API Error:', errorData)
+        const errorMessage = response.status === 401
+          ? 'Admin session invalid - please contact support or check your credentials'
+          : errorData.error || 'Failed to fetch communications data';
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
-      
+
       setDeliveryLogs(data.deliveryLogs || [])
       setOptOuts(data.optOuts || [])
-      
+      setError(null) // Clear error on success
+
       // Log communication logs for debugging
       if (data.communicationLogs && data.communicationLogs.length > 0) {
         console.log(`Found ${data.communicationLogs.length} communication logs (SendGrid/Twilio)`)
       }
     } catch (err) {
       console.error('Error loading communications data:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load communications data';
+      setError(errorMessage);
     } finally {
       setLoading(false)
     }
@@ -130,31 +138,42 @@ export default function CommunicationsPage() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Communications</h1>
-        <div className="flex gap-3">
+        {activeTab === 'failed' && (
           <button
-            onClick={() => {
-              setLoading(true);
-              loadData();
-            }}
-            disabled={loading}
-            className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
-            title="Refresh data"
+            onClick={handleRetryFailed}
+            disabled={retrying}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            <RefreshCw className={`h-4 w-4 mr-2 ${retrying ? 'animate-spin' : ''}`} />
+            {retrying ? 'Retrying...' : 'Retry Failed Emails'}
           </button>
-          {activeTab === 'failed' && (
-            <button
-              onClick={handleRetryFailed}
-              disabled={retrying}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${retrying ? 'animate-spin' : ''}`} />
-              {retrying ? 'Retrying...' : 'Retry Failed Emails'}
-            </button>
-          )}
-        </div>
+        )}
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <XCircle className="h-5 w-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-red-800">Error Loading Communications</h3>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+              <button
+                onClick={loadData}
+                className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+              >
+                Try again
+              </button>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-400 hover:text-red-600 ml-3"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex space-x-1 mb-6 border-b">

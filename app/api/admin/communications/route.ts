@@ -1,49 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
-import { createSupabaseRouteHandlerClient } from '@/lib/supabase-ssr'
+import { verifyAdminAuth } from '@/lib/auth/admin'
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    // Method 1: Try Supabase Auth first
-    const { supabase } = await createSupabaseRouteHandlerClient(request)
+    // Verify admin authentication (supports session or password header)
+    const { isAuthenticated, isAdmin, error } = await verifyAdminAuth(request)
 
-    // Check if user is authenticated
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    let isAuthenticated = false
-    let isAdmin = false
-    
-    if (session?.user) {
-      // Check if user has admin role
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_role')
-        .eq('id', session.user.id)
-        .single()
-      
-      if (profile?.user_role === 'admin') {
-        isAuthenticated = true
-        isAdmin = true
-      }
-    }
-    
-    // Method 2: Fallback to simple password check if Supabase auth fails
-    if (!isAuthenticated) {
-      // Check for admin password in header as fallback
-      const authHeader = request.headers.get('x-admin-password')
-      const adminPassword = process.env.ADMIN_PASSWORD
-      
-      if (authHeader && adminPassword && authHeader === adminPassword) {
-        isAuthenticated = true
-        isAdmin = true
-      }
-    }
-    
-    // If still not authenticated, return 401
     if (!isAuthenticated || !isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: error || 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
     const supabaseService = getServiceSupabase()

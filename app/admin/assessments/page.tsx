@@ -27,6 +27,7 @@ export default function AssessmentsPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null)
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; assessment: Assessment | null }>({
@@ -58,6 +59,7 @@ export default function AssessmentsPage() {
   const loadAssessments = async () => {
     try {
       setRefreshing(true)
+      setError(null) // Clear previous errors
       // Use API route that has service role access
       // Include credentials to send cookies
       const response = await fetch('/api/admin/assessments', {
@@ -70,18 +72,22 @@ export default function AssessmentsPage() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        console.error('API Error:', error);
-        throw new Error(error.error || 'Failed to load assessments');
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        const errorMessage = response.status === 401
+          ? 'Admin session invalid - please contact support or check your credentials'
+          : errorData.error || 'Failed to load assessments';
+        throw new Error(errorMessage);
       }
 
       const { assessments } = await response.json();
       setAssessments(assessments || [])
       setLastUpdated(new Date().toISOString())
+      setError(null) // Clear error on success
     } catch (err) {
       console.error('Error loading assessments:', err)
-      // Show error to user
-      alert('Failed to load assessments. Please check if you are logged in as admin.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load assessments';
+      setError(errorMessage);
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -223,6 +229,31 @@ export default function AssessmentsPage() {
           </button>
         </div>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <XCircle className="h-5 w-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-red-800">Error Loading Assessments</h3>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+              <button
+                onClick={loadAssessments}
+                className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+              >
+                Try again
+              </button>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-400 hover:text-red-600 ml-3"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <div className="mb-6">

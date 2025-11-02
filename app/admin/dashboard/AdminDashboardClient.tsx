@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDistanceToNow } from 'date-fns'
 import { DollarSign, Users, Mail, MessageSquare, TrendingUp, AlertCircle } from 'lucide-react'
@@ -35,24 +34,28 @@ export default function AdminDashboardClient() {
 
   const loadDashboardData = async () => {
     try {
+      setError(null) // Clear previous errors
       // Use API endpoint to fetch data with service role permissions
       const response = await fetch('/api/admin/dashboard', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           // Add admin password as fallback auth
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+          'x-admin-password': 'PainOptix2025Admin!'
         }
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        console.error('Dashboard API Error:', error)
-        throw new Error(error.error || 'Failed to fetch dashboard data')
+        const errorData = await response.json()
+        console.error('Dashboard API Error:', errorData)
+        const errorMessage = response.status === 401
+          ? 'Admin session invalid - please contact support or check your credentials'
+          : errorData.error || 'Failed to fetch dashboard data';
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
-      
+
       setStats({
         totalAssessments: data.totalAssessments || 0,
         revenueByTier: data.revenueByTier || {
@@ -68,6 +71,7 @@ export default function AdminDashboardClient() {
         },
         recentAssessments: data.recentAssessments || []
       })
+      setError(null) // Clear error on success
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -82,9 +86,20 @@ export default function AdminDashboardClient() {
   if (error) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-red-600 flex items-center gap-2">
-          <AlertCircle className="h-5 w-5" />
-          Error loading dashboard: {error}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+          <div className="flex items-start">
+            <AlertCircle className="h-5 w-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-red-800">Error Loading Dashboard</h3>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+              <button
+                onClick={loadDashboardData}
+                className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+              >
+                Try again
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     )
