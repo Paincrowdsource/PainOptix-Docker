@@ -54,17 +54,23 @@ export async function verifyAdminAuth(request: NextRequest): Promise<{
     const currentPassword = process.env.ADMIN_PASSWORD
     const legacyPassword = process.env.ADMIN_PASSWORD_LEGACY
 
+    // DEBUG: Log env var presence (not values!)
+    console.log('[AUTH DEBUG] Has currentPassword:', !!currentPassword, 'Has legacyPassword:', !!legacyPassword, 'Header length:', passwordHeader.length)
+
     // Accept current password
     if (currentPassword && timingSafeEqual(passwordHeader, currentPassword)) {
+      console.log('[AUTH DEBUG] Current password matched')
       return { isAuthenticated: true, isAdmin: true }
     }
 
     // Accept legacy password (temporary - remove after client migration)
     if (legacyPassword && timingSafeEqual(passwordHeader, legacyPassword)) {
+      console.log('[AUTH DEBUG] Legacy password matched')
       return { isAuthenticated: true, isAdmin: true }
     }
 
     // Password provided but invalid
+    console.log('[AUTH DEBUG] Password mismatch')
     return {
       isAuthenticated: false,
       isAdmin: false,
