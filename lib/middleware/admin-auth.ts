@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { logger } from '@/lib/logger';
-import { randomUUID } from 'crypto';
+
+// Use Web Crypto API (available in Edge runtime) instead of Node.js crypto
+const randomUUID = () => crypto.randomUUID();
 
 export interface AdminUser {
   id: string;

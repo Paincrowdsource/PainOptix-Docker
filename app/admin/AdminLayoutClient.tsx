@@ -14,42 +14,9 @@ interface AdminLayoutClientProps {
 
 export default function AdminLayoutClient({ children, user }: AdminLayoutClientProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createSupabaseBrowserClient();
-
-  const checkAuthAndRedirect = useCallback(async () => {
-    // Skip checks for login page
-    if (pathname === '/admin/login') {
-      setIsLoading(false);
-      return;
-    }
-
-    // Check if user is authenticated
-    if (!user) {
-      router.push('/admin/login');
-      return;
-    }
-
-    // Check admin role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('user_role')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile || profile.user_role !== 'admin') {
-      router.push('/admin/login');
-      return;
-    }
-
-    setIsLoading(false);
-  }, [pathname, user, router, supabase]);
-
-  useEffect(() => {
-    checkAuthAndRedirect();
-  }, [checkAuthAndRedirect]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -66,15 +33,6 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
     { href: '/admin/logs', label: 'Logs & Monitoring', icon: ScrollText },
     { href: '/admin/analytics', label: 'Analytics', icon: Activity },
   ];
-
-  // Show loading state
-  if (isLoading && pathname !== '/admin/login') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    );
-  }
 
   // Login page - no navigation
   if (pathname === '/admin/login') {

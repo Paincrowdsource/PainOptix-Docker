@@ -23,11 +23,12 @@ export default function AdminLoginPage() {
       // Call server action - it will redirect on success
       const result = await loginAdminAction(email, password);
 
-      // If we reach here, login failed (success would redirect)
-      if (!result.success) {
+      // If we reach here and have a result, login failed (success redirects and never returns)
+      if (result && !result.success) {
         setError(result.error || 'An error occurred. Please try again.');
         setLoading(false);
       }
+      // If result is undefined, the redirect happened successfully - do nothing
     } catch (err) {
       // If it's a redirect, let it happen (this is expected on success)
       if (err && typeof err === 'object' && 'digest' in err) {
