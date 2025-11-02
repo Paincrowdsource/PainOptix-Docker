@@ -34,11 +34,11 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: `
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.stripe.com;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' https://fonts.gstatic.com;
-      img-src 'self' data: https: blob:;
-      connect-src 'self' https://*.supabase.co https://api.stripe.com https://checkout.stripe.com;
+      img-src 'self' data: https: blob: https://www.google-analytics.com;
+      connect-src 'self' https://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://*.analytics.google.com;
       frame-src 'self' https://js.stripe.com https://checkout.stripe.com;
       object-src 'none';
       base-uri 'self';
@@ -53,11 +53,7 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false, // Remove X-Powered-By header
   output: 'standalone', // For Docker deployment
-
-  // Disable static optimization for all routes
-  // This prevents build-time errors in job context without full env vars
-  skipTrailingSlashRedirect: true,
-
+  
   async headers() {
     return [
       {
@@ -66,12 +62,6 @@ const nextConfig = {
         headers: securityHeaders,
       },
     ]
-  },
-
-  // Experimental: Skip static page generation during build
-  experimental: {
-    // This helps when building without full env vars (e.g., in job context)
-    skipMiddlewareUrlNormalize: true,
   },
 }
 

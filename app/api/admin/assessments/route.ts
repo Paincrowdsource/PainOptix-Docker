@@ -8,19 +8,19 @@ export const revalidate = 0;
 export async function GET(request: NextRequest) {
   try {
     // Verify admin authentication (supports session or password header)
-    const { isAuthenticated, isAdmin, error: authError } = await verifyAdminAuth(request);
+    const { isAuthenticated, isAdmin, error } = await verifyAdminAuth(request);
 
     if (!isAuthenticated || !isAdmin) {
       return NextResponse.json(
-        { error: authError || 'Unauthorized' },
+        { error: error || 'Unauthorized' },
         { status: 401 }
       );
     }
 
     // Use service role client to bypass RLS
     const supabaseService = getServiceSupabase();
-    
-    const { data, error } = await supabaseService
+
+    const { data, error: dbError } = await supabaseService
       .from('assessments')
       .select(`
         *,
@@ -28,9 +28,9 @@ export async function GET(request: NextRequest) {
       `)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching assessments:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) {
+      console.error('Error fetching assessments:', dbError);
+      return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
     // Return with aggressive no-cache headers to prevent stale data
