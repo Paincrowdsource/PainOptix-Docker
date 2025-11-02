@@ -8,11 +8,11 @@ export const revalidate = 0;
 export async function GET(request: NextRequest) {
   try {
     // Verify admin authentication (supports session or password header)
-    const { isAuthenticated, isAdmin, error } = await verifyAdminAuth(request);
+    const { isAuthenticated, isAdmin, error: authError } = await verifyAdminAuth(request);
 
     if (!isAuthenticated || !isAdmin) {
       return NextResponse.json(
-        { error: error || 'Unauthorized' },
+        { error: authError || 'Unauthorized' },
         { status: 401 }
       );
     }
