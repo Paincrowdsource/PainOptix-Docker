@@ -168,11 +168,5 @@ export async function requireAdminAuth(): Promise<boolean> {
 
   // Fall back to Supabase admin check
   const isSupabaseAdmin = await verifySupabaseAdmin()
-  if (isSupabaseAdmin) {
-    // Set cookie for future requests
-    await setAdminSession()
-    return true
-  }
-
-  return false
+  return isSupabaseAdmin
 }
