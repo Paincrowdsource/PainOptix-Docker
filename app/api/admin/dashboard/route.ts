@@ -150,9 +150,11 @@ export async function GET(request: NextRequest) {
       },
       {
         headers: {
+          'Content-Type': 'application/json',
           'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
           'Pragma': 'no-cache',
-          'Expires': '0'
+          'Expires': '0',
+          'X-Build-Stamp': process.env.NEXT_PUBLIC_BUILD_STAMP || 'n/a'
         }
       }
     )
