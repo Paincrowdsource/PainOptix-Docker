@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase-ssr';
+import { setAdminSession } from '@/lib/auth/server-admin';
 import { randomUUID } from 'crypto';
 
 export interface LoginResult {
@@ -70,6 +71,9 @@ export async function loginAdminAction(email: string, password: string): Promise
       rid: requestId,
       userId: data.user.id,
     }));
+
+    // Set admin session cookie for faster auth checks
+    await setAdminSession();
 
     // Revalidate admin routes to ensure fresh data
     revalidatePath('/admin');
