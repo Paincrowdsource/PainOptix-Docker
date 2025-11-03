@@ -4,6 +4,10 @@ import { requireAdminAuth } from '@/lib/auth/server-admin'
 import { getServiceSupabase } from '@/lib/supabase'
 import DashboardClient from './DashboardClient'
 
+// Disable all caching for admin dashboard
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
+
 /**
  * Admin Dashboard - Server Component
  *
