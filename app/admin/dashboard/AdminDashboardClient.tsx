@@ -26,54 +26,38 @@ export default function AdminDashboardClient() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [unauthorized, setUnauthorized] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'dropoffs'>('overview')
 
   useEffect(() => {
+    // Log build stamp to confirm new bundle is loaded
+    console.info('AdminDashboardClient build', process.env.NEXT_PUBLIC_BUILD_STAMP)
     loadDashboardData()
   }, [])
 
   const loadDashboardData = async () => {
     try {
       setError(null) // Clear previous errors
-      setUnauthorized(false) // Clear unauthorized state
 
-      // Use redirect: 'manual' to prevent browser-level redirects
+      // Simplified fetch - trust SSR auth guard
       const response = await fetch('/api/admin/dashboard', {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json'
-        },
         credentials: 'include',
         cache: 'no-store',
-        redirect: 'manual'
+        headers: {
+          'Accept': 'application/json'
+        }
       })
-
-      const contentType = response.headers.get('content-type') || ''
-
-      // Debug log for troubleshooting
-      console.debug('[AdminDashboard fetch]', {
-        status: response.status,
-        type: response.type,
-        contentType
-      })
-
-      // Check for unauthorized conditions
-      if (
-        response.type === 'opaqueredirect' ||
-        (response.status >= 300 && response.status < 400) ||
-        response.status === 401 ||
-        response.status === 403 ||
-        !contentType.includes('application/json')
-      ) {
-        setUnauthorized(true)
-        return
-      }
 
       if (!response.ok) {
-        const errorData = await response.json()
-        console.error('Dashboard API Error:', errorData)
-        throw new Error(errorData.error || 'Failed to fetch dashboard data')
+        let msg = `Request failed: ${response.status}`
+        try {
+          const errorData = await response.json()
+          if (errorData?.error) msg = errorData.error
+        } catch {
+          // If JSON parsing fails, use the generic message
+        }
+        setError(msg)
+        setLoading(false)
+        return
       }
 
       const data = await response.json()
@@ -102,25 +86,6 @@ export default function AdminDashboardClient() {
 
   if (loading) {
     return <div className="flex items-center justify-center h-64">Loading dashboard...</div>
-  }
-
-  if (unauthorized) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="bg-amber-50 border border-amber-300 rounded-lg p-6 max-w-md">
-          <div className="flex-1">
-            <h3 className="text-sm font-medium text-amber-900">Unauthorized</h3>
-            <p className="text-sm text-amber-800 mt-1 opacity-80">
-              Your session might have expired. Please{' '}
-              <a href="/admin/login" className="underline hover:text-amber-900">
-                sign in
-              </a>{' '}
-              again.
-            </p>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   if (error) {

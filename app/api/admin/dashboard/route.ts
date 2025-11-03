@@ -13,7 +13,13 @@ export async function GET(request: NextRequest) {
     if (!isAuthenticated || !isAdmin) {
       return NextResponse.json(
         { error: error || 'Unauthorized' },
-        { status: 401 }
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store, no-cache, must-revalidate'
+          }
+        }
       )
     }
 
@@ -152,6 +158,15 @@ export async function GET(request: NextRequest) {
     )
   } catch (error) {
     console.error('Dashboard API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, no-cache, must-revalidate'
+        }
+      }
+    )
   }
 }
