@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { loginAdminAction } from './actions';
+import { useRouter } from 'next/navigation';
+import { createSupabaseBrowserClient } from '@/lib/supabase-client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,8 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const supabase = createSupabaseBrowserClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,22 +23,40 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      // Call server action - it will redirect on success
-      const result = await loginAdminAction(email, password);
+      // Sign in with Supabase
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email || 'drbcarpentier@gmail.com', // Default to admin email if not provided
+        password: password
+      });
 
-      // If we reach here and have a result, login failed (success redirects and never returns)
-      if (result && !result.success) {
-        setError(result.error || 'An error occurred. Please try again.');
+      if (signInError) {
+        setError('Invalid credentials. Please check your email and password.');
         setLoading(false);
-      }
-      // If result is undefined, the redirect happened successfully - do nothing
-    } catch (err) {
-      // If it's a redirect, let it happen (this is expected on success)
-      if (err && typeof err === 'object' && 'digest' in err) {
-        // This is a Next.js redirect, which is expected - don't show error
         return;
       }
 
+      // Check if user has admin role
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_role')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError || profile?.user_role !== 'admin') {
+        // Sign out non-admin user
+        await supabase.auth.signOut();
+        setError('Access denied. Admin privileges required.');
+        setLoading(false);
+        return;
+      }
+
+      // The user is authenticated and has admin role
+      // Supabase auth cookies are already set by signInWithPassword
+      // Just redirect to dashboard
+      router.push('/admin/dashboard');
+      router.refresh();
+      
+    } catch (err) {
       console.error('Login error:', err);
       setError('An error occurred. Please try again.');
       setLoading(false);

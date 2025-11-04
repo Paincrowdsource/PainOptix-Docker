@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { stripe } from '@/lib/stripe'
 import { getServiceSupabase } from '@/lib/supabase'
 import { getAppUrl, joinUrlPaths } from '@/lib/utils/url'
+import { isPilotEligible, getPilotConfig, hasPilotCookie } from '@/lib/pilot.server'
 
 export async function POST(req: NextRequest) {
   try {
-    const { assessmentId, priceId, tierPrice, source, bundleType } = await req.json()
+    const { assessmentId, priceId, tierPrice, source, bundleType, tier } = await req.json()
 
     const supabase = getServiceSupabase()
 
@@ -20,6 +22,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Assessment not found' }, { status: 404 })
     }
 
+    // Parse request data
+    const requestedTierPriceCents = typeof tierPrice === 'number' ? tierPrice : Number.parseInt(`${tierPrice ?? ''}`, 10)
+    const sourceTag = typeof source === 'string' && source.length > 0 ? source : 'direct'
+    const normalizedTier =
+      typeof tier === 'string' && tier.length > 0
+        ? tier
+        : priceId === 'monograph'
+          ? 'comprehensive'
+          : priceId === 'enhanced'
+            ? 'enhanced'
+            : String(priceId || 'comprehensive')
+
+    // Get pilot configuration
+    const { allowedCents } = getPilotConfig()
+
+    // Server-side pricing authority: check pilot eligibility
+    const eligible = isPilotEligible({
+      sourceTag,
+      normalizedTier,
+      requestedTierPriceCents: Number.isFinite(requestedTierPriceCents) ? requestedTierPriceCents : null
+    })
+
+    // Standard price map (server decides, not client)
+    const STANDARD_PRICE_CENTS: Record<string, number> = {
+      comprehensive: 2000,
+      enhanced: 2000,
+      consultation: 350 * 100
+    }
+
     // Determine product type and details
     const isConsultation = bundleType === 'comprehensive' || priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_BUNDLE_350
     const isMonograph = priceId === 'monograph'
@@ -27,26 +58,28 @@ export async function POST(req: NextRequest) {
 
     let productName: string
     let productDescription: string
-    let amount: number
+    let amountCents: number
     let tierName: string
     let successUrl: string
 
     if (isConsultation) {
       productName = 'Professional Consultation with Dr. Carpentier'
       productDescription = '45-minute phone consultation to discuss your back pain condition'
-      amount = 350 * 100 // $350 in cents
+      amountCents = STANDARD_PRICE_CENTS.consultation
       tierName = 'consultation'
       successUrl = joinUrlPaths(getAppUrl(), 'consultation-success', `?assessment=${assessmentId}`)
     } else if (isMonograph) {
       productName = 'Comprehensive Pain Monograph'
       productDescription = `Detailed guide for ${assessment.guide_type.replace(/_/g, ' ')}`
-      amount = (tierPrice || 20) * 100
+      // Server decides: pilot price if eligible, otherwise standard
+      amountCents = eligible ? allowedCents : STANDARD_PRICE_CENTS.comprehensive
       tierName = 'comprehensive'
       successUrl = joinUrlPaths(getAppUrl(), 'guide', assessmentId, '?payment=success')
     } else {
       productName = 'Enhanced Educational Guide'
       productDescription = `Detailed guide for ${assessment.guide_type.replace(/_/g, ' ')}`
-      amount = (tierPrice || 5) * 100
+      // Server decides: pilot price if eligible, otherwise standard (FIX: was hardcoded to 500)
+      amountCents = eligible ? allowedCents : STANDARD_PRICE_CENTS.enhanced
       tierName = 'enhanced'
       successUrl = joinUrlPaths(getAppUrl(), 'guide', assessmentId, '?payment=success')
     }
@@ -62,7 +95,7 @@ export async function POST(req: NextRequest) {
               name: productName,
               description: productDescription,
             },
-            unit_amount: amount,
+            unit_amount: amountCents,
           },
           quantity: 1,
         },
@@ -74,13 +107,20 @@ export async function POST(req: NextRequest) {
         : joinUrlPaths(getAppUrl(), 'guide', assessmentId, 'upgrade'),
       metadata: {
         assessmentId,
-        tierPrice: (amount / 100).toString(),
+        tierPrice: (amountCents / 100).toString(),
         tierName,
         guideType: assessment.guide_type,
         email: assessment.email || '',
         phone: assessment.phone_number || '',
-        source: source || 'direct',
-        productType: isConsultation ? 'consultation' : 'guide'
+        source: sourceTag,
+        productType: isConsultation ? 'consultation' : 'guide',
+        // Server decision (not just source tag)
+        price_strategy: eligible ? 'pilot' : 'standard',
+        // Analytics fields reveal full context
+        pilot_cookie: hasPilotCookie() ? '1' : '0',
+        pilot_server_active: process.env.PILOT_SERVER_ACTIVE === 'true' ? '1' : '0',
+        requested_tier_price_cents: Number.isFinite(requestedTierPriceCents) ? requestedTierPriceCents.toString() : '',
+        normalized_tier: normalizedTier
       }
     })
     

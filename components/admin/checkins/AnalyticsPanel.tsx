@@ -180,7 +180,7 @@ export default function AnalyticsPanel({ queueItems, responses, revenue }: Analy
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <h3 className="mb-4 text-sm font-semibold text-gray-900">Recent "feeling worse" responses</h3>
+        <h3 className="mb-4 text-sm font-semibold text-gray-900">Recent &quot;feeling worse&quot; responses</h3>
         <div className="overflow-x-auto text-sm">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -196,7 +196,7 @@ export default function AnalyticsPanel({ queueItems, responses, revenue }: Analy
               {recentWorse.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-500">
-                    No "worse" responses recorded yet.
+                    No &quot;worse&quot; responses recorded yet.
                   </td>
                 </tr>
               )}

@@ -2,7 +2,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-ssr';
 import { redirect } from 'next/navigation';
 import AdminLayoutClient from './AdminLayoutClient';
 
-// Force dynamic rendering for all admin pages - no caching
+// Force dynamic rendering for all admin pages
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 

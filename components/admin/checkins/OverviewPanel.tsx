@@ -255,7 +255,7 @@ export default function OverviewPanel({
           </p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-gray-500">"Feeling worse" replies</p>
+          <p className="text-sm text-gray-500">&quot;Feeling worse&quot; replies</p>
           <p className="mt-2 text-2xl font-semibold text-orange-600">{worseCount}</p>
           <p className="mt-1 text-xs text-gray-500">Monitor for red-flag follow-up</p>
         </div>

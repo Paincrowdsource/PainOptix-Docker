@@ -5,9 +5,13 @@ import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Lock, Activity, ArrowRight, Shield, Award, CheckCircle, Clock } from 'lucide-react'
 
+import { HomepageV2 } from '@/src/components/home-v2/HomepageV2'
+import { isPilot } from '@/lib/pilot'
+
 export default function LandingPage() {
   const router = useRouter()
   const [recentAssessment, setRecentAssessment] = useState<any>(null)
+  const hpV2Enabled = process.env.NEXT_PUBLIC_HP_V2 === 'true'
   
   // Check for recent assessment on component mount
   useState(() => {
@@ -50,13 +54,38 @@ export default function LandingPage() {
     }
     
     // Otherwise proceed normally
-    router.push('/test-assessment')
+    const target = isPilot() ? '/test-assessment?src=homepage_pilot' : '/test-assessment'
+    router.push(target)
   }, [router])
+
+  const ctaSection = (
+    <section id="start-check" className="py-24 bg-gradient-to-b from-gray-50/50 to-white">
+      <div className="max-w-3xl mx-auto px-6 lg:px-8 text-center">
+        <h2 className="text-3xl font-light text-gray-900 mb-4">
+          Ready to Start?
+        </h2>
+        <p className="text-lg text-gray-600 mb-8">
+          Get your personalized assessment in just 2 minutes
+        </p>
+        <button onClick={handleStartAssessment} className="inline-flex px-8 py-3 bg-[#0B5394] text-white text-lg font-medium rounded shadow-sm hover:bg-[#084074] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+          Start Free Check
+          <ArrowRight className="inline-block ml-2 w-5 h-5" />
+        </button>
+      </div>
+    </section>
+  )
   
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
-      {/* Medical Header */}
-      <header className="relative z-50 border-b border-gray-200">
+      {hpV2Enabled ? (
+        <>
+          <HomepageV2 assessmentId={recentAssessment?.id ?? undefined} />
+          {ctaSection}
+        </>
+      ) : (
+        <>
+          {/* Medical Header */}
+          <header className="relative z-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center gap-3">
@@ -293,20 +322,7 @@ export default function LandingPage() {
       </section>
 
       {/* Medical CTA Section */}
-      <section className="py-24 bg-gradient-to-b from-gray-50/50 to-white">
-        <div className="max-w-3xl mx-auto px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-light text-gray-900 mb-4">
-            Ready to Start?
-          </h2>
-          <p className="text-lg text-gray-600 mb-8">
-            Get your personalized assessment in just 2 minutes
-          </p>
-          <button onClick={handleStartAssessment} className="inline-flex px-8 py-3 bg-[#0B5394] text-white text-lg font-medium rounded shadow-sm hover:bg-[#084074] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
-            Start Free Check
-            <ArrowRight className="inline-block ml-2 w-5 h-5" />
-          </button>
-        </div>
-      </section>
+      {ctaSection}
 
       {/* Soft Footer - Clementine Style */}
       <footer className="bg-gray-50 border-t border-gray-100">
@@ -381,6 +397,8 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+        </>
+      )}
     </div>
   )
 }

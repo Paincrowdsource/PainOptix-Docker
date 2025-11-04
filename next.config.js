@@ -53,7 +53,15 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false, // Remove X-Powered-By header
   output: 'standalone', // For Docker deployment
-  
+
+  webpack: (config, { dev }) => {
+    // Disable persistent cache during Playwright E2E tests to avoid OneDrive rename errors
+    if (dev && process.env.PLAYWRIGHT) {
+      config.cache = false;
+    }
+    return config;
+  },
+
   async headers() {
     return [
       {
