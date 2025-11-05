@@ -24,6 +24,16 @@ interface DashboardData {
   }
   recentAssessments: any[]
   totalDeliveries: number
+  pilotStats?: {
+    source?: string
+    totals?: {
+      pilot_count: number
+      pilot_revenue_cents: number
+      standard_count: number
+      standard_revenue_cents: number
+    }
+    by_tier?: Record<string, any>
+  } | null
 }
 
 interface Props {
@@ -138,6 +148,22 @@ export default function DashboardClient({ data }: Props) {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{data.totalDeliveries}</div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pilot (24h)</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {data.pilotStats?.totals?.pilot_count ?? 0} × $5
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {data.pilotStats?.totals?.standard_count ?? 0} × $20
+                  {data.pilotStats?.source && ` • ${data.pilotStats.source}`}
+                </p>
               </CardContent>
             </Card>
           </div>

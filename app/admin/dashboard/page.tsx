@@ -127,13 +127,28 @@ async function fetchDashboardData() {
     const totalDeliveries = deliveryStats.emailSuccess + deliveryStats.emailFailed +
                           deliveryStats.smsSuccess + deliveryStats.smsFailed
 
+    // Fetch pilot stats (24h window)
+    const BASE = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    let pilotStats = null
+    try {
+      const pilotRes = await fetch(`${BASE}/api/admin/pilot-stats`, {
+        cache: 'no-store'
+      })
+      if (pilotRes.ok) {
+        pilotStats = await pilotRes.json()
+      }
+    } catch (e) {
+      console.error('Error fetching pilot stats:', e)
+    }
+
     return {
       totalAssessments: totalAssessments || 0,
       totalRevenue,
       revenueByTier,
       deliveryStats,
       recentAssessments: recentAssessments || [],
-      totalDeliveries
+      totalDeliveries,
+      pilotStats
     }
   } catch (error) {
     console.error('Error fetching dashboard data:', error)
@@ -144,7 +159,8 @@ async function fetchDashboardData() {
       revenueByTier: { free: 0, enhanced: 0, comprehensive: 0 },
       deliveryStats: { emailSuccess: 0, emailFailed: 0, smsSuccess: 0, smsFailed: 0 },
       recentAssessments: [],
-      totalDeliveries: 0
+      totalDeliveries: 0,
+      pilotStats: null
     }
   }
 }
