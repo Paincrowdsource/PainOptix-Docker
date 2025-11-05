@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { stripe } from '@/lib/stripe'
 import { getServiceSupabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getAppUrl, joinUrlPaths } from '@/lib/utils/url'
 import { isPilotEligible, getPilotConfig, hasPilotCookie } from '@/lib/pilot.server'
 
@@ -129,7 +130,26 @@ export async function POST(req: NextRequest) {
       .from('assessments')
       .update({ stripe_session_id: session.id })
       .eq('id', assessmentId)
-    
+
+    // Log pilot pricing decision for analytics (non-blocking)
+    try {
+      await supabaseAdmin
+        .from('pilot_events')
+        .insert({
+          source: sourceTag,
+          tier: normalizedTier,
+          assessment_id: assessmentId,
+          amount_cents: amountCents,
+          price_strategy: eligible ? 'pilot' : 'standard',
+          pilot_cookie: hasPilotCookie(),
+          pilot_server_active: process.env.PILOT_SERVER_ACTIVE === 'true',
+          checkout_session_id: session.id
+        })
+    } catch (pilotLogError) {
+      // Non-blocking: log error but don't fail checkout
+      console.error('pilot_events insert failed (non-blocking):', pilotLogError)
+    }
+
     return NextResponse.json({ url: session.url })
   } catch (error) {
     console.error('Checkout error:', error)
