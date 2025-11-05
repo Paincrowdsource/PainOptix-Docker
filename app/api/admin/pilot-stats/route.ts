@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
+// Force dynamic rendering - compute 24h window per request
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
+
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
 export async function GET() {
+  // Compute the since window NOW, every request (not at module scope)
   const sinceIso = new Date(Date.now() - ONE_DAY_MS).toISOString()
   const sinceUnix = Math.floor((Date.now() - ONE_DAY_MS) / 1000)
 
@@ -17,7 +23,10 @@ export async function GET() {
     if (error) throw error
 
     const agg = aggregateFromEvents(data || [])
-    return NextResponse.json({ source: 'supabase', sinceIso, ...agg })
+    return NextResponse.json(
+      { source: 'supabase', sinceIso, ...agg },
+      { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } }
+    )
   } catch (err: any) {
     console.warn('pilot_events query failed, falling back to Stripe:', err.message)
 
@@ -26,7 +35,10 @@ export async function GET() {
     if (!sk) {
       return NextResponse.json(
         { error: 'Missing STRIPE_SECRET_KEY/STRIPE_SK', totals: null, by_tier: {} },
-        { status: 500 }
+        {
+          status: 500,
+          headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+        }
       )
     }
 
@@ -44,7 +56,10 @@ export async function GET() {
       if (!resp.ok) {
         return NextResponse.json(
           { error: 'Stripe fetch failed', details: json, totals: null, by_tier: {} },
-          { status: 502 }
+          {
+            status: 502,
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+          }
         )
       }
 
@@ -55,12 +70,18 @@ export async function GET() {
       }))
 
       const agg = aggregateFromEvents(events)
-      return NextResponse.json({ source: 'stripe', sinceIso, ...agg })
+      return NextResponse.json(
+        { source: 'stripe', sinceIso, ...agg },
+        { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } }
+      )
     } catch (stripeErr) {
       console.error('Stripe fallback also failed:', stripeErr)
       return NextResponse.json(
         { error: 'Both Supabase and Stripe failed', totals: null, by_tier: {} },
-        { status: 500 }
+        {
+          status: 500,
+          headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+        }
       )
     }
   }
