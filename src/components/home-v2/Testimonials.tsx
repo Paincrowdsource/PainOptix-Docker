@@ -5,9 +5,9 @@ import { Card, CardContent } from '@/components/ui/card'
 
 export function Testimonials() {
   return (
-    <section className="bg-white py-16 lg:py-20">
+    <section className="bg-white py-24 lg:py-32">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <h2 className="text-3xl font-semibold text-gray-900">
+        <h2 className="text-3xl font-light text-gray-900">
           {hp.testimonials.strap}
         </h2>
         <div className="mt-10 overflow-x-auto pb-4 md:overflow-visible">

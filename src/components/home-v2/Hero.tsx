@@ -12,12 +12,12 @@ type HeroProps = {
 export function Hero({ startHref }: HeroProps) {
   return (
     <section className="bg-white">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16 lg:py-24">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-24 lg:py-32">
         <div className="max-w-3xl">
           <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
             {hp.brand.name}
           </span>
-          <h1 className="mt-6 text-5xl md:text-6xl font-normal tracking-tight text-gray-900 leading-tight">
+          <h1 className="mt-6 text-5xl md:text-6xl font-light tracking-tight text-gray-900 leading-tight">
             {hp.hero.title}
           </h1>
           <p className="mt-6 text-lg md:text-xl text-gray-600 leading-relaxed">

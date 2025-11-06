@@ -52,8 +52,8 @@ export default function AdminLoginPage() {
 
       // The user is authenticated and has admin role
       // Supabase auth cookies are already set by signInWithPassword
-      // Just redirect to dashboard
-      router.push('/admin/dashboard');
+      // Hard redirect and refresh to ensure clean state
+      router.replace('/admin');
       router.refresh();
       
     } catch (err) {

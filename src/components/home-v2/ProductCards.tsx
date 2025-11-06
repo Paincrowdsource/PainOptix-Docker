@@ -41,10 +41,10 @@ export function ProductCards({ pilotActive, pilotLabelValue, assessmentId, start
   }
 
   return (
-    <section className="bg-neutral-50 py-16 lg:py-20">
+    <section className="bg-neutral-50 py-24 lg:py-32">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="max-w-2xl">
-          <h2 className="text-3xl font-semibold text-gray-900">
+          <h2 className="text-3xl font-light text-gray-900">
             {hp.products.title}
           </h2>
           <p className="mt-3 text-muted-foreground">
@@ -64,7 +64,7 @@ export function ProductCards({ pilotActive, pilotLabelValue, assessmentId, start
               <p className="mt-2 text-sm text-muted-foreground">
                 {hp.products.monograph.oneLine}
               </p>
-              <p className="mt-4 text-lg font-semibold text-primary">
+              <p className="mt-4 text-lg font-medium text-primary">
                 {monographPrice}
               </p>
             </CardHeader>
@@ -106,7 +106,7 @@ export function ProductCards({ pilotActive, pilotLabelValue, assessmentId, start
               <p className="mt-2 text-sm text-muted-foreground">
                 {hp.products.enhanced.oneLine}
               </p>
-              <p className="mt-4 text-lg font-semibold text-primary">
+              <p className="mt-4 text-lg font-medium text-primary">
                 {hp.products.enhanced.price}
               </p>
             </CardHeader>

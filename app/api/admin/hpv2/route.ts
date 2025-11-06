@@ -21,10 +21,11 @@ export async function GET(req: Request) {
   // Set cookie and redirect to homepage
   const c = cookies()
   c.set('hpv2', on ? '1' : '0', {
-    httpOnly: false, // Allow client-side access for debugging
-    path: '/',
-    maxAge: 3600, // 1 hour
+    httpOnly: true,
+    secure: true,
     sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7, // 7 days
   })
 
   // Redirect back to homepage with no-cache and noindex headers

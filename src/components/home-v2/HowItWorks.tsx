@@ -11,21 +11,21 @@ type HowItWorksProps = {
 
 export function HowItWorks({ startHref }: HowItWorksProps) {
   return (
-    <section id="how-it-works" className="bg-white py-16 lg:py-20">
+    <section id="how-it-works" className="bg-white py-24 lg:py-32">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="lg:flex lg:items-center lg:justify-between">
           <div className="max-w-2xl">
-            <h2 className="text-3xl font-semibold text-gray-900">
+            <h2 className="text-3xl font-light text-gray-900">
               {hp.howItWorks.title}
             </h2>
             <div className="mt-8 space-y-6">
               {hp.howItWorks.steps.map((step, index) => (
                 <div key={step.title} className="flex gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-lg font-medium text-primary">
                     {index + 1}
                   </div>
                   <div>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-lg font-medium text-gray-900">
                       {step.title}
                     </p>
                     <p className="mt-2 text-sm text-muted-foreground">
