@@ -18,20 +18,24 @@ export async function GET(req: Request) {
   const url = new URL(req.url)
   const on = url.searchParams.get('on') === '1'
 
-  // Set cookie and redirect to homepage
+  // Set cookie with prod/dev security settings
+  const isProd = process.env.NODE_ENV === 'production'
   const c = cookies()
   c.set('hpv2', on ? '1' : '0', {
     httpOnly: true,
-    secure: true,
+    secure: isProd, // true in prod; false on localhost so we can test
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60 * 24 * 7, // 7 days
   })
 
-  // Redirect back to homepage with no-cache and noindex headers
-  const response = NextResponse.redirect(new URL('/', req.url))
-  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
-  response.headers.set('X-Robots-Tag', 'noindex, nofollow')
+  // Build redirect target from forwarded headers (never from req.url)
+  const proto = req.headers.get('x-forwarded-proto') ?? 'https'
+  const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? 'painoptix.com'
+  const response = NextResponse.redirect(`${proto}://${host}/`, 307)
+
+  response.headers.set('Cache-Control', 'no-store')
+  response.headers.set('X-Robots-Tag', 'noindex')
 
   return response
 }
