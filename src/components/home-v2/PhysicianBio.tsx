@@ -4,27 +4,29 @@ import { hp } from '@/content/homepage_v2'
 
 export function PhysicianBio() {
   return (
-    <section className="bg-white py-24 lg:py-32">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="rounded-3xl border border-gray-200 bg-neutral-50/70 px-8 py-10 shadow-sm lg:flex lg:items-center lg:gap-10">
-          <div className="flex-shrink-0">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-lg font-medium text-white">
-              {hp.bio.avatarInitials}
+    <section data-e2e="physician-bio" className="py-32 bg-white">
+      <div className="max-w-4xl mx-auto px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-light text-gray-900 mb-4">{hp.bio.title}</h2>
+          <div className="w-16 h-px bg-[#0B5394] mx-auto"></div>
+        </div>
+
+        <div className="bg-gray-50 rounded-lg p-12 shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100">
+          <div className="text-center">
+            <div className="mb-8">
+              <div className="w-32 h-32 rounded-full bg-gray-100 mx-auto mb-6 flex items-center justify-center">
+                <span className="text-4xl font-light text-gray-600">{hp.bio.avatarInitials}</span>
+              </div>
+
+              <h3 className="text-2xl font-medium text-gray-900 mb-2">{hp.bio.name}</h3>
+              <p className="text-gray-600 mb-6">{hp.bio.creds}</p>
             </div>
-          </div>
-          <div className="mt-6 lg:mt-0">
-            <h2 className="text-3xl font-light text-gray-900">
-              {hp.bio.title}
-            </h2>
-            <p className="mt-2 text-sm uppercase tracking-wide text-primary">
-              {hp.bio.name}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {hp.bio.creds}
-            </p>
-            <p className="mt-6 text-lg text-gray-700 leading-relaxed">
-              {hp.bio.quote}
-            </p>
+
+            <div className="max-w-3xl mx-auto">
+              <blockquote className="text-lg text-gray-700 italic leading-relaxed">
+                &quot;{hp.bio.quote}&quot;
+              </blockquote>
+            </div>
           </div>
         </div>
       </div>

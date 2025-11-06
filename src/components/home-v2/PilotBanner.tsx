@@ -30,33 +30,33 @@ export function PilotBanner({ pilotActive, assessmentId, startHref }: PilotBanne
   if (!pilotActive) return null
 
   return (
-    <section className="bg-primary text-white py-14">
+    <section className="bg-[#0B5394] text-white py-12">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="rounded-3xl bg-white/10 p-8 lg:flex lg:items-center lg:justify-between lg:gap-10">
+        <div className="rounded-2xl bg-white/10 p-8 lg:flex lg:items-center lg:justify-between lg:gap-10 border border-white/20">
           <div className="max-w-2xl">
-            <h2 className="text-3xl font-semibold leading-tight">
+            <h2 className="text-2xl font-medium leading-tight">
               {hp.pilot.title}
             </h2>
             <p className="mt-4 text-base text-white/90 leading-relaxed">
               {hp.pilot.body}
             </p>
           </div>
-          <div className="mt-6 lg:mt-0">
+          <div className="mt-6 lg:mt-0 lg:flex-shrink-0">
             {hasAssessment ? (
-              <Button
+              <button
                 onClick={handleClick}
-                size="lg"
-                variant="secondary"
                 disabled={pending}
+                className="px-8 py-3 bg-white text-[#0B5394] text-lg font-medium rounded shadow-sm hover:bg-gray-50 transition-colors"
               >
                 {hp.pilot.cta}
-              </Button>
+              </button>
             ) : (
-              <Button asChild size="lg" variant="secondary">
-                <Link href={startHref}>
-                  {hp.pilot.cta}
-                </Link>
-              </Button>
+              <a
+                href={startHref}
+                className="inline-block px-8 py-3 bg-white text-[#0B5394] text-lg font-medium rounded shadow-sm hover:bg-gray-50 transition-colors"
+              >
+                {hp.pilot.cta}
+              </a>
             )}
           </div>
         </div>

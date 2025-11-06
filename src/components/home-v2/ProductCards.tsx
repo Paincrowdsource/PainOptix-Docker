@@ -1,12 +1,10 @@
 "use client"
 
-import Link from 'next/link'
 import { useMemo, useState } from 'react'
 
 import { hp } from '@/content/homepage_v2'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import { BrandButton } from './BrandButton'
+import { BrandCard } from './BrandCard'
 import { startCheckout } from '@/lib/checkout'
 
 type ProductCardsProps = {
@@ -41,108 +39,123 @@ export function ProductCards({ pilotActive, pilotLabelValue, assessmentId, start
   }
 
   return (
-    <section className="bg-neutral-50 py-24 lg:py-32">
+    <section id="pricing" data-e2e="product-cards" className="bg-gray-50/50 py-24 scroll-mt-24">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="max-w-2xl">
-          <h2 className="text-3xl font-light text-gray-900">
+        <div className="max-w-2xl mx-auto text-center mb-12">
+          <h2 className="text-3xl font-light text-gray-900 mb-4">
             {hp.products.title}
           </h2>
-          <p className="mt-3 text-muted-foreground">
+          <div className="w-16 h-px bg-[#0B5394] mx-auto mb-4"></div>
+          <p className="text-gray-600">
             {hp.products.subtitle}
           </p>
         </div>
 
-        <div className="mt-12 grid gap-8 lg:grid-cols-2">
-          <Card className={cn('relative border-2', pilotActive ? 'border-primary' : 'border-primary/60')}>
-            <CardHeader>
-              <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                {hp.products.monograph.featuredLabel}
+        <div className="mt-12 grid gap-8 lg:grid-cols-2 max-w-5xl mx-auto">
+          {/* Monograph Card */}
+          <BrandCard variant="elevated" hover className={pilotActive ? 'border-[3px] border-[#0B5394]' : ''}>
+            <div className="mb-6">
+              <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-[#0B5394] mb-4">
+                Most Chosen
               </span>
-              <CardTitle className="mt-4 text-2xl text-gray-900">
+              <h3 className="text-2xl font-medium text-gray-900 mt-4">
                 {hp.products.monograph.name}
-              </CardTitle>
-              <p className="mt-2 text-sm text-muted-foreground">
+              </h3>
+              <p className="mt-2 text-sm text-gray-600">
                 {hp.products.monograph.oneLine}
               </p>
-              <p className="mt-4 text-lg font-medium text-primary">
-                {monographPrice}
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <div className="mt-4">
+                {pilotActive ? (
+                  <p className="text-lg font-semibold text-[#0B5394]">
+                    <span className="line-through text-gray-400">$20</span> → {pilotLabelValue} today (Pilot)
+                  </p>
+                ) : (
+                  <p className="text-lg font-semibold text-[#0B5394]">
+                    {hp.products.monograph.priceNormal}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <ul className="space-y-2 text-sm text-gray-600">
                 {hp.products.monograph.includes.map(item => (
                   <li key={item} className="flex items-start gap-2">
-                    <span className="mt-1 h-2 w-2 rounded-full bg-primary" />
+                    <span className="mt-1 h-2 w-2 rounded-full bg-[#0B5394]" />
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
+
               {hasAssessment ? (
-                <Button
+                <BrandButton
                   onClick={() => handleCheckout('comprehensive')}
-                  size="lg"
                   disabled={pendingTier === 'comprehensive'}
+                  showIcon={false}
                 >
                   {monographButton}
-                </Button>
+                </BrandButton>
               ) : (
-                <Button asChild size="lg">
-                  <Link href={startHref}>
-                    {monographButton}
-                  </Link>
-                </Button>
+                <BrandButton href={startHref} showIcon={false}>
+                  {monographButton}
+                </BrandButton>
               )}
-              <p className="text-xs text-muted-foreground">
+
+              <p className="text-xs text-gray-600">
                 {hp.products.monograph.microcopy}
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </BrandCard>
 
-          <Card className="border border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-2xl text-gray-900">
+          {/* Enhanced Card */}
+          <BrandCard variant="default" hover>
+            <div className="mb-6">
+              <span className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-600 mb-4">
+                Quick Start
+              </span>
+              <h3 className="text-2xl font-medium text-gray-900 mt-4">
                 {hp.products.enhanced.name}
-              </CardTitle>
-              <p className="mt-2 text-sm text-muted-foreground">
+              </h3>
+              <p className="mt-2 text-sm text-gray-600">
                 {hp.products.enhanced.oneLine}
               </p>
-              <p className="mt-4 text-lg font-medium text-primary">
+              <p className="mt-4 text-lg font-semibold text-[#0B5394]">
                 {hp.products.enhanced.price}
               </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-2 text-sm text-muted-foreground">
+            </div>
+
+            <div className="space-y-4">
+              <ul className="space-y-2 text-sm text-gray-600">
                 {hp.products.enhanced.includes.map(item => (
                   <li key={item} className="flex items-start gap-2">
-                    <span className="mt-1 h-2 w-2 rounded-full bg-primary" />
+                    <span className="mt-1 h-2 w-2 rounded-full bg-[#0B5394]" />
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
+
               {hasAssessment ? (
-                <Button
+                <BrandButton
                   onClick={() => handleCheckout('enhanced')}
-                  variant="secondary"
-                  size="lg"
                   disabled={pendingTier === 'enhanced'}
+                  showIcon={false}
                 >
                   {hp.products.enhanced.button}
-                </Button>
+                </BrandButton>
               ) : (
-                <Button asChild variant="secondary" size="lg">
-                  <Link href={startHref}>
-                    {hp.products.enhanced.button}
-                  </Link>
-                </Button>
+                <BrandButton href={startHref} showIcon={false}>
+                  {hp.products.enhanced.button}
+                </BrandButton>
               )}
-              <p className="text-xs text-muted-foreground">
+
+              <p className="text-xs text-gray-600">
                 {hp.products.enhanced.microcopy}
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </BrandCard>
         </div>
 
-        <p className="mt-10 text-sm text-muted-foreground">
+        <p className="mt-10 text-sm text-gray-600 text-center">
           {hp.products.underNote}
         </p>
       </div>

@@ -5,17 +5,34 @@ import { useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Activity, Shield, Lock } from 'lucide-react'
 
-type FooterProps = {
-  startHref: string
-}
+import { isPilot } from '@/lib/pilot'
 
-export function Footer({ startHref }: FooterProps) {
+export function Footer() {
   const router = useRouter()
 
   const handleStartAssessment = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
-    router.push(startHref)
-  }, [router, startHref])
+
+    if (typeof window !== 'undefined') {
+      const recent = localStorage.getItem('recentAssessment')
+      if (recent) {
+        try {
+          const data = JSON.parse(recent)
+          const hoursSince = (Date.now() - new Date(data.completedAt).getTime()) / (1000 * 60 * 60)
+
+          if (hoursSince < 24) {
+            router.push('/my-assessments')
+            return
+          }
+        } catch (e) {
+          // Invalid data, proceed normally
+        }
+      }
+    }
+
+    const target = isPilot() ? '/test-assessment?src=homepage_pilot' : '/test-assessment'
+    router.push(target)
+  }, [router])
 
   return (
     <footer className="bg-gray-50 border-t border-gray-100">
@@ -80,7 +97,7 @@ export function Footer({ startHref }: FooterProps) {
         {/* Medical Disclaimer */}
         <div className="mt-8 p-6 rounded-lg bg-white border border-gray-200">
           <p className="text-xs text-gray-600 leading-relaxed">
-            <strong>Medical Disclaimer:</strong> PainFinder™ does not diagnose medical conditions or recommend specific treatments.
+            <strong>Medical Disclaimer:</strong> PainOptix™ does not diagnose medical conditions or recommend specific treatments.
             A complete diagnosis requires a physical exam, imaging, or other testing — symptoms alone are not enough.
             <Link href="/about" className="text-blue-600 hover:text-blue-700 underline">Learn more about what a full diagnosis involves</Link>.
             Your result reflects a common symptom pattern that matches your questionnaire responses.

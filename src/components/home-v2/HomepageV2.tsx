@@ -5,16 +5,18 @@ import { useEffect, useState } from 'react'
 import { hp } from '@/content/homepage_v2'
 import { ensurePilotCookie, isPilot, pilotLabel } from '@/lib/pilot'
 
-import { Badges } from './Badges'
-import { FaqTrust } from './FaqTrust'
-import { Footer } from './Footer'
 import { Header } from './Header'
+import { Footer } from './Footer'
+import { Badges } from './Badges'
 import { Hero } from './Hero'
 import { HowItWorks } from './HowItWorks'
-import { PilotBanner } from './PilotBanner'
 import { PhysicianBio } from './PhysicianBio'
 import { ProductCards } from './ProductCards'
 import { Testimonials } from './Testimonials'
+import { PilotLaunch } from './PilotLaunch'
+import { WhatYouGetSection } from './WhatYouGetSection'
+import { TrustAndFaqs } from './TrustAndFaqs'
+import { FinalCTA } from './FinalCTA'
 
 const startHref = '/?src=homepage_pilot#start-check'
 
@@ -44,7 +46,7 @@ export function HomepageV2({ assessmentId }: HomepageV2Props) {
 
   return (
     <div className="bg-white">
-      <Header startHref={startHref} />
+      <Header />
       <Hero startHref={startHref} />
       <Badges />
       <HowItWorks startHref={startHref} />
@@ -56,26 +58,11 @@ export function HomepageV2({ assessmentId }: HomepageV2Props) {
       />
       <PhysicianBio />
       <Testimonials />
-      <PilotBanner pilotActive={pilotActive} assessmentId={assessmentId} startHref={startHref} />
-      <section className="bg-white py-16 lg:py-20">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <h2 className="text-3xl font-light text-gray-900">
-            {hp.whatYouGet.title}
-          </h2>
-          <ul className="mt-8 grid gap-4 md:grid-cols-2">
-            {hp.whatYouGet.bullets.map(item => (
-              <li key={item} className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-neutral-50 px-5 py-4">
-                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
-                <span className="text-base text-gray-700 leading-relaxed">
-                  {item}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-      <FaqTrust />
-      <Footer startHref={startHref} />
+      <PilotLaunch startHref={startHref} />
+      <WhatYouGetSection />
+      <TrustAndFaqs />
+      <FinalCTA startHref={startHref} />
+      <Footer />
     </div>
   )
 }
