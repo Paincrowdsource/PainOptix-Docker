@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin/auth";
 import { getServiceSupabase } from "@/lib/supabase";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET(req: NextRequest) {
   const isAdmin = await isAdminRequest(req);
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     // Fetch queue items
     const { data: queueData, error: queueError } = await supabase
-      .from('check_in_queue')
+      .from('v_check_in_queue_visible')
       .select('*')
       .order('due_at', { ascending: true });
 
@@ -30,15 +31,12 @@ export async function GET(req: NextRequest) {
 
     if (assessmentIds.length > 0) {
       const { data: assessmentsData } = await supabase
-        .from('assessments')
-        .select('id, email, phone_number')
+        .from('v_assessments_visible')
+        .select('id, email, phone_number, diagnosis_code')
         .in('id', assessmentIds);
 
       assessmentsMap = (assessmentsData || []).reduce((acc, assessment) => {
-        acc[assessment.id] = {
-          email: assessment.email,
-          phone_number: assessment.phone_number
-        };
+        acc[assessment.id] = assessment;
         return acc;
       }, {} as Record<string, any>);
     }

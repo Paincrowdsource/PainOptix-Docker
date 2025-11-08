@@ -1,27 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
-import { verifyAdminAuth } from '@/lib/auth/admin'
+import { createSupabaseRouteHandlerClient } from '@/lib/supabase-ssr'
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin authentication (supports session or password header)
-    const { isAuthenticated, isAdmin, error } = await verifyAdminAuth(request)
+    // Method 1: Try Supabase Auth first
+    const { supabase } = await createSupabaseRouteHandlerClient(request)
 
+    // Check if user is authenticated
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    let isAuthenticated = false
+    let isAdmin = false
+    
+    if (session?.user) {
+      // Check if user has admin role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_role')
+        .eq('id', session.user.id)
+        .single()
+      
+      if (profile?.user_role === 'admin') {
+        isAuthenticated = true
+        isAdmin = true
+      }
+    }
+    
+    // Method 2: Fallback to simple password check if Supabase auth fails
+    if (!isAuthenticated) {
+      // Check for admin password in header as fallback
+      const authHeader = request.headers.get('x-admin-password')
+      const adminPassword = process.env.ADMIN_PASSWORD
+      
+      if (authHeader && adminPassword && authHeader === adminPassword) {
+        isAuthenticated = true
+        isAdmin = true
+      }
+    }
+    
+    // If still not authenticated, return 401
     if (!isAuthenticated || !isAdmin) {
-      return NextResponse.json(
-        { error: error || 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const supabaseService = getServiceSupabase()
 
     // Load delivery logs with assessment data
     const { data: deliveryLogs, error: deliveryError } = await supabaseService
-      .from('guide_deliveries')
+      .from('v_guide_deliveries_visible')
       .select(`
         *,
         assessment:assessments (
@@ -50,7 +79,7 @@ export async function GET(request: NextRequest) {
 
     // Also get communication_logs for additional email tracking
     const { data: commLogs, error: commError } = await supabaseService
-      .from('communication_logs')
+      .from('v_communication_logs_visible')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(100)
@@ -59,31 +88,13 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching communication logs:', commError)
     }
 
-    // Return with aggressive no-cache headers to prevent stale data
-    return NextResponse.json(
-      {
-        deliveryLogs: deliveryLogs || [],
-        optOuts: optOuts || [],
-        communicationLogs: commLogs || []
-      },
-      {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      }
-    )
+    return NextResponse.json({
+      deliveryLogs: deliveryLogs || [],
+      optOuts: optOuts || [],
+      communicationLogs: commLogs || []
+    })
   } catch (error) {
     console.error('Communications API error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      {
-        status: 500,
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-        }
-      }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

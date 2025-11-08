@@ -4,7 +4,9 @@ import { isAdminRequest } from "@/lib/admin/auth";
 import { getServiceSupabase } from "@/lib/supabase";
 import { log } from "@/lib/logger";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET(req: NextRequest) {
   // Check admin auth
   const isAdmin = await isAdminRequest(req);
@@ -17,7 +19,7 @@ export async function GET(req: NextRequest) {
 
     // Fetch recent assessments for manual trigger
     const { data: assessments, error: assessmentsError } = await supabase
-      .from('assessments')
+      .from('v_assessments_visible')
       .select('id, email, guide_type, created_at')
       .order('created_at', { ascending: false })
       .limit(200);

@@ -39,14 +39,14 @@ async function fetchDashboardData() {
   const supabaseService = getServiceSupabase()
 
   try {
-    // Get total assessments
+    // Get total assessments (view automatically excludes quarantined)
     const { count: totalAssessments } = await supabaseService
-      .from('assessments')
+      .from('v_assessments_visible')
       .select('*', { count: 'exact', head: true })
 
-    // Get revenue data
+    // Get revenue data (view automatically excludes quarantined)
     const { data: revenueData } = await supabaseService
-      .from('assessments')
+      .from('v_assessments_visible')
       .select('payment_tier, payment_completed')
       .eq('payment_completed', true)
 
@@ -71,7 +71,7 @@ async function fetchDashboardData() {
 
     // Get delivery stats from communication_logs
     const { data: communicationLogs } = await supabaseService
-      .from('communication_logs')
+      .from('v_communication_logs_visible')
       .select('type, status, channel')
 
     const deliveryStats = {
@@ -99,12 +99,12 @@ async function fetchDashboardData() {
 
     // Also check guide_deliveries for additional delivery stats
     const { count: deliverySuccess } = await supabaseService
-      .from('guide_deliveries')
+      .from('v_guide_deliveries_visible')
       .select('*', { count: 'exact', head: true })
       .eq('delivery_status', 'sent')
 
     const { count: deliveryFailed } = await supabaseService
-      .from('guide_deliveries')
+      .from('v_guide_deliveries_visible')
       .select('*', { count: 'exact', head: true })
       .eq('delivery_status', 'failed')
 
@@ -116,9 +116,9 @@ async function fetchDashboardData() {
       deliveryStats.emailFailed = Math.max(deliveryStats.emailFailed, deliveryFailed)
     }
 
-    // Get recent assessments
+    // Get recent assessments (view automatically excludes quarantined)
     const { data: recentAssessments } = await supabaseService
-      .from('assessments')
+      .from('v_assessments_visible')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(10)

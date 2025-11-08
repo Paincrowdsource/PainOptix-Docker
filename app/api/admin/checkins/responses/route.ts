@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin/auth";
 import { getServiceSupabase } from "@/lib/supabase";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET(req: NextRequest) {
   const isAdmin = await isAdminRequest(req);
   if (!isAdmin) {
@@ -14,7 +16,7 @@ export async function GET(req: NextRequest) {
     const supabase = getServiceSupabase();
 
     const { data: responseData, error: responseError } = await supabase
-      .from('check_in_responses')
+      .from('v_check_in_responses_visible')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -28,7 +30,7 @@ export async function GET(req: NextRequest) {
 
     if (responseAssessmentIds.length > 0) {
       const { data: responseAssessmentsData } = await supabase
-        .from('assessments')
+        .from('v_assessments_visible')
         .select('id, email, diagnosis_code, guide_type')
         .in('id', responseAssessmentIds);
 

@@ -1,33 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
-import { verifyAdminAuth } from '@/lib/auth/admin'
+import { createSupabaseRouteHandlerClient } from '@/lib/supabase-ssr'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin authentication (supports session or password header)
-    const { isAuthenticated, isAdmin, error } = await verifyAdminAuth(request)
+    // Method 1: Try Supabase Auth first
+    const { supabase } = await createSupabaseRouteHandlerClient(request)
 
+    // Check if user is authenticated
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    let isAuthenticated = false
+    let isAdmin = false
+    
+    if (session?.user) {
+      // Check if user has admin role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_role')
+        .eq('id', session.user.id)
+        .single()
+      
+      if (profile?.user_role === 'admin') {
+        isAuthenticated = true
+        isAdmin = true
+      }
+    }
+    
+    // Method 2: Fallback to simple password check if Supabase auth fails
+    if (!isAuthenticated) {
+      // Check for admin password in header as fallback
+      const authHeader = request.headers.get('x-admin-password')
+      const adminPassword = process.env.ADMIN_PASSWORD
+      
+      if (authHeader && adminPassword && authHeader === adminPassword) {
+        isAuthenticated = true
+        isAdmin = true
+      }
+    }
+    
+    // If still not authenticated, return 401
     if (!isAuthenticated || !isAdmin) {
-      return NextResponse.json(
-        { error: error || 'Unauthorized' },
-        {
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-store, no-cache, must-revalidate'
-          }
-        }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const supabaseService = getServiceSupabase()
 
     // Get total assessments
     const { count: totalAssessments, error: countError } = await supabaseService
-      .from('assessments')
+      .from('v_assessments_visible')
       .select('*', { count: 'exact', head: true })
 
     if (countError) {
@@ -36,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     // Get revenue data
     const { data: revenueData, error: revenueError } = await supabaseService
-      .from('assessments')
+      .from('v_assessments_visible')
       .select('payment_tier, payment_completed')
       .eq('payment_completed', true)
 
@@ -65,7 +88,7 @@ export async function GET(request: NextRequest) {
 
     // Get delivery stats from communication_logs
     const { data: communicationLogs, error: commError } = await supabaseService
-      .from('communication_logs')
+      .from('v_communication_logs_visible')
       .select('type, status, channel')
 
     if (commError) {
@@ -97,12 +120,12 @@ export async function GET(request: NextRequest) {
 
     // Also check guide_deliveries for additional delivery stats
     const { count: deliverySuccess, error: deliverySuccessError } = await supabaseService
-      .from('guide_deliveries')
+      .from('v_guide_deliveries_visible')
       .select('*', { count: 'exact', head: true })
       .eq('delivery_status', 'sent')
 
     const { count: deliveryFailed, error: deliveryFailedError } = await supabaseService
-      .from('guide_deliveries')
+      .from('v_guide_deliveries_visible')
       .select('*', { count: 'exact', head: true })
       .eq('delivery_status', 'failed')
 
@@ -123,7 +146,7 @@ export async function GET(request: NextRequest) {
 
     // Get recent assessments
     const { data: recentAssessments, error: recentError } = await supabaseService
-      .from('assessments')
+      .from('v_assessments_visible')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(10)
@@ -139,36 +162,16 @@ export async function GET(request: NextRequest) {
     const totalDeliveries = deliveryStats.emailSuccess + deliveryStats.emailFailed + 
                           deliveryStats.smsSuccess + deliveryStats.smsFailed
 
-    return NextResponse.json(
-      {
-        totalAssessments: totalAssessments || 0,
-        totalRevenue,
-        revenueByTier,
-        deliveryStats,
-        recentAssessments: recentAssessments || [],
-        totalDeliveries
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-          'X-Build-Stamp': process.env.NEXT_PUBLIC_BUILD_STAMP || 'n/a'
-        }
-      }
-    )
+    return NextResponse.json({
+      totalAssessments: totalAssessments || 0,
+      totalRevenue,
+      revenueByTier,
+      deliveryStats,
+      recentAssessments: recentAssessments || [],
+      totalDeliveries
+    })
   } catch (error) {
     console.error('Dashboard API error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store, no-cache, must-revalidate'
-        }
-      }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
