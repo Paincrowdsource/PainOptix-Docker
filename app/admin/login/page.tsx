@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSupabaseBrowserClient } from '@/lib/supabase-client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, AlertCircle } from 'lucide-react';
+import { loginAdminAction } from './actions';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -15,7 +15,6 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createSupabaseBrowserClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,40 +22,28 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      // Sign in with Supabase
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email || 'drbcarpentier@gmail.com', // Default to admin email if not provided
-        password: password
-      });
+      // Use server action for authentication
+      // This sets BOTH Supabase cookies AND admin-session cookie
+      const result = await loginAdminAction(email || 'drbcarpentier@gmail.com', password);
 
-      if (signInError) {
-        setError('Invalid credentials. Please check your email and password.');
+      if (!result.success) {
+        setError(result.error || 'Login failed');
         setLoading(false);
         return;
       }
 
-      // Check if user has admin role
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_role')
-        .eq('id', data.user.id)
-        .single();
+      // Server action handles redirect via redirect()
+      // If we get here, something went wrong
+      setError('Login succeeded but redirect failed. Please try refreshing.');
+      setLoading(false);
 
-      if (profileError || profile?.user_role !== 'admin') {
-        // Sign out non-admin user
-        await supabase.auth.signOut();
-        setError('Access denied. Admin privileges required.');
-        setLoading(false);
-        return;
-      }
-
-      // The user is authenticated and has admin role
-      // Supabase auth cookies are already set by signInWithPassword
-      // Hard redirect and refresh to ensure clean state
-      router.replace('/admin');
-      router.refresh();
-      
     } catch (err) {
+      // Check if this is a redirect error (which is expected from server actions)
+      if (err && typeof err === 'object' && 'digest' in err && String(err.digest).startsWith('NEXT_REDIRECT')) {
+        // This is a successful redirect, let it propagate
+        throw err;
+      }
+
       console.error('Login error:', err);
       setError('An error occurred. Please try again.');
       setLoading(false);
