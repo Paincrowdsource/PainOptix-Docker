@@ -328,7 +328,6 @@ export default function CheckInsPage() {
       'note',
       'created_at',
       'email',
-      'diagnosis_code',
       'guide_type',
     ]
 
@@ -339,7 +338,6 @@ export default function CheckInsPage() {
       response.note ? `"${response.note.replace(/"/g, '""')}"` : '',
       response.created_at,
       response.assessment?.email || '',
-      response.assessment?.diagnosis_code || '',
       response.assessment?.guide_type || '',
     ])
 
