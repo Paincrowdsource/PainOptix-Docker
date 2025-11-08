@@ -48,23 +48,38 @@ export async function GET(request: NextRequest) {
 
     const supabaseService = getServiceSupabase()
 
-    // Load delivery logs with assessment data
+    // Load delivery logs (step 1: get guide_deliveries)
     const { data: deliveryLogs, error: deliveryError } = await supabaseService
       .from('v_guide_deliveries_visible')
-      .select(`
-        *,
-        assessment:assessments (
-          email,
-          phone_number,
-          guide_type
-        )
-      `)
+      .select('*')
       .order('delivered_at', { ascending: false, nullsFirst: false })
 
     if (deliveryError) {
       console.error('Error fetching delivery logs:', deliveryError)
       return NextResponse.json({ error: 'Failed to fetch delivery logs' }, { status: 500 })
     }
+
+    // Load assessment data separately (step 2: manual join)
+    const assessmentIds = Array.from(new Set(deliveryLogs?.map(log => log.assessment_id).filter(Boolean) || []))
+    let assessmentsMap: Record<string, any> = {}
+
+    if (assessmentIds.length > 0) {
+      const { data: assessmentsData } = await supabaseService
+        .from('v_assessments_visible')
+        .select('id, email, phone_number, guide_type')
+        .in('id', assessmentIds)
+
+      assessmentsMap = (assessmentsData || []).reduce((acc, assessment) => {
+        acc[assessment.id] = assessment
+        return acc
+      }, {} as Record<string, any>)
+    }
+
+    // Enrich delivery logs with assessment data
+    const enrichedDeliveryLogs = (deliveryLogs || []).map(log => ({
+      ...log,
+      assessment: log.assessment_id ? (assessmentsMap[log.assessment_id] || null) : null
+    }))
 
     // Load SMS opt-outs
     const { data: optOuts, error: optOutError } = await supabaseService
@@ -89,7 +104,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      deliveryLogs: deliveryLogs || [],
+      deliveryLogs: enrichedDeliveryLogs || [],
       optOuts: optOuts || [],
       communicationLogs: commLogs || []
     })

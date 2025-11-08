@@ -62,12 +62,10 @@ export async function GET(request: NextRequest) {
     // Use service role client to bypass RLS
     const supabaseService = getServiceSupabase();
 
-    const { data, error } = await supabaseService
+    // Step 1: Fetch assessments
+    const { data: assessments, error } = await supabaseService
       .from('v_assessments_visible')
-      .select(`
-        *,
-        guide_deliveries (*)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -75,7 +73,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ assessments: data || [] });
+    // Step 2: Fetch guide deliveries for these assessments
+    const assessmentIds = assessments?.map(a => a.id) || []
+    let guideDeliveriesMap: Record<string, any[]> = {}
+
+    if (assessmentIds.length > 0) {
+      const { data: guideDeliveries } = await supabaseService
+        .from('v_guide_deliveries_visible')
+        .select('*')
+        .in('assessment_id', assessmentIds)
+
+      // Group by assessment_id
+      guideDeliveriesMap = (guideDeliveries || []).reduce((acc, delivery) => {
+        if (!acc[delivery.assessment_id]) {
+          acc[delivery.assessment_id] = []
+        }
+        acc[delivery.assessment_id].push(delivery)
+        return acc
+      }, {} as Record<string, any[]>)
+    }
+
+    // Step 3: Enrich assessments with guide_deliveries
+    const enrichedAssessments = (assessments || []).map(assessment => ({
+      ...assessment,
+      guide_deliveries: guideDeliveriesMap[assessment.id] || []
+    }))
+
+    return NextResponse.json({ assessments: enrichedAssessments });
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json(
