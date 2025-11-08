@@ -26,14 +26,28 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch assessments data separately for queue items
-    const assessmentIds = Array.from(new Set(queueData?.map(item => item.assessment_id) || []));
+    // Filter out null/undefined assessment_ids before querying
+    const assessmentIds = Array.from(
+      new Set(
+        queueData?.map(item => item.assessment_id).filter(Boolean) || []
+      )
+    );
     let assessmentsMap: Record<string, any> = {};
 
+    console.log('[checkins/queue] Queue items:', queueData?.length || 0);
+    console.log('[checkins/queue] Assessment IDs to fetch:', assessmentIds.length);
+
     if (assessmentIds.length > 0) {
-      const { data: assessmentsData } = await supabase
+      const { data: assessmentsData, error: assessError } = await supabase
         .from('v_assessments_visible')
         .select('id, email, phone_number, diagnosis_code')
         .in('id', assessmentIds);
+
+      if (assessError) {
+        console.error('[checkins/queue] Error fetching assessments:', assessError);
+      }
+
+      console.log('[checkins/queue] Assessments fetched:', assessmentsData?.length || 0);
 
       assessmentsMap = (assessmentsData || []).reduce((acc, assessment) => {
         acc[assessment.id] = assessment;
@@ -43,8 +57,11 @@ export async function GET(req: NextRequest) {
 
     const enrichedQueueData = (queueData || []).map(item => ({
       ...item,
-      assessment: assessmentsMap[item.assessment_id] || null
+      assessment: item.assessment_id ? (assessmentsMap[item.assessment_id] || null) : null
     }));
+
+    console.log('[checkins/queue] Enriched items:', enrichedQueueData.length);
+    console.log('[checkins/queue] Sample item:', enrichedQueueData[0]);
 
     return NextResponse.json({ queueItems: enrichedQueueData }, { status: 200 });
   } catch (error) {

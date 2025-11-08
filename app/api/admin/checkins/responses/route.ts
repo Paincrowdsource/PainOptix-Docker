@@ -25,14 +25,28 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch assessments data separately for responses
-    const responseAssessmentIds = Array.from(new Set(responseData?.map(item => item.assessment_id) || []));
+    // Filter out null/undefined assessment_ids before querying
+    const responseAssessmentIds = Array.from(
+      new Set(
+        responseData?.map(item => item.assessment_id).filter(Boolean) || []
+      )
+    );
     let responseAssessmentsMap: Record<string, any> = {};
 
+    console.log('[checkins/responses] Response items:', responseData?.length || 0);
+    console.log('[checkins/responses] Assessment IDs to fetch:', responseAssessmentIds.length);
+
     if (responseAssessmentIds.length > 0) {
-      const { data: responseAssessmentsData } = await supabase
+      const { data: responseAssessmentsData, error: assessError } = await supabase
         .from('v_assessments_visible')
-        .select('id, email, diagnosis_code, guide_type')
+        .select('id, email, phone_number, diagnosis_code, guide_type')
         .in('id', responseAssessmentIds);
+
+      if (assessError) {
+        console.error('[checkins/responses] Error fetching assessments:', assessError);
+      }
+
+      console.log('[checkins/responses] Assessments fetched:', responseAssessmentsData?.length || 0);
 
       responseAssessmentsMap = (responseAssessmentsData || []).reduce((acc, assessment) => {
         acc[assessment.id] = assessment;
@@ -42,8 +56,10 @@ export async function GET(req: NextRequest) {
 
     const enrichedResponseData = (responseData || []).map(item => ({
       ...item,
-      assessment: responseAssessmentsMap[item.assessment_id] || null
+      assessment: item.assessment_id ? (responseAssessmentsMap[item.assessment_id] || null) : null
     }));
+
+    console.log('[checkins/responses] Enriched items:', enrichedResponseData.length);
 
     return NextResponse.json({ responses: enrichedResponseData }, { status: 200 });
   } catch (error) {
