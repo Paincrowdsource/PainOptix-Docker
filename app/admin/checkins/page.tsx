@@ -27,8 +27,12 @@ interface CheckInQueueItem {
   assessment?: {
     email?: string | undefined
     phone_number?: string | undefined
-    diagnosis_code?: string | undefined
+    guide_type?: string | undefined
   } | undefined
+  // Flat contact fields from API enrichment
+  contact?: string | null
+  contact_email?: string | null
+  contact_phone?: string | null
 }
 
 interface CheckInResponse {
@@ -40,9 +44,12 @@ interface CheckInResponse {
   created_at: string
   assessment?: {
     email?: string | null
-    diagnosis_code?: string | null
     guide_type?: string | null
   } | null
+  // Flat contact fields from API enrichment
+  contact?: string | null
+  contact_email?: string | null
+  contact_phone?: string | null
 }
 
 interface RevenueEvent {
@@ -126,11 +133,15 @@ export default function CheckInsPage() {
       const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
       // Fetch queue data from API endpoint (bypasses RLS)
-      const queueResponse = await fetch('/api/admin/checkins/queue')
+      const queueResponse = await fetch('/api/admin/checkins/queue', {
+        credentials: 'include',
+        cache: 'no-store'
+      })
       if (!queueResponse.ok) {
         throw new Error('Failed to fetch queue items')
       }
-      const { queueItems: queueData } = await queueResponse.json()
+      const qJson = await queueResponse.json()
+      const queueData = Array.isArray(qJson.queueItems) ? qJson.queueItems : (Array.isArray(qJson.queue) ? qJson.queue : [])
 
       // DEBUG: Verify data shape
       if (queueData?.length > 0 && !queueData[0]?.assessment && !queueData[0]?.contact) {
@@ -140,11 +151,15 @@ export default function CheckInsPage() {
       setQueueItems(queueData as CheckInQueueItem[])
 
       // Fetch responses from API endpoint (bypasses RLS)
-      const responsesResponse = await fetch('/api/admin/checkins/responses')
+      const responsesResponse = await fetch('/api/admin/checkins/responses', {
+        credentials: 'include',
+        cache: 'no-store'
+      })
       if (!responsesResponse.ok) {
         throw new Error('Failed to fetch responses')
       }
-      const { responses: responseData } = await responsesResponse.json()
+      const rJson = await responsesResponse.json()
+      const responseData = Array.isArray(rJson.responses) ? rJson.responses : []
 
       // DEBUG: Verify data shape
       if (responseData?.length > 0 && !responseData[0]?.assessment && !responseData[0]?.contact) {
@@ -154,7 +169,10 @@ export default function CheckInsPage() {
       setResponses(responseData as CheckInResponse[])
 
       // Fetch revenue from API endpoint (bypasses RLS)
-      const revenueResponse = await fetch('/api/admin/checkins/revenue')
+      const revenueResponse = await fetch('/api/admin/checkins/revenue', {
+        credentials: 'include',
+        cache: 'no-store'
+      })
       if (!revenueResponse.ok) {
         throw new Error('Failed to fetch revenue')
       }

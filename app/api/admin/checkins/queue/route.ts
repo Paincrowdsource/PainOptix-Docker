@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
     if (assessmentIds.length > 0) {
       const { data: assessmentsData, error: assessError } = await supabase
         .from('v_assessments_visible')
-        .select('id, email, phone_number, diagnosis_code')
+        .select('id, email, phone_number, guide_type')
         .in('id', assessmentIds);
 
       if (assessError) {

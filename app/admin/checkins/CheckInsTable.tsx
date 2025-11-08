@@ -17,8 +17,12 @@ interface CheckInQueueItem {
   assessment?: {
     email?: string
     phone_number?: string
-    diagnosis_code?: string
+    guide_type?: string
   }
+  // Flat contact fields from API enrichment
+  contact?: string | null
+  contact_email?: string | null
+  contact_phone?: string | null
 }
 
 interface CheckInsTableProps {
@@ -55,11 +59,13 @@ export default function CheckInsTable({ items, onDispatchDryRun, onDispatchNow, 
     )
   }
 
-  const formatContact = (email: string | undefined, phone: string | undefined) => {
-    if (email) return email
-    if (phone) return phone
-    return 'N/A'
-  }
+  const displayContact = (item: any) =>
+    item?.contact
+    ?? item?.contact_email
+    ?? item?.contact_phone
+    ?? item?.assessment?.email
+    ?? item?.assessment?.phone_number
+    ?? 'N/A'
 
   return (
     <div className="bg-white rounded-lg shadow">
@@ -167,7 +173,7 @@ export default function CheckInsTable({ items, onDispatchDryRun, onDispatchNow, 
                     Day {item.day}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600 font-mono">
-                    {formatContact(item.assessment?.email, item.assessment?.phone_number)}
+                    {displayContact(item)}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     <span className="capitalize">{item.channel}</span>
