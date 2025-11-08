@@ -131,6 +131,12 @@ export default function CheckInsPage() {
         throw new Error('Failed to fetch queue items')
       }
       const { queueItems: queueData } = await queueResponse.json()
+
+      // DEBUG: Verify data shape
+      if (queueData?.length > 0 && !queueData[0]?.assessment && !queueData[0]?.contact) {
+        console.warn('[CheckIns] First queue item missing contact data:', queueData[0])
+      }
+
       setQueueItems(queueData as CheckInQueueItem[])
 
       // Fetch responses from API endpoint (bypasses RLS)
@@ -139,6 +145,12 @@ export default function CheckInsPage() {
         throw new Error('Failed to fetch responses')
       }
       const { responses: responseData } = await responsesResponse.json()
+
+      // DEBUG: Verify data shape
+      if (responseData?.length > 0 && !responseData[0]?.assessment && !responseData[0]?.contact) {
+        console.warn('[CheckIns] First response item missing contact data:', responseData[0])
+      }
+
       setResponses(responseData as CheckInResponse[])
 
       // Fetch revenue from API endpoint (bypasses RLS)

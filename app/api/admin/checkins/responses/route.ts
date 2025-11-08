@@ -54,14 +54,42 @@ export async function GET(req: NextRequest) {
       }, {} as Record<string, any>);
     }
 
-    const enrichedResponseData = (responseData || []).map(item => ({
-      ...item,
-      assessment: item.assessment_id ? (responseAssessmentsMap[item.assessment_id] || null) : null
-    }));
+    const enrichedResponseData = (responseData || []).map(item => {
+      const assessment = item.assessment_id ? (responseAssessmentsMap[item.assessment_id] || null) : null;
+      return {
+        ...item,
+        assessment,
+        // Flat contact fields for UI flexibility
+        contact_email: assessment?.email ?? null,
+        contact_phone: assessment?.phone_number ?? null,
+        contact: assessment?.email ?? assessment?.phone_number ?? null
+      };
+    });
 
     console.log('[checkins/responses] Enriched items:', enrichedResponseData.length);
+    console.log('[checkins/responses] Sample item:', enrichedResponseData[0]);
 
-    return NextResponse.json({ responses: enrichedResponseData }, { status: 200 });
+    return NextResponse.json(
+      {
+        responses: enrichedResponseData,
+        meta: {
+          routeVersion: 'checkins-responses-v3',
+          timestamp: new Date().toISOString(),
+          counts: {
+            total: enrichedResponseData.length,
+            withAssessment: enrichedResponseData.filter(i => i.assessment).length
+          }
+        }
+      },
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'X-PO-Route-Version': 'checkins-responses-v3'
+        }
+      }
+    );
   } catch (error) {
     console.error("Error fetching responses:", error);
     return NextResponse.json(

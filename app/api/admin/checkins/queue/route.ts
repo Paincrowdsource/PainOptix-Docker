@@ -55,15 +55,43 @@ export async function GET(req: NextRequest) {
       }, {} as Record<string, any>);
     }
 
-    const enrichedQueueData = (queueData || []).map(item => ({
-      ...item,
-      assessment: item.assessment_id ? (assessmentsMap[item.assessment_id] || null) : null
-    }));
+    const enrichedQueueData = (queueData || []).map(item => {
+      const assessment = item.assessment_id ? (assessmentsMap[item.assessment_id] || null) : null;
+      return {
+        ...item,
+        assessment,
+        // Flat contact fields for UI flexibility
+        contact_email: assessment?.email ?? null,
+        contact_phone: assessment?.phone_number ?? null,
+        contact: assessment?.email ?? assessment?.phone_number ?? null
+      };
+    });
 
     console.log('[checkins/queue] Enriched items:', enrichedQueueData.length);
     console.log('[checkins/queue] Sample item:', enrichedQueueData[0]);
 
-    return NextResponse.json({ queueItems: enrichedQueueData }, { status: 200 });
+    return NextResponse.json(
+      {
+        queue: enrichedQueueData,      // For compatibility
+        queueItems: enrichedQueueData, // Current expected key
+        meta: {
+          routeVersion: 'checkins-queue-v3',
+          timestamp: new Date().toISOString(),
+          counts: {
+            total: enrichedQueueData.length,
+            withAssessment: enrichedQueueData.filter(i => i.assessment).length
+          }
+        }
+      },
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'X-PO-Route-Version': 'checkins-queue-v3'
+        }
+      }
+    );
   } catch (error) {
     console.error("Error fetching queue items:", error);
     return NextResponse.json(
