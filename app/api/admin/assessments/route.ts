@@ -3,6 +3,7 @@ import { getServiceSupabase } from '@/lib/supabase';
 import { createSupabaseRouteHandlerClient } from '@/lib/supabase-ssr';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
@@ -99,7 +100,23 @@ export async function GET(request: NextRequest) {
       guide_deliveries: guideDeliveriesMap[assessment.id] || []
     }))
 
-    return NextResponse.json({ assessments: enrichedAssessments });
+    return NextResponse.json(
+      {
+        assessments: enrichedAssessments,
+        meta: {
+          routeVersion: 'assessments-v2',
+          ts: new Date().toISOString()
+        }
+      },
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'X-PO-Route-Version': 'assessments-v2'
+        }
+      }
+    );
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json(

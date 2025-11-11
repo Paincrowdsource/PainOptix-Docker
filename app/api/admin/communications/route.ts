@@ -3,6 +3,7 @@ import { getServiceSupabase } from '@/lib/supabase'
 import { createSupabaseRouteHandlerClient } from '@/lib/supabase-ssr'
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
@@ -103,11 +104,25 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching communication logs:', commError)
     }
 
-    return NextResponse.json({
-      deliveryLogs: enrichedDeliveryLogs || [],
-      optOuts: optOuts || [],
-      communicationLogs: commLogs || []
-    })
+    return NextResponse.json(
+      {
+        deliveryLogs: enrichedDeliveryLogs || [],
+        optOuts: optOuts || [],
+        communicationLogs: commLogs || [],
+        meta: {
+          routeVersion: 'communications-v2',
+          ts: new Date().toISOString()
+        }
+      },
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'X-PO-Route-Version': 'communications-v2'
+        }
+      }
+    )
   } catch (error) {
     console.error('Communications API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -62,8 +62,9 @@ export default function AssessmentsPage() {
       setError(null) // Clear previous errors
       // Use API route that has service role access
       // Include credentials to send cookies
-      const response = await fetch('/api/admin/assessments', {
+      const response = await fetch(`/api/admin/assessments?ts=${Date.now()}`, {
         credentials: 'include',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
           // Add admin password as fallback auth

@@ -43,8 +43,9 @@ export default function CommunicationsPage() {
     try {
       setError(null) // Clear previous errors
       // Use API endpoint to fetch data with service role permissions
-      const response = await fetch('/api/admin/communications', {
+      const response = await fetch(`/api/admin/communications?ts=${Date.now()}`, {
         credentials: 'include',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
           // Add admin password as fallback auth
