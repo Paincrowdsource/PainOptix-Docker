@@ -8,6 +8,7 @@ import ProgressBar from './ProgressBar';
 import { FieldGroup, FormLabel, FormRadioGroup, FormRadioItem, FormCheckbox } from './FieldGroup';
 import { ContactCollection } from './ContactCollection';
 import { CheckYourInbox } from './CheckYourInbox';
+import { DeliveryPreferencesForm } from './DeliveryPreferencesForm';
 
 // Algorithm imports
 import { Questions, EducationalGuide } from '@/types/algorithm';
@@ -18,7 +19,7 @@ interface AssessmentWizardProps {
   onComplete?: (guideType: EducationalGuide, sessionId: string) => void;
 }
 
-type WizardStep = 'disclaimer' | 'assessment' | 'contact' | 'payment' | 'complete';
+type WizardStep = 'disclaimer' | 'assessment' | 'contact' | 'delivery' | 'complete';
 
 export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState<WizardStep>('disclaimer');
@@ -363,12 +364,12 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
         throw retryError;
       }
       
-      // Store assessment ID and move to payment screen
-      console.log('âœ… Assessment created with ID:', result.assessmentId);
+      // Store assessment ID and move to delivery screen
+      console.log('Assessment created with ID:', result.assessmentId);
       setAssessmentId(result.assessmentId);
       // Mark session as complete
       await completeSession(result.assessmentId);
-      setCurrentStep('payment');
+      setCurrentStep('delivery');
     } catch (error: any) {
       const errorCode = generateErrorCode();
       console.error('Submission error:', error, { errorCode });
@@ -544,294 +545,32 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
     );
   }
 
-  if (currentStep === 'payment') {
-    // Get guide display name
-    const getGuideDisplayName = (guide: EducationalGuide | null) => {
-      if (!guide) return 'Back Pain';
-      const guideNames: Record<EducationalGuide, string> = {
-        'sciatica': 'Sciatica',
-        'upper_lumbar_radiculopathy': 'Upper Lumbar Radiculopathy',
-        'si_joint_dysfunction': 'SI Joint Dysfunction',
-        'canal_stenosis': 'Spinal Canal Stenosis',
-        'central_disc_bulge': 'Central Disc Bulge',
-        'facet_arthropathy': 'Facet Arthropathy',
-        'muscular_nslbp': 'Muscular Non-Specific Low Back Pain',
-        'lumbar_instability': 'Lumbar Instability',
-        'urgent_symptoms': 'Urgent Symptoms Requiring Medical Attention'
-      };
-      return guideNames[guide] || 'Back Pain';
-    };
+  if (currentStep === 'delivery') {
+    // Prepare responses array for DeliveryPreferencesForm
+    const responsesArray = Array.from(responses.entries())
+      .filter(([questionId, answer]) => answer && answer !== '')
+      .map(([questionId, answer]) => ({
+        questionId,
+        question: Questions[questionId as keyof typeof Questions]?.text || '',
+        answer: String(answer)
+      }));
 
     return (
-      <div className="relative min-h-screen bg-gradient-to-b from-white via-gray-50/30 to-white -m-8 p-8">
-        {/* Subtle pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.01]">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%230B5394' fill-opacity='1'%3E%3Ccircle cx='1' cy='1' r='1'/%3E%3C/g%3E%3C/svg%3E")`
-          }} />
-        </div>
-        
-        <div className="relative z-10 max-w-5xl mx-auto">
-          {/* Professional Header */}
-          <div className="text-center mb-10">
-            <h2 className="text-4xl font-normal tracking-tight text-gray-900 mb-6">Your Assessment Results</h2>
-            
-            {/* Premium Result Card */}
-            <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden mb-8">
-              <div className="bg-gradient-to-r from-[#0B5394] to-[#084074] px-8 py-6">
-                <div className="flex items-center justify-center gap-3 mb-3">
-                  <Activity className="w-8 h-8 text-white" />
-                  <p className="text-lg text-blue-100">
-                    Based on your self-reported questionnaire
-                  </p>
-                </div>
-                <p className="text-3xl font-normal text-white">
-                  {getGuideDisplayName(selectedGuide)}
-                </p>
-              </div>
-              <div className="px-8 py-6">
-                <p className="text-gray-600">
-                  Select your educational guide package below. This guide explores the {getGuideDisplayName(selectedGuide)} pattern, which shares features with the symptoms you reported.
-                </p>
-                <a href="/about-painfinder" className="inline-flex items-center gap-2 mt-3 text-sm text-blue-600 hover:text-blue-700 underline">
-                  <Info className="w-4 h-4" />
-                  Important: Understanding your results
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Pricing Cards Grid */}
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {/* Free Tier */}
-            <div className={`relative bg-white rounded-2xl transition-all duration-300 cursor-pointer hover:shadow-xl ${
-              selectedTier === 'free' ? 'ring-2 ring-green-500 shadow-xl scale-[1.02]' : 'shadow-lg hover:scale-[1.01]'
-            }`} onClick={() => setSelectedTier('free')}>
-              <div className="p-8">
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 mx-auto bg-green-50 rounded-2xl flex items-center justify-center mb-4">
-                    <BookOpen className="w-8 h-8 text-green-600" />
-                  </div>
-                  <h3 className="text-2xl font-semibold text-gray-900">Basic Guide</h3>
-                  <p className="text-4xl font-bold text-gray-900 mt-4">Free!</p>
-                  <p className="text-sm text-gray-600 mt-1">No payment required</p>
-                </div>
-                <ul className="space-y-4 mb-8">
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">Core educational content</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">Basic pain management tips</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">General exercise guidance</span>
-                  </li>
-                </ul>
-                <button
-                  onClick={() => handlePaymentSelection('free')}
-                  disabled={isSubmitting}
-                  className="w-full py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-all duration-200 disabled:opacity-50"
-                >
-                  {isSubmitting && selectedTier === 'free' ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Processing...
-                    </span>
-                  ) : (
-                    'Continue with Free Guide'
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Enhanced Tier */}
-            <div className={`relative bg-white rounded-2xl transition-all duration-300 cursor-pointer hover:shadow-xl ${
-              selectedTier === 'enhanced' ? 'ring-2 ring-blue-500 shadow-xl scale-[1.02]' : 'shadow-lg hover:scale-[1.01]'
-            }`} onClick={() => setSelectedTier('enhanced')}>
-              <div className="p-8">
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 mx-auto bg-blue-50 rounded-2xl flex items-center justify-center mb-4">
-                    <Zap className="w-8 h-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-2xl font-semibold text-gray-900">Enhanced Guide</h3>
-                  <p className="text-4xl font-bold text-gray-900 mt-4">$5</p>
-                  <p className="text-sm text-gray-600 mt-1">One-time payment</p>
-                </div>
-                <ul className="space-y-4 mb-8">
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 font-medium">Everything in Basic, plus:</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">Detailed exercise illustrations</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">14-day progress tracker</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">Recovery timeline estimates</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">Workplace modifications</span>
-                  </li>
-                </ul>
-                <button
-                  onClick={() => handlePaymentSelection('enhanced')}
-                  disabled={isSubmitting}
-                  className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
-                >
-                  {isSubmitting && selectedTier === 'enhanced' ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Processing...
-                    </span>
-                  ) : (
-                    'Get Enhanced Guide'
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Comprehensive Tier - POPULAR */}
-            <div className={`relative bg-white rounded-2xl transition-all duration-300 cursor-pointer hover:shadow-2xl transform ${
-              selectedTier === 'monograph' ? 'ring-2 ring-[#0B5394] shadow-2xl scale-[1.05]' : 'shadow-xl scale-[1.02] hover:scale-[1.03]'
-            }`} onClick={() => setSelectedTier('monograph')}>
-              {/* POPULAR Badge */}
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                <span className="bg-gradient-to-r from-[#0B5394] to-[#084074] text-white px-5 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-lg">
-                  <Crown className="w-4 h-4" /> POPULAR CHOICE
-                </span>
-              </div>
-              <div className="p-8 pt-10">
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl flex items-center justify-center mb-4">
-                    <Award className="w-8 h-8 text-[#0B5394]" />
-                  </div>
-                  <h3 className="text-2xl font-semibold text-gray-900">Comprehensive Guide</h3>
-                  <p className="text-4xl font-bold text-gray-900 mt-4">$20</p>
-                  <p className="text-sm text-gray-600 mt-1">Best value • One-time payment</p>
-                </div>
-                <ul className="space-y-4 mb-8">
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#0B5394] flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 font-medium">Everything in Enhanced, plus:</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#0B5394] flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">Medical research references</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#0B5394] flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">Treatment option comparisons</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#0B5394] flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">Sleep position guides</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#0B5394] flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">Long-term management plan</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#0B5394] flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">Provider discussion points</span>
-                  </li>
-                </ul>
-                <button
-                  onClick={() => handlePaymentSelection('monograph')}
-                  disabled={isSubmitting}
-                  className="w-full py-3 bg-gradient-to-r from-[#0B5394] to-[#084074] text-white rounded-lg font-semibold hover:from-[#084074] hover:to-[#0B5394] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg disabled:opacity-50"
-                >
-                  {isSubmitting && selectedTier === 'monograph' ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Processing...
-                    </span>
-                  ) : (
-                    'Get Comprehensive Guide'
-                  )}
-                </button>
-              </div>
-            </div>
-            
-            {/* Telehealth Consultation Option */}
-            <div className="border-2 border-blue-600 rounded-2xl p-8 bg-blue-50">
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                  <Phone className="w-8 h-8 text-blue-600" />
-                </div>
-                <h3 className="text-2xl font-bold mb-2">Telehealth Consultation</h3>
-                <p className="text-3xl font-bold text-blue-600">$250</p>
-              </div>
-              
-              <div className="space-y-3 mb-8">
-                <div className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
-                  <span className="text-gray-700">Direct consultation with Bradley W. Carpentier, MD</span>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
-                  <span className="text-gray-700">Personalized medical advice</span>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
-                  <span className="text-gray-700">Treatment recommendations</span>
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <p className="text-sm text-gray-600 mb-4">Call to schedule your appointment</p>
-                <a href="tel:254-393-2114" className="inline-block w-full py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors">
-                  <Phone className="inline w-5 h-5 mr-2" />
-                  Call (254) 393-2114
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Trust Badges */}
-          <div className="mt-12 bg-white rounded-xl shadow-lg border border-gray-100 p-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mb-3">
-                  <Shield className="w-6 h-6 text-[#0B5394]" />
-                </div>
-                <h4 className="font-semibold text-gray-900 mb-1">HIPAA Compliant</h4>
-                <p className="text-sm text-gray-600">Your health information is secure</p>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mb-3">
-                  <Lock className="w-6 h-6 text-[#0B5394]" />
-                </div>
-                <h4 className="font-semibold text-gray-900 mb-1">256-bit SSL Encryption</h4>
-                <p className="text-sm text-gray-600">Bank-level payment security</p>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mb-3">
-                  <Award className="w-6 h-6 text-[#0B5394]" />
-                </div>
-                <h4 className="font-semibold text-gray-900 mb-1">Medical Experts</h4>
-                <p className="text-sm text-gray-600">Created by licensed physicians</p>
-              </div>
-            </div>
-            
-            <div className="text-center border-t border-gray-100 pt-6">
-              <p className="text-gray-600 mb-2">
-                <span className="font-semibold text-gray-900">100% Satisfaction Guarantee</span> • Secure checkout via Stripe
-              </p>
-              <p className="text-sm text-gray-500">
-                Your personalized guide will be delivered instantly to your {contactInfo.method === 'email' ? 'email' : 'phone'}
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="max-w-2xl mx-auto p-4 md:p-6">
+        <DeliveryPreferencesForm
+          assessmentId={assessmentId}
+          prefillEmail={contactInfo.value}
+          prefillName={contactInfo.method === 'email' ? '' : ''}
+          guideType={selectedGuide || undefined}
+          disclosures={disclosures}
+          responses={responsesArray}
+          initialPainScore={5}
+          onSuccess={(id) => {
+            // Redirect to guide page with success parameter
+            window.location.href = `/guide/${id}?payment=success`;
+          }}
+          onBack={() => setCurrentStep('contact')}
+        />
       </div>
     );
   }

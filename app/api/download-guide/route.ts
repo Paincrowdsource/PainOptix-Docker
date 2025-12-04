@@ -100,6 +100,19 @@ export async function POST(req: NextRequest) {
       actualTier = requestedTier || data.payment_tier || 'free';
     }
 
+    // ==========================================================
+    // PHASE 1 PIVOT: Force Monograph Tier for Everyone
+    // ==========================================================
+    // Everyone gets the premium content for free when payments are disabled
+    const FORCE_MONOGRAPH_TIER = process.env.DISABLE_PAYMENTS === 'true';
+    if (FORCE_MONOGRAPH_TIER && !assessmentId.startsWith('admin-test-')) {
+      console.info(`[PHASE 1 PIVOT] Forcing monograph tier (was: ${actualTier})`);
+      actualTier = 'comprehensive';  // Maps to 'monograph' in content directory
+    }
+    // ==========================================================
+    // END PHASE 1 PIVOT
+    // ==========================================================
+
     // ---- UNIFIED CONTENT RETRIEVAL ----
     const guideType = assessmentData.guide_type;
     console.info(`Generating PDF: guideType=${guideType}, tier=${actualTier}`);

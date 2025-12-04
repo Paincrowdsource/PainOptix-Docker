@@ -8,7 +8,38 @@ import { isPilotEligible, getPilotConfig, hasPilotCookie } from '@/lib/pilot.ser
 
 export async function POST(req: NextRequest) {
   try {
-    const { assessmentId, priceId, tierPrice, source, bundleType, tier } = await req.json()
+    const body = await req.json()
+    const { assessmentId, priceId, tierPrice, source, bundleType, tier } = body
+
+    // ==========================================================
+    // PHASE 1 PIVOT: Payment Hibernation
+    // ==========================================================
+    // Skip Stripe checkout - everyone gets free access to monograph tier
+    if (process.env.DISABLE_PAYMENTS === 'true') {
+      const supabase = getServiceSupabase()
+
+      // Update assessment to "paid" status without Stripe
+      await supabase
+        .from('assessments')
+        .update({
+          payment_tier: 'comprehensive',
+          payment_completed: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', assessmentId)
+
+      // Return success URL directly (skip Stripe checkout)
+      const baseUrl = getAppUrl()
+      console.log('[PAYMENT HIBERNATION] Bypassing Stripe for assessment:', assessmentId)
+
+      return NextResponse.json({
+        url: joinUrlPaths(baseUrl, 'guide', assessmentId, '?payment=success'),
+        hibernated: true  // Flag for debugging
+      })
+    }
+    // ==========================================================
+    // END PHASE 1 PIVOT
+    // ==========================================================
 
     const supabase = getServiceSupabase()
 

@@ -63,12 +63,15 @@ export function LandingPageV1Client() {
           Ready to Start?
         </h2>
         <p className="text-lg text-gray-600 mb-8">
-          Get your personalized assessment in just 2 minutes
+          Get your personalized plan in just 2 minutes
         </p>
         <button onClick={handleStartAssessment} className="inline-flex px-8 py-3 bg-[#0B5394] text-white text-lg font-medium rounded shadow-sm hover:bg-[#084074] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
           Start Free Check
           <ArrowRight className="inline-block ml-2 w-5 h-5" />
         </button>
+        <p className="mt-4 text-sm text-gray-500">
+          Delivered instantly by text. No payment required.
+        </p>
       </div>
     </section>
   )
@@ -122,7 +125,7 @@ export function LandingPageV1Client() {
           {/* Subheadline */}
           <p className="mt-6 text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
             Take a free, two-minute educational check to see which back-pain type most closely matches your symptoms.
-            We&apos;ll email your results instantly. No payment or signup required!
+            We&apos;ll text your personalized plan instantly. No payment required.
           </p>
 
           {/* CTA Section */}
@@ -237,10 +240,10 @@ export function LandingPageV1Client() {
                   </div>
                 </div>
                 <div className="flex-grow">
-                  <h3 className="text-xl font-medium text-gray-900 mb-2">Receive Your Guide</h3>
+                  <h3 className="text-xl font-medium text-gray-900 mb-2">Receive Your Plan Instantly</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Get a personalized educational guide based on your specific condition.
-                    Choose from basic (free), enhanced ($5), or comprehensive ($20) options.
+                    Get a comprehensive personalized guide delivered directly to your phone by secure text message.
+                    Includes exercises, management strategies, and a 14-day follow-up plan.
                   </p>
                 </div>
               </div>

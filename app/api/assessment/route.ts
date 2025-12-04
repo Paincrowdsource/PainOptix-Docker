@@ -22,13 +22,14 @@ export async function POST(req: NextRequest) {
     
     // Validate input
     const validatedData = assessmentSubmissionSchema.parse(body)
-    const { responses, name, contactMethod, email, phoneNumber, initialPainScore, referrerSource } = validatedData
-    
-    // Contact info received
+    const {
+      responses, name, contactMethod, email, phoneNumber,
+      initialPainScore, referrerSource, smsOptIn, deliveryMethod
+    } = validatedData
 
     // Create the selector and process responses
     const selector = new EducationalGuideSelector()
-    
+
     // Add all responses to selector
     responses.forEach((response: any) => {
       selector.addResponse(response.questionId, response.question, response.answer)
@@ -37,39 +38,117 @@ export async function POST(req: NextRequest) {
     // Get the selected guide
     const guideType = selector.selectEducationalGuide()
     const session = selector.getSession()
-    
-    // Guide type selected: guideType
 
     // Create assessment record
     const supabase = getServiceSupabase()
-    
-    // Saving assessment to database
-    
-    const { data: assessment, error } = await supabase
-      .from('assessments')
-      .insert({
-        session_id: session.sessionId,
-        name: name || null,
-        email: email || null,
-        phone_number: phoneNumber || null,
-        contact_consent: true,
-        responses: responses,
-        disclosures: session.disclosures,
-        guide_type: guideType,
-        initial_pain_score: initialPainScore,
-        referrer_source: referrerSource || 'organic',
-        payment_tier: 'free',
-        enrolled_in_paincrowdsource: false
-      })
-      .select()
-      .single()
+
+    // ==========================================================
+    // PHASE 1 PIVOT: Deduplication with Phone Priority
+    // ==========================================================
+    // Check if user already exists - prevents duplicate research_ids
+    // Priority: Phone first, then email (only if no phone provided)
+    let existingAssessment: { id: string; research_id: string | null } | null = null
+
+    if (phoneNumber) {
+      // Primary: Match by phone_number
+      const { data } = await supabase
+        .from('assessments')
+        .select('id, research_id')
+        .eq('phone_number', phoneNumber)
+        .single()
+      existingAssessment = data
+      if (data) {
+        logger.info('Dedup: Found existing assessment by phone', {
+          existingId: data.id,
+          researchId: data.research_id
+        })
+      }
+    } else if (email) {
+      // Fallback: Only check email if NO phone was provided
+      const { data } = await supabase
+        .from('assessments')
+        .select('id, research_id')
+        .eq('email', email)
+        .single()
+      existingAssessment = data
+      if (data) {
+        logger.info('Dedup: Found existing assessment by email', {
+          existingId: data.id,
+          researchId: data.research_id
+        })
+      }
+    }
+
+    let assessment: any
+    let error: any
+
+    if (existingAssessment) {
+      // UPDATE existing row - preserve research_id
+      logger.info('Dedup: Updating existing assessment', { id: existingAssessment.id })
+      const result = await supabase
+        .from('assessments')
+        .update({
+          name: name || null,
+          responses: responses,
+          disclosures: session.disclosures,
+          guide_type: guideType,
+          initial_pain_score: initialPainScore,
+          sms_opt_in: smsOptIn || false,
+          delivery_method: deliveryMethod || 'sms',
+          sms_consent_timestamp: smsOptIn ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString(),
+          // Phase 1 Pivot: Force monograph tier for everyone
+          payment_tier: 'comprehensive',
+          payment_completed: true,
+        })
+        .eq('id', existingAssessment.id)
+        .select()
+        .single()
+      assessment = result.data
+      error = result.error
+    } else {
+      // INSERT new row - DB trigger assigns research_id
+      logger.info('Dedup: Creating new assessment')
+      const result = await supabase
+        .from('assessments')
+        .insert({
+          session_id: session.sessionId,
+          name: name || null,
+          email: email || null,
+          phone_number: phoneNumber || null,
+          contact_consent: true,
+          responses: responses,
+          disclosures: session.disclosures,
+          guide_type: guideType,
+          initial_pain_score: initialPainScore,
+          referrer_source: referrerSource || 'organic',
+          sms_opt_in: smsOptIn || false,
+          delivery_method: deliveryMethod || 'sms',
+          sms_consent_timestamp: smsOptIn ? new Date().toISOString() : null,
+          // Phase 1 Pivot: Force monograph tier for everyone
+          payment_tier: 'comprehensive',
+          payment_completed: true,
+          enrolled_in_paincrowdsource: false
+        })
+        .select()
+        .single()
+      assessment = result.data
+      error = result.error
+    }
+    // ==========================================================
+    // END PHASE 1 PIVOT
+    // ==========================================================
 
     if (error) {
-      console.error('Failed to save assessment')
+      logger.error('Failed to save assessment', { error })
       throw error
     }
-    
-    // Assessment saved successfully
+
+    logger.info('Assessment saved', {
+      id: assessment.id,
+      researchId: assessment.research_id,
+      isUpdate: !!existingAssessment
+    })
 
     // Queue the guide delivery
     const { error: deliveryError } = await supabase

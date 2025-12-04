@@ -187,6 +187,7 @@ export type Database = {
         Row: {
           contact_consent: boolean | null
           created_at: string | null
+          delivery_method: 'sms' | 'email' | 'both' | null
           disclosures: string[] | null
           email: string | null
           enrolled_in_paincrowdsource: boolean | null
@@ -203,8 +204,11 @@ export type Database = {
           payment_tier: Database["public"]["Enums"]["payment_tier"] | null
           phone_number: string | null
           referrer_source: string | null
+          research_id: string | null
           responses: Json
           session_id: string
+          sms_consent_timestamp: string | null
+          sms_opt_in: boolean | null
           sms_opted_out: boolean | null
           stripe_session_id: string | null
           telehealth_provider_notes: string | null
@@ -215,6 +219,7 @@ export type Database = {
         Insert: {
           contact_consent?: boolean | null
           created_at?: string | null
+          delivery_method?: 'sms' | 'email' | 'both' | null
           disclosures?: string[] | null
           email?: string | null
           enrolled_in_paincrowdsource?: boolean | null
@@ -231,8 +236,11 @@ export type Database = {
           payment_tier?: Database["public"]["Enums"]["payment_tier"] | null
           phone_number?: string | null
           referrer_source?: string | null
+          research_id?: string | null
           responses?: Json
           session_id?: string
+          sms_consent_timestamp?: string | null
+          sms_opt_in?: boolean | null
           sms_opted_out?: boolean | null
           stripe_session_id?: string | null
           telehealth_provider_notes?: string | null
@@ -243,6 +251,7 @@ export type Database = {
         Update: {
           contact_consent?: boolean | null
           created_at?: string | null
+          delivery_method?: 'sms' | 'email' | 'both' | null
           disclosures?: string[] | null
           email?: string | null
           enrolled_in_paincrowdsource?: boolean | null
@@ -259,8 +268,11 @@ export type Database = {
           payment_tier?: Database["public"]["Enums"]["payment_tier"] | null
           phone_number?: string | null
           referrer_source?: string | null
+          research_id?: string | null
           responses?: Json
           session_id?: string
+          sms_consent_timestamp?: string | null
+          sms_opt_in?: boolean | null
           sms_opted_out?: boolean | null
           stripe_session_id?: string | null
           telehealth_provider_notes?: string | null

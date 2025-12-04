@@ -315,14 +315,14 @@ export default function GuidePage() {
           </div>
         )}
         
-        {/* Show upgrade options based on current tier */}
-        {(!assessment.payment_tier || assessment.payment_tier === 0 || assessment.payment_tier === 'free') && (
+        {/* Show upgrade options based on current tier - hidden when payments are disabled */}
+        {process.env.NEXT_PUBLIC_DISABLE_PAYMENTS !== 'true' && (!assessment.payment_tier || assessment.payment_tier === 0 || assessment.payment_tier === 'free') && (
           <div className="mt-8 space-y-4">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold mb-2">Unlock More Detailed Information</h3>
               <p className="text-gray-600">Get educational strategies and expert guidance</p>
             </div>
-            
+
             {/* Enhanced Report Upgrade */}
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-6 relative overflow-hidden">
               <div className="absolute top-2 right-2">
@@ -340,7 +340,7 @@ export default function GuidePage() {
                     <li>• Posture correction guide</li>
                     <li>• Progress tracking tools</li>
                   </ul>
-                  <button 
+                  <button
                     onClick={() => router.push(`/guide/${params.id}/upgrade?tier=enhanced`)}
                     className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-all transform hover:scale-105 inline-flex items-center gap-2"
                   >
@@ -368,7 +368,7 @@ export default function GuidePage() {
                     <li>• 14-day management roadmap</li>
                     <li>• Provider discussion guide</li>
                   </ul>
-                  <button 
+                  <button
                     onClick={() => router.push(`/guide/${params.id}/upgrade?tier=monograph`)}
                     className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-all transform hover:scale-105 inline-flex items-center gap-2"
                   >
@@ -379,15 +379,15 @@ export default function GuidePage() {
             </div>
           </div>
         )}
-        
-        {/* For $5 users, show monograph upgrade */}
-        {(assessment.payment_tier === 5 || assessment.payment_tier === 'enhanced') && (
+
+        {/* For $5 users, show monograph upgrade - hidden when payments are disabled */}
+        {process.env.NEXT_PUBLIC_DISABLE_PAYMENTS !== 'true' && (assessment.payment_tier === 5 || assessment.payment_tier === 'enhanced') && (
           <div className="mt-8">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold mb-2">Upgrade to Complete Monograph</h3>
               <p className="text-gray-600">Get the most comprehensive guide with medical research</p>
             </div>
-            
+
             <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-300 rounded-xl p-6">
               <div className="flex items-start gap-4">
                 <BookOpen className="w-10 h-10 text-purple-600 flex-shrink-0" />
@@ -400,7 +400,7 @@ export default function GuidePage() {
                     <li>• Long-term management strategies</li>
                     <li>• Professional provider discussion points</li>
                   </ul>
-                  <button 
+                  <button
                     onClick={() => router.push(`/guide/${params.id}/upgrade?tier=monograph`)}
                     className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-all transform hover:scale-105 inline-flex items-center gap-2"
                   >

@@ -15,7 +15,10 @@ export const assessmentSubmissionSchema = z.object({
     .optional()
     .nullable(),
   initialPainScore: z.number().int().min(0).max(10),
-  referrerSource: z.string().max(50).optional()
+  referrerSource: z.string().max(50).optional(),
+  // Phase 1 Pivot: SMS-first data collection fields
+  smsOptIn: z.boolean().optional().default(false),
+  deliveryMethod: z.enum(['sms', 'email', 'both']).optional().default('sms')
 }).refine(
   (data) => {
     // Ensure email is provided if contactMethod is email
