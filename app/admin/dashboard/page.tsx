@@ -44,30 +44,11 @@ async function fetchDashboardData() {
       .from('v_assessments_visible')
       .select('*', { count: 'exact', head: true })
 
-    // Get revenue data (view automatically excludes quarantined)
-    const { data: revenueData } = await supabaseService
-      .from('v_assessments_visible')
-      .select('payment_tier, payment_completed')
-      .eq('payment_completed', true)
-
-    const revenueByTier = {
-      free: 0,
-      enhanced: 0,
-      comprehensive: 0
-    }
-
-    const tierPrices = {
-      free: 0,
-      enhanced: 47,
-      comprehensive: 97
-    }
-
-    revenueData?.forEach(assessment => {
-      const tier = assessment.payment_tier || 'free'
-      if (tier in revenueByTier) {
-        revenueByTier[tier as keyof typeof revenueByTier] += tierPrices[tier as keyof typeof tierPrices]
-      }
-    })
+    // Get free guides delivered count (Phase 1 Pivot: Lead Gen focus)
+    const { count: freeGuidesDelivered } = await supabaseService
+      .from('v_guide_deliveries_visible')
+      .select('*', { count: 'exact', head: true })
+      .eq('delivery_status', 'sent')
 
     // Get delivery stats from communication_logs
     const { data: communicationLogs } = await supabaseService
@@ -123,7 +104,6 @@ async function fetchDashboardData() {
       .order('created_at', { ascending: false })
       .limit(10)
 
-    const totalRevenue = revenueByTier.free + revenueByTier.enhanced + revenueByTier.comprehensive
     const totalDeliveries = deliveryStats.emailSuccess + deliveryStats.emailFailed +
                           deliveryStats.smsSuccess + deliveryStats.smsFailed
 
@@ -143,8 +123,7 @@ async function fetchDashboardData() {
 
     return {
       totalAssessments: totalAssessments || 0,
-      totalRevenue,
-      revenueByTier,
+      freeGuidesDelivered: freeGuidesDelivered || 0,
       deliveryStats,
       recentAssessments: recentAssessments || [],
       totalDeliveries,
@@ -155,8 +134,7 @@ async function fetchDashboardData() {
     // Return empty data on error
     return {
       totalAssessments: 0,
-      totalRevenue: 0,
-      revenueByTier: { free: 0, enhanced: 0, comprehensive: 0 },
+      freeGuidesDelivered: 0,
       deliveryStats: { emailSuccess: 0, emailFailed: 0, smsSuccess: 0, smsFailed: 0 },
       recentAssessments: [],
       totalDeliveries: 0,

@@ -8,12 +8,15 @@ import DeleteConfirmationModal from '@/components/admin/DeleteConfirmationModal'
 
 interface Assessment {
   id: string
+  research_id: string | null
   email: string | null
   phone_number: string | null
   name: string | null
   guide_type: string
   payment_tier: string
   payment_completed: boolean
+  delivery_method: string | null
+  sms_opt_in: boolean
   created_at: string
   guide_deliveries?: any[]
   responses?: any
@@ -55,6 +58,7 @@ export default function AssessmentsClient({ assessments: initialAssessments }: P
   const filteredAssessments = assessments.filter(assessment => {
     const search = searchTerm.toLowerCase()
     return (
+      assessment.research_id?.toLowerCase().includes(search) ||
       assessment.email?.toLowerCase().includes(search) ||
       assessment.phone_number?.includes(search) ||
       assessment.name?.toLowerCase().includes(search) ||
@@ -63,14 +67,14 @@ export default function AssessmentsClient({ assessments: initialAssessments }: P
   })
 
   const exportToCSV = () => {
-    const headers = ['ID', 'Email', 'Phone', 'Guide Type', 'Payment Tier', 'Payment Completed', 'Created At']
+    const headers = ['Research ID', 'Email', 'Phone', 'Delivery Method', 'Guide Type', 'Payment Tier', 'Created At']
     const rows = filteredAssessments.map(a => [
-      a.id,
+      a.research_id || '',
       a.email || '',
       a.phone_number || '',
+      a.delivery_method || '',
       a.guide_type,
       a.payment_tier,
-      a.payment_completed ? 'Yes' : 'No',
       new Date(a.created_at).toLocaleString()
     ])
 
@@ -162,7 +166,7 @@ export default function AssessmentsClient({ assessments: initialAssessments }: P
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by email, phone, name, or guide type..."
+            placeholder="Search by Research ID, email, phone, name, or guide type..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -179,6 +183,9 @@ export default function AssessmentsClient({ assessments: initialAssessments }: P
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Research ID
+                </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Contact
                 </th>
@@ -207,12 +214,26 @@ export default function AssessmentsClient({ assessments: initialAssessments }: P
                 return (
                   <tr key={assessment.id} className="hover:bg-gray-50">
                     <td className="px-4 py-4 whitespace-nowrap">
+                      <span className="text-sm font-mono text-blue-600 font-medium">
+                        {assessment.research_id || '—'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div>
                         {assessment.email && (
                           <div className="text-sm font-medium text-gray-900">{assessment.email}</div>
                         )}
                         {assessment.phone_number && (
                           <div className="text-sm text-gray-500">{assessment.phone_number}</div>
+                        )}
+                        {assessment.delivery_method && (
+                          <span className={`inline-flex mt-1 text-xs px-1.5 py-0.5 rounded ${
+                            assessment.delivery_method === 'sms' ? 'bg-green-100 text-green-700' :
+                            assessment.delivery_method === 'email' ? 'bg-blue-100 text-blue-700' :
+                            'bg-purple-100 text-purple-700'
+                          }`}>
+                            {assessment.delivery_method.toUpperCase()}
+                          </span>
                         )}
                       </div>
                     </td>
@@ -312,9 +333,11 @@ export default function AssessmentsClient({ assessments: initialAssessments }: P
                 <div>
                   <h3 className="font-medium mb-2">Contact Information</h3>
                   <div className="bg-gray-50 p-4 rounded-lg">
+                    <p><strong>Research ID:</strong> <span className="font-mono text-blue-600">{selectedAssessment.research_id || 'N/A'}</span></p>
                     <p><strong>Email:</strong> {selectedAssessment.email || 'N/A'}</p>
                     <p><strong>Phone:</strong> {selectedAssessment.phone_number || 'N/A'}</p>
                     <p><strong>Name:</strong> {selectedAssessment.name || 'N/A'}</p>
+                    <p><strong>Delivery Method:</strong> {selectedAssessment.delivery_method || 'N/A'}</p>
                   </div>
                 </div>
 

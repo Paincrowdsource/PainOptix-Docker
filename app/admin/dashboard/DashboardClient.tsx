@@ -4,18 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDistanceToNow } from 'date-fns'
-import { DollarSign, Users, Mail, MessageSquare, TrendingUp, RefreshCcw } from 'lucide-react'
+import { FileText, Users, Mail, MessageSquare, TrendingUp, RefreshCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import DropoffAnalytics from '@/components/admin/DropoffAnalytics'
 
 interface DashboardData {
   totalAssessments: number
-  totalRevenue: number
-  revenueByTier: {
-    free: number
-    enhanced: number
-    comprehensive: number
-  }
+  freeGuidesDelivered: number
   deliveryStats: {
     emailSuccess: number
     emailFailed: number
@@ -123,11 +118,12 @@ export default function DashboardClient({ data }: Props) {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Free Guides Delivered</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${data.totalRevenue}</div>
+                <div className="text-2xl font-bold">{data.freeGuidesDelivered}</div>
+                <p className="text-xs text-muted-foreground mt-1">Lead Gen Mode</p>
               </CardContent>
             </Card>
 
@@ -151,47 +147,10 @@ export default function DashboardClient({ data }: Props) {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pilot (24h)</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {data.pilotStats?.totals?.pilot_count ?? 0} × $5
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {data.pilotStats?.totals?.standard_count ?? 0} × $20
-                  {data.pilotStats?.source && ` • ${data.pilotStats.source}`}
-                </p>
-              </CardContent>
-            </Card>
           </div>
 
-          {/* Revenue Breakdown */}
-          <div className="grid gap-6 mb-8 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue by Tier</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Free Guide</span>
-                    <span className="text-sm text-gray-600">${data.revenueByTier.free}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Enhanced Guide ($47)</span>
-                    <span className="text-sm text-gray-600">${data.revenueByTier.enhanced}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Comprehensive Guide ($97)</span>
-                    <span className="text-sm text-gray-600">${data.revenueByTier.comprehensive}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
+          {/* Delivery Statistics */}
+          <div className="grid gap-6 mb-8 md:grid-cols-1 lg:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Delivery Statistics</CardTitle>
