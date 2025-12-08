@@ -39,7 +39,7 @@ export function getMonographConfirmationTemplate(ctx: { assessmentResults: any; 
               <div style="margin: 24px 0;">
                 <h2 style="margin: 0 0 16px 0; font-size: 20px; color: #1F2937;">What's Included in Your Comprehensive Monograph</h2>
 
-                <div style="padding: 16px; background: linear-gradient(135deg, #F3E8FF 0%, #EDE9FE 100%); border-radius: 8px; border: 1px solid #8B5CF6;">
+                <div style="padding: 16px; background: #F7FAFF; border-radius: 8px; border: 1px solid #0B539433;">
                   <ul style="margin: 0; padding-left: 20px; color: #4B5563; font-size: 15px; line-height: 1.8;">
                     <li><strong>14+ Detailed Sections:</strong> Complete medical education about ${assessmentResults?.diagnosis || 'your condition'}</li>
                     <li><strong>Exercise Illustrations:</strong> Visual guides showing proper form for therapeutic movements</li>
@@ -66,7 +66,7 @@ export function getMonographConfirmationTemplate(ctx: { assessmentResults: any; 
                 </p>
                 <div style="text-align: center;">
                   <a href="${appUrl}/guide/${assessmentResults?.assessmentId || 'YOUR_ASSESSMENT_ID'}"
-                     style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%); color: #FFFFFF; text-decoration: none; border-radius: 999px; font-weight: 600; font-size: 16px; letter-spacing: 0.02em; box-shadow: 0 4px 14px 0 rgba(124, 58, 237, 0.35);">
+                     style="display: inline-block; padding: 14px 32px; background: #0B5394; color: #FFFFFF; text-decoration: none; border-radius: 999px; font-weight: 600; font-size: 16px; letter-spacing: 0.02em; box-shadow: 0 4px 14px 0 rgba(11, 83, 148, 0.25);">
                     Download My Comprehensive Monograph
                   </a>
                 </div>
