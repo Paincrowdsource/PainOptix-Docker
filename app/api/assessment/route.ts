@@ -63,8 +63,11 @@ export async function POST(req: NextRequest) {
           researchId: data.research_id
         })
       }
-    } else if (email) {
-      // Fallback: Only check email if NO phone was provided
+    }
+
+    // Fall-through: If no match by phone AND email provided, check email
+    // This handles the case where user converts from email-only to SMS
+    if (!existingAssessment && email) {
       const { data } = await supabase
         .from('assessments')
         .select('id, research_id')
@@ -72,7 +75,7 @@ export async function POST(req: NextRequest) {
         .single()
       existingAssessment = data
       if (data) {
-        logger.info('Dedup: Found existing assessment by email', {
+        logger.info('Dedup: Found existing assessment by email (fall-through)', {
           existingId: data.id,
           researchId: data.research_id
         })
@@ -89,6 +92,9 @@ export async function POST(req: NextRequest) {
         .from('assessments')
         .update({
           name: name || null,
+          // Merge contact info: update email/phone if provided (handles email→SMS conversion)
+          email: email || undefined,
+          phone_number: phoneNumber || undefined,
           responses: responses,
           disclosures: session.disclosures,
           guide_type: guideType,

@@ -248,7 +248,10 @@ export default function AssessmentsClient({ assessments: initialAssessments }: P
                         assessment.payment_tier === 'enhanced' ? 'bg-blue-100 text-blue-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {assessment.payment_tier}
+                        {assessment.payment_tier === 'free' ? 'Free' :
+                         assessment.payment_tier === 'comprehensive' ? 'Comp' :
+                         assessment.payment_tier === 'enhanced' ? 'Paid' :
+                         assessment.payment_tier}
                       </span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">

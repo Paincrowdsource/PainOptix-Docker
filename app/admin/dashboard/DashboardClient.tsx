@@ -210,7 +210,10 @@ export default function DashboardClient({ data }: Props) {
                         {formatDistanceToNow(new Date(assessment.created_at), { addSuffix: true })}
                       </p>
                       {assessment.payment_completed && (
-                        <p className="text-sm text-green-600">Paid</p>
+                        <p className="text-sm text-green-600">
+                          {assessment.payment_tier === 'free' ? 'Free' :
+                           assessment.payment_tier === 'comprehensive' ? 'Comp' : 'Paid'}
+                        </p>
                       )}
                     </div>
                   </div>
