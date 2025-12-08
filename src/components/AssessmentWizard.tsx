@@ -21,6 +21,19 @@ interface AssessmentWizardProps {
 
 type WizardStep = 'disclaimer' | 'assessment' | 'contact' | 'delivery' | 'complete';
 
+// Draft persistence constants
+const DRAFT_STORAGE_KEY = 'painoptix_assessment_draft';
+const DRAFT_EXPIRY_HOURS = 24;
+
+// Draft type for localStorage persistence
+interface AssessmentDraft {
+  responses: [string, any][]; // Map entries as array
+  currentQuestionId: string;
+  sessionId: string;
+  disclaimerAccepted: boolean;
+  savedAt: string; // ISO timestamp
+}
+
 export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState<WizardStep>('disclaimer');
   const [currentQuestionId, setCurrentQuestionId] = useState<string>('Q1');
@@ -50,6 +63,10 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
   const [guideSelector] = useState(() => new EducationalGuideSelector());
   const [questionFlow] = useState(() => new QuestionFlow());
 
+  // Draft recovery state
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [savedDraft, setSavedDraft] = useState<AssessmentDraft | null>(null);
+
   // Initialize session on component mount
   useEffect(() => {
     // Generate or retrieve session ID
@@ -60,6 +77,71 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
     }
     setSessionId(storedSessionId);
   }, []);
+
+  // Auto-save draft to localStorage after each answer
+  useEffect(() => {
+    if (responses.size > 0 && currentStep === 'assessment') {
+      const draft: AssessmentDraft = {
+        responses: Array.from(responses.entries()),
+        currentQuestionId,
+        sessionId,
+        disclaimerAccepted,
+        savedAt: new Date().toISOString()
+      };
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    }
+  }, [responses, currentQuestionId, sessionId, disclaimerAccepted, currentStep]);
+
+  // Check for saved draft on component mount
+  useEffect(() => {
+    const draftJson = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (draftJson) {
+      try {
+        const draft: AssessmentDraft = JSON.parse(draftJson);
+        const savedAt = new Date(draft.savedAt);
+        const hoursSinceSave = (Date.now() - savedAt.getTime()) / (1000 * 60 * 60);
+
+        // Only offer to resume if draft is less than 24 hours old and has responses
+        if (hoursSinceSave < DRAFT_EXPIRY_HOURS && draft.responses.length > 0) {
+          setSavedDraft(draft);
+          setShowResumeModal(true);
+        } else {
+          // Clear expired draft
+          localStorage.removeItem(DRAFT_STORAGE_KEY);
+        }
+      } catch (e) {
+        console.error('Failed to parse saved draft:', e);
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+      }
+    }
+  }, []);
+
+  // Resume from saved draft
+  const handleResumeDraft = () => {
+    if (savedDraft) {
+      setResponses(new Map(savedDraft.responses));
+      setCurrentQuestionId(savedDraft.currentQuestionId);
+      setSessionId(savedDraft.sessionId);
+      setDisclaimerAccepted(true);
+      setCurrentStep('assessment');
+
+      // Restore guideSelector state
+      savedDraft.responses.forEach(([questionId, answer]) => {
+        const question = Questions[questionId as keyof typeof Questions];
+        if (question) {
+          guideSelector.addResponse(questionId, question.text, answer);
+        }
+      });
+    }
+    setShowResumeModal(false);
+  };
+
+  // Start fresh, discard draft
+  const handleDiscardDraft = () => {
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+    setSavedDraft(null);
+    setShowResumeModal(false);
+  };
 
   // Track progress helper function
   const trackProgress = async (
@@ -367,6 +449,10 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
       // Store assessment ID and move to delivery screen
       console.log('Assessment created with ID:', result.assessmentId);
       setAssessmentId(result.assessmentId);
+
+      // Clear draft after successful submission
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+
       // Mark session as complete
       await completeSession(result.assessmentId);
       setCurrentStep('delivery');
@@ -443,6 +529,47 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
   };
 
   // Render based on current step
+
+  // Resume Modal (shown before disclaimer if draft exists)
+  if (showResumeModal && savedDraft) {
+    const savedAt = new Date(savedDraft.savedAt);
+    const questionsAnswered = savedDraft.responses.length;
+
+    return (
+      <div className="max-w-2xl mx-auto p-4 md:p-6">
+        <div className="medical-card">
+          <h2 className="text-center mb-6 text-xl md:text-2xl">Welcome Back!</h2>
+
+          <div className="info-box mb-6">
+            <Info className="icon-sm flex-shrink-0" style={{ color: 'var(--primary-blue)' }} />
+            <div>
+              <p className="font-semibold mb-2">You have a saved assessment</p>
+              <p className="text-sm">
+                You answered {questionsAnswered} question{questionsAnswered !== 1 ? 's' : ''} on {savedAt.toLocaleDateString()} at {savedAt.toLocaleTimeString()}.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={handleResumeDraft}
+              className="btn-primary flex items-center justify-center gap-2"
+            >
+              <Activity className="w-4 h-4" />
+              Continue Assessment
+            </button>
+            <button
+              onClick={handleDiscardDraft}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Start Fresh
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (currentStep === 'disclaimer') {
     return (
       <div className="max-w-2xl mx-auto p-4 md:p-6">

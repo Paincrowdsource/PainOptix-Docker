@@ -38,6 +38,29 @@ export async function POST(req: NextRequest) {
     // Get the selected guide
     const guideType = selector.selectEducationalGuide()
     const session = selector.getSession()
+    const reasoning = selector.getReasoning()
+
+    // Log diagnosis reasoning for AI audit trail
+    logger.info('Diagnosis reasoning', {
+      assessmentSessionId: session.sessionId,
+      ...reasoning
+    })
+
+    // Detect if answer was originally multi-select (for ML metadata)
+    const detectAnswerType = (answer: any): 'single' | 'multi' => {
+      if (Array.isArray(answer)) {
+        return 'multi';
+      }
+      return 'single';
+    };
+
+    // Enrich responses with answerType metadata for ML training (backward compatible)
+    const enrichedResponses = responses.map((r: any) => ({
+      questionId: r.questionId,
+      question: r.question,
+      answer: r.answer, // Keep original format for backward compatibility
+      answerType: detectAnswerType(r.answer) // NEW: aids ML feature extraction
+    }));
 
     // Create assessment record
     const supabase = getServiceSupabase()
@@ -95,7 +118,7 @@ export async function POST(req: NextRequest) {
           // Merge contact info: update email/phone if provided (handles email→SMS conversion)
           email: email || undefined,
           phone_number: phoneNumber || undefined,
-          responses: responses,
+          responses: enrichedResponses, // Use enriched responses with answerType metadata
           disclosures: session.disclosures,
           guide_type: guideType,
           initial_pain_score: initialPainScore,
@@ -123,7 +146,7 @@ export async function POST(req: NextRequest) {
           email: email || null,
           phone_number: phoneNumber || null,
           contact_consent: true,
-          responses: responses,
+          responses: enrichedResponses, // Use enriched responses with answerType metadata
           disclosures: session.disclosures,
           guide_type: guideType,
           initial_pain_score: initialPainScore,

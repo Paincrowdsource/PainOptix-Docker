@@ -1,8 +1,18 @@
 import { EducationalGuide, QuestionResponse, AssessmentSession } from '@/types/algorithm';
 
+// Diagnosis reasoning for AI audit trail
+export interface DiagnosisReasoning {
+  selectedGuide: EducationalGuide;
+  primaryFactor: string;
+  matchedRules: string[];
+  timestamp: string;
+  responses: { questionId: string; answer: any }[];
+}
+
 export class EducationalGuideSelector {
   private session: AssessmentSession;
-  
+  private reasoning: DiagnosisReasoning | null = null;
+
   constructor() {
     this.session = {
       sessionId: crypto.randomUUID(),
@@ -55,27 +65,49 @@ export class EducationalGuideSelector {
   // Main logic to select educational guide based on responses
   selectEducationalGuide(): EducationalGuide {
     const responses = this.getResponseMap();
-    
+    const matchedRules: string[] = [];
+    let primaryFactor = '';
+    let selectedGuide: EducationalGuide;
+
     // Check urgent symptoms first (Q13-Q16)
     if (this.checkUrgentSymptoms(responses)) {
-      return 'urgent_symptoms';
+      selectedGuide = 'urgent_symptoms';
+      primaryFactor = 'Red flag symptoms detected';
+      matchedRules.push('RULE: Q13-Q16 any YES → urgent_symptoms');
+    } else {
+      // Route based on Q1 (primary pain location)
+      const q1Answer = responses.get('Q1');
+      primaryFactor = `Pain location: ${q1Answer || 'unknown'}`;
+
+      switch(q1Answer) {
+        case 'back_only':
+          selectedGuide = this.evaluateBackOnly(responses, matchedRules);
+          break;
+        case 'back_one_leg':
+          selectedGuide = this.evaluateBackOneLeg(responses, matchedRules);
+          break;
+        case 'back_both_legs':
+          selectedGuide = this.evaluateBackBothLegs(responses, matchedRules);
+          break;
+        case 'groin_thigh':
+          selectedGuide = this.evaluateGroinThigh(responses, matchedRules);
+          break;
+        default:
+          selectedGuide = 'muscular_nslbp';
+          matchedRules.push('RULE: No pattern match → muscular_nslbp (default)');
+      }
     }
-    
-    // Route based on Q1 (primary pain location)
-    const q1Answer = responses.get('Q1');
-    
-    switch(q1Answer) {
-      case 'back_only':
-        return this.evaluateBackOnly(responses);
-      case 'back_one_leg':
-        return this.evaluateBackOneLeg(responses);
-      case 'back_both_legs':
-        return this.evaluateBackBothLegs(responses);
-      case 'groin_thigh':
-        return this.evaluateGroinThigh(responses);
-      default:
-        return 'muscular_nslbp'; // Default
-    }
+
+    // Store reasoning for audit trail
+    this.reasoning = {
+      selectedGuide,
+      primaryFactor,
+      matchedRules,
+      timestamp: new Date().toISOString(),
+      responses: Array.from(responses.entries()).map(([questionId, answer]) => ({ questionId, answer }))
+    };
+
+    return selectedGuide;
   }
 
   // Check Q13-Q16 for urgent symptoms
@@ -87,62 +119,73 @@ export class EducationalGuideSelector {
   }
 
   // Logic for back pain only (Q2-Q3)
-  private evaluateBackOnly(responses: Map<string, any>): EducationalGuide {
+  private evaluateBackOnly(responses: Map<string, any>, matchedRules: string[]): EducationalGuide {
     const q2Answers = responses.get('Q2') || [];
-    const q3Answer = responses.get('Q3');
-    
+
     if (q2Answers.includes('bending_backward')) {
+      matchedRules.push('RULE: Q2 includes bending_backward → facet_arthropathy');
       return 'facet_arthropathy';
     }
     if (q2Answers.includes('getting_up')) {
+      matchedRules.push('RULE: Q2 includes getting_up → lumbar_instability');
       return 'lumbar_instability';
     }
+    matchedRules.push('RULE: Back only, no specific pattern → muscular_nslbp');
     return 'muscular_nslbp';
   }
 
   // Logic for back + one leg (Q4-Q6)
-  private evaluateBackOneLeg(responses: Map<string, any>): EducationalGuide {
+  private evaluateBackOneLeg(responses: Map<string, any>, matchedRules: string[]): EducationalGuide {
     if (responses.get('Q4') === 'yes') {
+      matchedRules.push('RULE: Q4 = yes (leg pain below knee) → sciatica');
       return 'sciatica';
     }
-    
+
     const q6Answers = responses.get('Q6') || [];
     if (q6Answers.length > 0) {
+      matchedRules.push(`RULE: Q6 has symptoms (${q6Answers.join(', ')}) → upper_lumbar_radiculopathy`);
       return 'upper_lumbar_radiculopathy';
     }
-    
+
     const q5Answer = responses.get('Q5');
     if (q5Answer === 'groin_front_thigh') {
+      matchedRules.push('RULE: Q5 = groin_front_thigh → si_joint_dysfunction');
       return 'si_joint_dysfunction';
     }
-    
+
+    matchedRules.push('RULE: Back + one leg, no specific pattern → muscular_nslbp');
     return 'muscular_nslbp';
   }
 
   // Logic for back + both legs (Q7-Q8)
-  private evaluateBackBothLegs(responses: Map<string, any>): EducationalGuide {
+  private evaluateBackBothLegs(responses: Map<string, any>, matchedRules: string[]): EducationalGuide {
     const q7Answer = responses.get('Q7');
     const q8Answer = responses.get('Q8');
-    
+
     if (q7Answer === 'worse_standing' && q8Answer === 'sitting_bending') {
+      matchedRules.push('RULE: Q7 = worse_standing AND Q8 = sitting_bending → canal_stenosis');
       return 'canal_stenosis';
     }
-    
+
     if (q7Answer === 'constant' || q7Answer === 'worse_sitting') {
+      matchedRules.push(`RULE: Q7 = ${q7Answer} → central_disc_bulge`);
       return 'central_disc_bulge';
     }
-    
+
+    matchedRules.push('RULE: Back + both legs, no specific pattern → muscular_nslbp');
     return 'muscular_nslbp';
   }
 
   // Logic for groin/thigh pain (Q9)
-  private evaluateGroinThigh(responses: Map<string, any>): EducationalGuide {
+  private evaluateGroinThigh(responses: Map<string, any>, matchedRules: string[]): EducationalGuide {
     const q9Answers = responses.get('Q9') || [];
-    
+
     if (q9Answers.length > 0) {
+      matchedRules.push(`RULE: Q9 has symptoms (${q9Answers.join(', ')}) → upper_lumbar_radiculopathy`);
       return 'upper_lumbar_radiculopathy';
     }
-    
+
+    matchedRules.push('RULE: Groin/thigh pain, no neurological symptoms → si_joint_dysfunction');
     return 'si_joint_dysfunction';
   }
   
@@ -156,5 +199,9 @@ export class EducationalGuideSelector {
 
   getSession(): AssessmentSession {
     return this.session;
+  }
+
+  getReasoning(): DiagnosisReasoning | null {
+    return this.reasoning;
   }
 }
