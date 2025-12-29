@@ -1,5 +1,5 @@
 import { getServiceSupabase } from './supabase'
-import { sendEmail, sendSMS } from './communications'
+import { sendEmail, sendSMS, SendSMSResult } from './communications'
 import { getEducationalGuideEmailTemplate, getSMSTemplate } from './email-templates/educational-guide'
 import { getFreeTierWelcomeTemplate } from './email/templates/free-tier-welcome'
 import { getEnhancedConfirmationTemplate } from './email/templates/enhanced-confirmation'
@@ -52,8 +52,86 @@ export async function deliverEducationalGuide(assessmentId: string) {
     let errorMessage: string | null = null
     let deliveryAttempts = 0
     const maxRetries = 3
-    
-    if (assessment.email) {
+
+    // Determine delivery method: respect user's explicit preference
+    const wantsSMS = assessment.sms_opt_in === true && assessment.phone_number
+    const prefersSMS = assessment.delivery_method === 'sms'
+    const wantsBoth = assessment.delivery_method === 'both'
+
+    console.log('[Guide Delivery] Starting delivery for assessment:', assessmentId)
+    console.log('[Guide Delivery] User preferences:', {
+      delivery_method: assessment.delivery_method,
+      sms_opt_in: assessment.sms_opt_in,
+      has_phone: !!assessment.phone_number,
+      has_email: !!assessment.email,
+      wantsSMS,
+      prefersSMS,
+      wantsBoth
+    })
+
+    // SMS DELIVERY PATH: If user opted in for SMS and has phone
+    if (wantsSMS && (prefersSMS || wantsBoth) && features.smsEnabled) {
+      console.log('[Guide Delivery] Attempting SMS delivery to:', assessment.phone_number)
+
+      const smsMessage = getSMSTemplate({
+        guideType: assessment.guide_type,
+        assessmentId: assessment.id,
+      })
+
+      const smsResult: SendSMSResult = await sendSMS({
+        to: assessment.phone_number,
+        message: smsMessage
+      })
+
+      console.log('[Guide Delivery] SMS result:', smsResult)
+
+      if (smsResult.success) {
+        deliverySuccess = true
+
+        // Log successful SMS with SID for tracking
+        await logCommunication({
+          assessmentId: assessment.id,
+          templateKey: 'guide_sms_delivery',
+          status: 'sent',
+          channel: 'sms',
+          providerId: smsResult.sid, // Store Twilio SID for webhook correlation
+          recipient: assessment.phone_number,
+          message: smsMessage.substring(0, 500)
+        })
+
+        await logEvent('sms_sent_initial_assessment', {
+          assessmentId: assessment.id,
+          sid: smsResult.sid
+        })
+      } else {
+        // Log failed SMS attempt with error details
+        await logCommunication({
+          assessmentId: assessment.id,
+          templateKey: 'guide_sms_delivery',
+          status: 'failed',
+          channel: 'sms',
+          recipient: assessment.phone_number,
+          message: smsMessage.substring(0, 500),
+          errorMessage: smsResult.error || 'SMS delivery failed'
+        })
+
+        console.log('[Guide Delivery] SMS failed, error:', smsResult.error)
+
+        // If user only wanted SMS (not both), mark as failed
+        if (prefersSMS && !wantsBoth && !assessment.email) {
+          errorMessage = smsResult.error || 'SMS delivery failed and no email fallback'
+        }
+      }
+
+      // If SMS failed but user also has email, try email as fallback
+      if (!deliverySuccess && assessment.email && (wantsBoth || !prefersSMS)) {
+        console.log('[Guide Delivery] SMS failed, falling back to email')
+      }
+    }
+
+    // EMAIL DELIVERY PATH: Send email if not already successful via SMS
+    // OR if user wants both, OR if user prefers email
+    if (!deliverySuccess && assessment.email) {
       // Use the actual name from assessment, or extract from email as fallback
       let firstName = assessment.name;
       if (!firstName && assessment.email) {
@@ -156,131 +234,12 @@ export async function deliverEducationalGuide(assessmentId: string) {
           })
         }
       }
-    } else if (assessment.phone_number) {
-      // Try SMS if available
-      if (features.smsEnabled) {
-        const smsMessage = getSMSTemplate({
-          guideType: assessment.guide_type,
-          assessmentId: assessment.id,
-        })
-        
-        deliverySuccess = await sendSMS({
-          to: assessment.phone_number,
-          message: smsMessage
-        })
+    }
 
-        // Log SMS delivery attempt
-        if (deliverySuccess) {
-          await logCommunication({
-            assessmentId: assessment.id,
-            templateKey: 'guide_sms_delivery',
-            status: 'sent',
-            channel: 'sms',
-            recipient: assessment.phone_number,
-            message: smsMessage.substring(0, 500)
-          })
-
-          await logEvent('sms_sent_initial_assessment', {
-            assessmentId: assessment.id
-          })
-        } else {
-          // Log failed SMS attempt
-          await logCommunication({
-            assessmentId: assessment.id,
-            templateKey: 'guide_sms_delivery',
-            status: 'failed',
-            channel: 'sms',
-            recipient: assessment.phone_number,
-            message: smsMessage.substring(0, 500),
-            errorMessage: 'SMS delivery failed'
-          })
-        }
-
-        // If SMS fails and we have an email, try email as fallback
-        if (!deliverySuccess && assessment.email) {
-          console.log('SMS delivery failed, falling back to email')
-          
-          let firstName = assessment.name;
-          if (!firstName && assessment.email) {
-            firstName = assessment.email.split('@')[0].split('.')[0] 
-              .charAt(0).toUpperCase() + assessment.email.split('@')[0].split('.')[0].slice(1);
-          }
-          
-          // Use new segmented templates based on tier
-          const { tier, redFlag } = await resolveTierAndFlags(supabase, assessmentId)
-          
-          // Format assessment data for templates
-          const assessmentResults = formatAssessmentResults(assessment)
-          
-          let emailTemplate: { subject: string; html: string; text: string }
-          
-          if (tier === 'monograph') {
-            const html = getMonographConfirmationTemplate({ 
-              assessmentResults,
-              userTier: tier 
-            })
-            emailTemplate = {
-              subject: 'Your Complete Educational Monograph is Ready',
-              html,
-              text: 'Your Complete Educational Monograph is Ready. Please view this email in HTML format.'
-            }
-          } else if (tier === 'enhanced') {
-            const html = getEnhancedConfirmationTemplate({ 
-              assessmentResults,
-              userTier: tier 
-            })
-            emailTemplate = {
-              subject: 'Your Enhanced Educational Report is Ready',
-              html,
-              text: 'Your Enhanced Educational Report is Ready. Please view this email in HTML format.'
-            }
-          } else {
-            const html = getFreeTierWelcomeTemplate({ 
-              assessmentResults,
-              userTier: tier 
-            })
-            emailTemplate = {
-              subject: 'Your PainOptix Educational Assessment & Free Guide',
-              html,
-              text: 'Your PainOptix Educational Assessment & Free Guide is Ready. Please view this email in HTML format.'
-            }
-          }
-          
-          const result = await sendEmail({
-            to: assessment.email,
-            subject: emailTemplate.subject,
-            html: emailTemplate.html,
-            text: emailTemplate.text
-          })
-
-          deliverySuccess = result.success
-
-          // Log the SMS fallback email if successful
-          if (deliverySuccess) {
-            await logCommunication({
-              assessmentId: assessment.id,
-              templateKey: tier === 'monograph' ? 'monograph_confirmation' :
-                          tier === 'enhanced' ? 'enhanced_confirmation' :
-                          'free_tier_welcome',
-              status: 'sent',
-              channel: 'email',
-              providerId: result.messageId,
-              recipient: assessment.email,
-              subject: emailTemplate.subject,
-              message: emailTemplate.html.substring(0, 500)
-            })
-
-            await logEvent('email_sent_sms_fallback', {
-              assessmentId: assessment.id,
-              tier
-            })
-          }
-        }
-      } else {
-        // SMS not available, log warning
-        console.warn('SMS delivery requested but SMS is not enabled')
-        errorMessage = 'SMS delivery not available'
-      }
+    // Log if no delivery method was successful
+    if (!deliverySuccess && !errorMessage) {
+      errorMessage = 'No valid delivery method available'
+      console.log('[Guide Delivery] No delivery method succeeded for assessment:', assessmentId)
     }
     
     // Update delivery status with detailed error message

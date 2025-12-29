@@ -100,23 +100,29 @@ export async function sendEmail(params: SendEmailParams): Promise<{ success: boo
   }
 }
 
-export async function sendSMS(params: SendSMSParams): Promise<boolean> {
+export interface SendSMSResult {
+  success: boolean
+  sid?: string
+  error?: string
+}
+
+export async function sendSMS(params: SendSMSParams): Promise<SendSMSResult> {
   try {
     // Check if SMS is enabled
     if (!features.smsEnabled) {
-      console.log('SMS is not enabled. Twilio not configured.')
-      return false // Indicate SMS was not sent
+      console.log('[SMS] Feature disabled - Twilio not configured')
+      return { success: false, error: 'SMS feature not enabled' }
     }
-    
+
     const client = getTwilioClient()
     if (!client) {
-      console.log('Twilio client initialization failed, skipping SMS:', params.to)
-      return false
+      console.log('[SMS] Twilio client initialization failed for:', params.to)
+      return { success: false, error: 'Twilio client not initialized' }
     }
 
     if (!process.env.TWILIO_MESSAGE_SERVICE_SID) {
-      console.error('TWILIO_MESSAGE_SERVICE_SID is not configured')
-      return false
+      console.error('[SMS] TWILIO_MESSAGE_SERVICE_SID is not configured')
+      return { success: false, error: 'Missing TWILIO_MESSAGE_SERVICE_SID' }
     }
 
     // Format phone number
@@ -124,6 +130,8 @@ export async function sendSMS(params: SendSMSParams): Promise<boolean> {
     if (!phoneNumber.startsWith('+')) {
       phoneNumber = '+1' + phoneNumber // Assume US number
     }
+
+    console.log('[SMS] Attempting to send to:', phoneNumber)
 
     // Check if user has opted out (unless this is a system message)
     if (!params.skipOptOutCheck) {
@@ -133,10 +141,10 @@ export async function sendSMS(params: SendSMSParams): Promise<boolean> {
           .select('phone_number')
           .eq('phone_number', phoneNumber)
           .single()
-        
+
         if (optOut) {
           logger.info('SMS blocked - user opted out', { phoneNumber })
-          return false
+          return { success: false, error: 'User opted out of SMS' }
         }
       } catch (error: any) {
         // If error is not "no rows", log it
@@ -153,16 +161,27 @@ export async function sendSMS(params: SendSMSParams): Promise<boolean> {
       messageWithStop += ' Reply STOP to unsubscribe.'
     }
 
-    await client.messages.create({
+    // Build message options with statusCallback for delivery tracking
+    const messageOptions: any = {
       body: messageWithStop,
       messagingServiceSid: process.env.TWILIO_MESSAGE_SERVICE_SID,
       to: phoneNumber
-    })
+    }
 
-    console.log('SMS sent successfully to:', phoneNumber)
-    return true
-  } catch (error) {
-    console.error('SMS send error:', error)
-    return false
+    // Add status callback URL if configured
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
+    if (baseUrl) {
+      messageOptions.statusCallback = `${baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`}/api/twilio/webhook`
+    }
+
+    const message = await client.messages.create(messageOptions)
+
+    console.log('[SMS] Sent successfully to:', phoneNumber, 'SID:', message.sid)
+    return { success: true, sid: message.sid }
+  } catch (error: any) {
+    const errorMessage = error.message || 'Unknown SMS error'
+    const errorCode = error.code || 'UNKNOWN'
+    console.error('[SMS] Send error:', { to: params.to, error: errorMessage, code: errorCode })
+    return { success: false, error: `${errorMessage} (${errorCode})` }
   }
 }

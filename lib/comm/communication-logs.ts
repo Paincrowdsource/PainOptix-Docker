@@ -41,7 +41,7 @@ export async function logCommunication(entry: CommunicationLogEntry) {
         template_key: entry.templateKey,
         status: entry.status,
         channel: entry.channel || 'email',
-        provider: 'sendgrid',
+        provider: (entry.channel === 'sms') ? 'twilio' : 'sendgrid',
         provider_message_id: entry.providerId,
         recipient: hashedRecipient,
         subject: entry.subject,
