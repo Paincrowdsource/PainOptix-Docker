@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FieldGroup, FormLabel, FormRadioGroup, FormRadioItem, FormInput, FormCheckbox } from './FieldGroup';
+import { FieldGroup, FormLabel, FormInput, FormCheckbox } from './FieldGroup';
 import { Shield, Lock, Award, CheckCircle, Mail, MessageSquare, ChevronRight, Send, Loader2 } from 'lucide-react';
 
 interface DeliveryPreferencesFormProps {
@@ -178,38 +178,14 @@ export const DeliveryPreferencesForm: React.FC<DeliveryPreferencesFormProps> = (
 
           {/* Form Content */}
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
-            {/* Delivery Method Selection */}
-            <div className="mb-6">
-              <FormLabel className="text-lg font-medium mb-4 block">
-                How would you like to receive your guide?
-              </FormLabel>
-              <FieldGroup>
-                <FormRadioGroup
-                  value={deliveryMethod}
-                  onValueChange={(value) => setDeliveryMethod(value as 'sms' | 'email')}
-                >
-                  <FormRadioItem value="sms" id="delivery-sms">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-gray-600" />
-                      Text Message (SMS)
-                      <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Recommended</span>
-                    </div>
-                  </FormRadioItem>
-                  <FormRadioItem value="email" id="delivery-email">
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-gray-600" />
-                      Email
-                    </div>
-                  </FormRadioItem>
-                </FormRadioGroup>
-              </FieldGroup>
-            </div>
-
-            {/* Phone Number Input (shown when SMS selected) */}
+            {/* SMS-First: Phone Number Input (shown by default) */}
             {deliveryMethod === 'sms' && (
               <div className="mb-6">
                 <FormLabel htmlFor="phoneNumber" required>
-                  Phone Number
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-[#0B5394]" />
+                    Mobile Phone Number
+                  </div>
                 </FormLabel>
                 <FormInput
                   id="phoneNumber"
@@ -221,27 +197,69 @@ export const DeliveryPreferencesForm: React.FC<DeliveryPreferencesFormProps> = (
                   error={errors.phone}
                   required
                 />
+                <p className="text-xs text-gray-500 mt-2">
+                  We'll text you a link to your personalized guide instantly.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setDeliveryMethod('email')}
+                  className="text-sm text-gray-500 hover:text-[#0B5394] underline mt-3 transition-colors"
+                >
+                  Prefer to receive via email?
+                </button>
               </div>
             )}
 
-            {/* Email Input */}
+            {/* Email Input (shown when email selected OR as backup for SMS) */}
             <div className="mb-6">
-              <FormLabel htmlFor="email" required={deliveryMethod === 'email'}>
-                Email Address {deliveryMethod === 'sms' && <span className="text-gray-500 font-normal">(optional backup)</span>}
-              </FormLabel>
-              <FormInput
-                id="email"
-                type="email"
-                name="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
-                }}
-                placeholder="your@email.com"
-                error={errors.email}
-                required={deliveryMethod === 'email'}
-              />
+              {deliveryMethod === 'email' ? (
+                <>
+                  <FormLabel htmlFor="email" required>
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-[#0B5394]" />
+                      Email Address
+                    </div>
+                  </FormLabel>
+                  <FormInput
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
+                    }}
+                    placeholder="your@email.com"
+                    error={errors.email}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryMethod('sms')}
+                    className="text-sm text-gray-500 hover:text-[#0B5394] underline mt-3 transition-colors"
+                  >
+                    Prefer to receive via text message?
+                  </button>
+                </>
+              ) : (
+                <>
+                  <FormLabel htmlFor="email">
+                    Email Address <span className="text-gray-400 font-normal">(optional backup)</span>
+                  </FormLabel>
+                  <FormInput
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
+                    }}
+                    placeholder="your@email.com"
+                    error={errors.email}
+                  />
+                </>
+              )}
             </div>
 
             {/* SMS Opt-In Checkbox (shown when SMS selected) */}

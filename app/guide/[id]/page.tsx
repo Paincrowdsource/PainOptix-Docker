@@ -20,6 +20,7 @@ interface Assessment {
   responses?: any[]
   email?: string | null
   phone_number?: string | null
+  research_id?: string | null
 }
 
 export default function GuidePage() {
@@ -577,6 +578,15 @@ export default function GuidePage() {
           userEmail={assessment.email}
           userPhone={assessment.phone_number}
         />
+
+        {/* Clinical Reference Footer - for doctor's records */}
+        {assessment.research_id && (
+          <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+            <p className="text-xs text-gray-400 font-mono">
+              Clinical Reference: {assessment.research_id}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

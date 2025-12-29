@@ -579,11 +579,8 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
           <div className="info-box mb-6">
             <Info className="icon-sm flex-shrink-0" style={{ color: 'var(--primary-blue)' }} />
             <div>
-              <p className="font-semibold mb-2">Important Information</p>
               <p className="text-sm">
-                PainFinder™ is an educational tool. It does not diagnose or treat medical conditions.
-                Your responses are used to generate wellness content aligned with symptom patterns, not a formal diagnosis.
-                By continuing, you consent to our Terms and confirm that you understand this limitation.
+                This tool looks for patterns, not perfect answers. Choose what feels closest most of the time — there are no wrong responses. You can stop at any point and come back later. Everything you enter is saved.
               </p>
             </div>
           </div>

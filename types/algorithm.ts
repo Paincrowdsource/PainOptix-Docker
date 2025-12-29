@@ -92,7 +92,7 @@ export const Questions = {
   },
   Q7: {
     id: 'Q7',
-    text: 'How does your pain behave?',
+    text: 'People with similar symptoms often notice patterns like these. Which sound familiar?',
     type: 'single',
     options: [
       { value: 'worse_standing', label: 'Worse with standing/walking' },
