@@ -53,7 +53,16 @@ export async function logCommunication(entry: CommunicationLogEntry) {
       });
     
     if (error) {
-      await logEvent('communication_log_write_failed', { 
+      // Surface error immediately for debugging
+      console.error('[Communication Logs] INSERT FAILED:', {
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        assessmentId: entry.assessmentId,
+        templateKey: entry.templateKey,
+        channel: entry.channel
+      });
+      await logEvent('communication_log_write_failed', {
         error: error.message,
         assessmentId: entry.assessmentId,
         templateKey: entry.templateKey
@@ -61,7 +70,14 @@ export async function logCommunication(entry: CommunicationLogEntry) {
     }
   } catch (err) {
     // Don't throw - logging should not break the main flow
-    await logEvent('communication_log_error', { 
+    // But surface the error for debugging
+    console.error('[Communication Logs] EXCEPTION:', {
+      error: err instanceof Error ? err.message : 'Unknown error',
+      stack: err instanceof Error ? err.stack : undefined,
+      assessmentId: entry.assessmentId,
+      channel: entry.channel
+    });
+    await logEvent('communication_log_error', {
       error: err instanceof Error ? err.message : 'Unknown error',
       assessmentId: entry.assessmentId
     });

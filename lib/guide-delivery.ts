@@ -89,15 +89,25 @@ export async function deliverEducationalGuide(assessmentId: string) {
         deliverySuccess = true
 
         // Log successful SMS with SID for tracking
-        await logCommunication({
-          assessmentId: assessment.id,
-          templateKey: 'guide_sms_delivery',
-          status: 'sent',
-          channel: 'sms',
-          providerId: smsResult.sid, // Store Twilio SID for webhook correlation
-          recipient: assessment.phone_number,
-          message: smsMessage.substring(0, 500)
-        })
+        // Wrapped in try/catch to surface any silent failures
+        try {
+          await logCommunication({
+            assessmentId: assessment.id,
+            templateKey: 'guide_sms_delivery',
+            status: 'sent',
+            channel: 'sms',
+            providerId: smsResult.sid, // Store Twilio SID for webhook correlation
+            recipient: assessment.phone_number,
+            message: smsMessage.substring(0, 500)
+          })
+          console.log('[Guide Delivery] SMS logged to communication_logs:', assessment.id)
+        } catch (logError) {
+          console.error('[Guide Delivery] FAILED to log SMS to communication_logs:', {
+            error: logError instanceof Error ? logError.message : logError,
+            assessmentId: assessment.id,
+            sid: smsResult.sid
+          })
+        }
 
         await logEvent('sms_sent_initial_assessment', {
           assessmentId: assessment.id,
