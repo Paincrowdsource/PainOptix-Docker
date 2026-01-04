@@ -134,3 +134,14 @@ grep -c "\\[\\[DOI" debug/enhanced-facet_arthropathy-final.html  # Should be 0
 - `DEBUG_PDF=1` - Saves debug HTML files
 
 **Last Updated: January 2025 - After the Bibliography War**
+
+## Supabase Project Confusion - IMPORTANT
+
+The PainOptix production database is **"Paincrowdsource Staging"** (project ID: `wljwlgjeqoulxvwbfgpy`).
+
+- This is NOT a staging environment - it is the actual production database despite the misleading name
+- The other project "PainCrowdSource.Org" (`usefhnghfstaloqxitlx`) is for a different application
+- **Always use project_id: `wljwlgjeqoulxvwbfgpy` for PainOptix queries**
+
+This confusion happens every session - remember this!
+

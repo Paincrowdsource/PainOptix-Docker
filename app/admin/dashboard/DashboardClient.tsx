@@ -33,6 +33,7 @@ interface DashboardData {
 
 interface Props {
   data: DashboardData
+  timePeriod: string
 }
 
 /**
@@ -41,7 +42,7 @@ interface Props {
  * Renders dashboard data provided by the Server Component parent.
  * No API calls - all data comes from props (server-side).
  */
-export default function DashboardClient({ data }: Props) {
+export default function DashboardClient({ data, timePeriod }: Props) {
   const [activeTab, setActiveTab] = useState<'overview' | 'dropoffs'>('overview')
   const [refreshing, setRefreshing] = useState(false)
   const router = useRouter()
@@ -52,6 +53,22 @@ export default function DashboardClient({ data }: Props) {
     router.refresh()
     // Reset refreshing state after a short delay
     setTimeout(() => setRefreshing(false), 1000)
+  }
+
+  const handleTimePeriodChange = (newPeriod: string) => {
+    const params = new URLSearchParams()
+    params.set('timePeriod', newPeriod)
+    router.push(`/admin/dashboard?${params.toString()}`)
+  }
+
+  const getTimePeriodLabel = (period: string): string => {
+    switch (period) {
+      case '30d': return 'Last 30 Days'
+      case '90d': return 'Last 90 Days'
+      case 'ytd': return 'Year to Date'
+      case 'all': return 'All Time'
+      default: return 'Last 30 Days'
+    }
   }
 
   const deliverySuccessRate = data.totalDeliveries > 0
@@ -65,15 +82,27 @@ export default function DashboardClient({ data }: Props) {
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">Monitor your PainOptix performance and metrics</p>
         </div>
-        <Button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          variant="outline"
-          size="sm"
-        >
-          <RefreshCcw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-3">
+          <select
+            value={timePeriod}
+            onChange={(e) => handleTimePeriodChange(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="30d">Last 30 Days</option>
+            <option value="90d">Last 90 Days</option>
+            <option value="ytd">Year to Date</option>
+            <option value="all">All Time</option>
+          </select>
+          <Button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            variant="outline"
+            size="sm"
+          >
+            <RefreshCcw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Tab Navigation */}
