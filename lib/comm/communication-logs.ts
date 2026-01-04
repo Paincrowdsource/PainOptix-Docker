@@ -62,6 +62,28 @@ export async function logCommunication(entry: CommunicationLogEntry) {
         templateKey: entry.templateKey,
         channel: entry.channel
       });
+
+      // Log to database for visibility (console logs are hard to access)
+      try {
+        await supabase.from('system_logs').insert({
+          level: 'error',
+          message: 'communication_log_insert_failed',
+          service: 'communications',
+          metadata: {
+            error_message: error.message,
+            error_code: error.code,
+            error_details: error.details,
+            assessment_id: entry.assessmentId,
+            template_key: entry.templateKey,
+            channel: entry.channel,
+            provider: (entry.channel === 'sms') ? 'twilio' : 'sendgrid'
+          }
+        });
+      } catch (dbLogError) {
+        // Last resort - if even system_logs fails, just console it
+        console.error('[Communication Logs] Could not log to system_logs:', dbLogError);
+      }
+
       await logEvent('communication_log_write_failed', {
         error: error.message,
         assessmentId: entry.assessmentId,
@@ -71,14 +93,36 @@ export async function logCommunication(entry: CommunicationLogEntry) {
   } catch (err) {
     // Don't throw - logging should not break the main flow
     // But surface the error for debugging
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    const errorStack = err instanceof Error ? err.stack : undefined;
+
     console.error('[Communication Logs] EXCEPTION:', {
-      error: err instanceof Error ? err.message : 'Unknown error',
-      stack: err instanceof Error ? err.stack : undefined,
+      error: errorMessage,
+      stack: errorStack,
       assessmentId: entry.assessmentId,
       channel: entry.channel
     });
+
+    // Log to database for visibility
+    try {
+      await supabase.from('system_logs').insert({
+        level: 'error',
+        message: 'communication_log_exception',
+        service: 'communications',
+        error_stack: errorStack,
+        metadata: {
+          error_message: errorMessage,
+          assessment_id: entry.assessmentId,
+          template_key: entry.templateKey,
+          channel: entry.channel
+        }
+      });
+    } catch (dbLogError) {
+      console.error('[Communication Logs] Could not log exception to system_logs:', dbLogError);
+    }
+
     await logEvent('communication_log_error', {
-      error: err instanceof Error ? err.message : 'Unknown error',
+      error: errorMessage,
       assessmentId: entry.assessmentId
     });
   }
