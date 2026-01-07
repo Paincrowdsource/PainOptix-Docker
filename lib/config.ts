@@ -1,19 +1,39 @@
 // Feature configuration based on environment variables
 export const features = {
   smsEnabled: !!(
-    process.env.TWILIO_ACCOUNT_SID && 
-    process.env.TWILIO_AUTH_TOKEN && 
+    process.env.TWILIO_ACCOUNT_SID &&
+    process.env.TWILIO_AUTH_TOKEN &&
     process.env.TWILIO_MESSAGE_SERVICE_SID &&
     process.env.TWILIO_ACCOUNT_SID !== 'placeholder' &&
     process.env.TWILIO_AUTH_TOKEN !== 'placeholder' &&
     process.env.TWILIO_MESSAGE_SERVICE_SID !== 'placeholder'
   ),
   emailEnabled: !!(
-    process.env.SENDGRID_API_KEY && 
+    process.env.SENDGRID_API_KEY &&
     process.env.SENDGRID_API_KEY !== 'placeholder' &&
     process.env.SENDGRID_API_KEY.startsWith('SG.')
   )
 };
+
+// Log feature status on server startup (helps diagnose silent failures)
+if (typeof window === 'undefined') {
+  console.log(`[Config] SMS Enabled: ${features.smsEnabled}`);
+  console.log(`[Config] Email Enabled: ${features.emailEnabled}`);
+
+  if (!features.smsEnabled) {
+    const missing: string[] = [];
+    if (!process.env.TWILIO_ACCOUNT_SID) missing.push('TWILIO_ACCOUNT_SID');
+    if (!process.env.TWILIO_AUTH_TOKEN) missing.push('TWILIO_AUTH_TOKEN');
+    if (!process.env.TWILIO_MESSAGE_SERVICE_SID) missing.push('TWILIO_MESSAGE_SERVICE_SID');
+    if (process.env.TWILIO_ACCOUNT_SID === 'placeholder') missing.push('TWILIO_ACCOUNT_SID=placeholder');
+    if (process.env.TWILIO_AUTH_TOKEN === 'placeholder') missing.push('TWILIO_AUTH_TOKEN=placeholder');
+    if (process.env.TWILIO_MESSAGE_SERVICE_SID === 'placeholder') missing.push('TWILIO_MESSAGE_SERVICE_SID=placeholder');
+
+    if (missing.length > 0) {
+      console.warn(`[Config] SMS DISABLED - Issue with: ${missing.join(', ')}`);
+    }
+  }
+}
 
 // Contact method configuration
 export const contactMethods = {

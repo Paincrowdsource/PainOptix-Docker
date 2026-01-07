@@ -118,16 +118,38 @@ async function getComponentStatus() {
     lastCheck: new Date().toISOString(),
   });
 
-  // Check SMS service
+  // Check SMS service - must verify ALL THREE required env vars
   const smsConfigured = !!(
-    process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
+    process.env.TWILIO_ACCOUNT_SID &&
+    process.env.TWILIO_AUTH_TOKEN &&
+    process.env.TWILIO_MESSAGE_SERVICE_SID &&
+    process.env.TWILIO_ACCOUNT_SID !== 'placeholder' &&
+    process.env.TWILIO_AUTH_TOKEN !== 'placeholder' &&
+    process.env.TWILIO_MESSAGE_SERVICE_SID !== 'placeholder'
   );
+
+  // Build detailed SMS status description
+  let smsDescription = "Twilio fully configured";
+  if (!smsConfigured) {
+    const missing: string[] = [];
+    if (!process.env.TWILIO_ACCOUNT_SID || process.env.TWILIO_ACCOUNT_SID === 'placeholder') {
+      missing.push('TWILIO_ACCOUNT_SID');
+    }
+    if (!process.env.TWILIO_AUTH_TOKEN || process.env.TWILIO_AUTH_TOKEN === 'placeholder') {
+      missing.push('TWILIO_AUTH_TOKEN');
+    }
+    if (!process.env.TWILIO_MESSAGE_SERVICE_SID || process.env.TWILIO_MESSAGE_SERVICE_SID === 'placeholder') {
+      missing.push('TWILIO_MESSAGE_SERVICE_SID');
+    }
+    smsDescription = missing.length > 0
+      ? `Missing: ${missing.join(', ')}`
+      : "SMS service not configured";
+  }
+
   components.push({
     name: "SMS Service",
     status: smsConfigured ? "operational" : "degraded",
-    description: smsConfigured
-      ? "Twilio configured"
-      : "SMS service not configured",
+    description: smsDescription,
     lastCheck: new Date().toISOString(),
   });
 
