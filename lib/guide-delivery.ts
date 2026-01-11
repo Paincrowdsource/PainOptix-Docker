@@ -32,9 +32,14 @@ function formatAssessmentResults(assessment: any) {
   }
 }
 
-export async function deliverEducationalGuide(assessmentId: string) {
+interface DeliveryOptions {
+  forceSms?: boolean  // Bug 2 Fix: Force SMS delivery even if email was already sent
+}
+
+export async function deliverEducationalGuide(assessmentId: string, options: DeliveryOptions = {}) {
   const supabase = getServiceSupabase()
-  
+  const { forceSms = false } = options
+
   try {
     // Get assessment details
     const { data: assessment, error } = await supabase
@@ -42,11 +47,11 @@ export async function deliverEducationalGuide(assessmentId: string) {
       .select('*')
       .eq('id', assessmentId)
       .single()
-    
+
     if (error || !assessment) {
       throw new Error('Assessment not found')
     }
-    
+
     // Prepare delivery based on contact method
     let deliverySuccess = false
     let errorMessage: string | null = null
@@ -66,11 +71,16 @@ export async function deliverEducationalGuide(assessmentId: string) {
       has_email: !!assessment.email,
       wantsSMS,
       prefersSMS,
-      wantsBoth
+      wantsBoth,
+      forceSms
     })
 
     // SMS DELIVERY PATH: If user opted in for SMS and has phone
-    if (wantsSMS && (prefersSMS || wantsBoth) && features.smsEnabled) {
+    // Bug 2 Fix: Also send if forceSms is true (for recovery/re-delivery scenarios)
+    const shouldAttemptSms = (wantsSMS && (prefersSMS || wantsBoth) && features.smsEnabled) ||
+                             (forceSms && assessment.phone_number && features.smsEnabled)
+
+    if (shouldAttemptSms) {
       console.log('[Guide Delivery] Attempting SMS delivery to:', assessment.phone_number)
 
       const smsMessage = getSMSTemplate({

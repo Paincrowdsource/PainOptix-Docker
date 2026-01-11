@@ -62,6 +62,20 @@ export async function POST(req: NextRequest) {
       answerType: detectAnswerType(r.answer) // NEW: aids ML feature extraction
     }));
 
+    // Bug 1 Fix: Server-side guard - never allow SMS delivery without phone
+    // This is a belt-and-suspenders check in addition to Zod validation
+    if (deliveryMethod === 'sms' && !phoneNumber) {
+      logger.warn('SMS delivery requested without phone number', {
+        deliveryMethod,
+        hasPhone: !!phoneNumber,
+        hasSmsOptIn: smsOptIn
+      })
+      return NextResponse.json(
+        { error: 'Phone number required for SMS delivery' },
+        { status: 400 }
+      )
+    }
+
     // Create assessment record
     const supabase = getServiceSupabase()
 
@@ -108,9 +122,33 @@ export async function POST(req: NextRequest) {
     let assessment: any
     let error: any
 
+    // Bug 2 Fix: Track if this is an update where user added SMS consent
+    let isUpdateWithNewSmsConsent = false
+
     if (existingAssessment) {
       // UPDATE existing row - preserve research_id
       logger.info('Dedup: Updating existing assessment', { id: existingAssessment.id })
+
+      // Bug 2 Fix: Check if user is NOW requesting SMS but didn't have it before
+      // We'll check if they already received SMS after the update
+      const hasNewSmsConsent = smsOptIn && phoneNumber && deliveryMethod === 'sms'
+      if (hasNewSmsConsent) {
+        // Check if SMS was already sent for this assessment
+        const { data: existingSmsLogs } = await supabase
+          .from('communication_logs')
+          .select('id')
+          .eq('assessment_id', existingAssessment.id)
+          .eq('channel', 'sms')
+          .limit(1)
+
+        if (!existingSmsLogs || existingSmsLogs.length === 0) {
+          logger.info('Bug 2 Fix: User added SMS consent, will re-trigger SMS delivery', {
+            assessmentId: existingAssessment.id
+          })
+          isUpdateWithNewSmsConsent = true
+        }
+      }
+
       const result = await supabase
         .from('assessments')
         .update({
@@ -191,7 +229,10 @@ export async function POST(req: NextRequest) {
     if (deliveryError) throw deliveryError
 
     // Trigger guide delivery
-    await deliverEducationalGuide(assessment.id)
+    // Bug 2 Fix: Force SMS if this is an update where user added SMS consent
+    await deliverEducationalGuide(assessment.id, {
+      forceSms: isUpdateWithNewSmsConsent
+    })
 
     // Auto-enqueue check-ins if enabled
     if (process.env.CHECKINS_AUTOWIRE === '1' && process.env.CHECKINS_ENABLED === '1') {

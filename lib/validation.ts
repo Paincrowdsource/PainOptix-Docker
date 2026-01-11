@@ -34,6 +34,18 @@ export const assessmentSubmissionSchema = z.object({
   {
     message: "Contact information required for selected method"
   }
+).refine(
+  (data) => {
+    // Bug 1 Fix: If user wants SMS delivery, they MUST have smsOptIn = true
+    // This prevents phantom phone numbers where delivery_method='sms' but smsOptIn defaults to false
+    if (data.deliveryMethod === 'sms' && data.smsOptIn !== true) {
+      return false
+    }
+    return true
+  },
+  {
+    message: "SMS opt-in consent required for SMS delivery"
+  }
 )
 
 // Assessment update validation
