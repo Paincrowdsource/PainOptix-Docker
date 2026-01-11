@@ -142,37 +142,27 @@ export function getEducationalGuideEmailTemplate(params: GuideTemplateParams) {
       
       <hr style="border: 1px solid #e5e7eb; margin: 30px 0;">
       
-      <h2 style="color: #1f2937; text-align: center;">Ready to Ease Your ${guideName}? Choose Your Relief Plan</h2>
-      
-      <p style="text-align: center;">With PainFinder™, you're steps away from moving freely again. Pick the option that fits you:</p>
-      
-      <div class="tier-box">
-        <h3 style="color: #16a34a; margin-top: 0;">$5 Enhanced Report <span class="discount">(Was $7 – 28% Off for First 1,000 Users!)</span></h3>
-        <p>Learn what ${guideName.toLowerCase()} means for you, get daily relief tips (e.g., avoiding prolonged sitting), and follow a 7-day starter plan to reduce pain.</p>
+      <h2 style="color: #1f2937; text-align: center;">Your Complete ${guideName} Guide is Ready</h2>
+
+      <p style="text-align: center;">Access your personalized guide now — it's completely FREE.</p>
+
+      <div class="tier-box" style="border-color: #16a34a; background-color: #f0fdf4;">
+        <h3 style="color: #16a34a; margin-top: 0;">Your Comprehensive Guide Includes:</h3>
+        <ul style="margin: 15px 0;">
+          <li>Detailed explanation of your ${guideName.toLowerCase()} pattern</li>
+          <li>Evidence-based exercises and stretches</li>
+          <li>Daily management strategies</li>
+          <li>When to seek medical care</li>
+          <li>14-day recovery roadmap</li>
+        </ul>
         <div style="text-align: center;">
-          <a href="${guideUrl}/upgrade?tier=enhanced" class="cta-button cta-secondary">Get My Report Now</a>
+          <a href="${guideUrl}" class="cta-button cta-secondary">Access My Free Guide</a>
         </div>
       </div>
-      
-      <div class="tier-box">
-        <h3 style="color: #7c3aed; margin-top: 0;">$20 Comprehensive Monograph</h3>
-        <p>Access a physician-written guide by Dr. Carpentier, detailing ${guideName.toLowerCase()} causes, red flags, treatments (e.g., exercises with ${content.successRate} success rate []), imaging advice, and a 14-day tracker. Includes free PainCrowdsource.org access to learn from others.</p>
-        <div style="text-align: center;">
-          <a href="${guideUrl}/upgrade?tier=monograph" class="cta-button cta-premium">Unlock My Monograph</a>
-        </div>
-      </div>
-      
-      <div class="tier-box" style="border-color: #2563eb;">
-        <h3 style="color: #2563eb; margin-top: 0;">$250 Telehealth Consult</h3>
-        <p>Book a one-on-one video call with Dr. Carpentier to confirm your ${guideName.toLowerCase()} pattern, customize your recovery plan, and address urgent concerns. Limited spots!</p>
-        <div style="text-align: center;">
-          <a href="https://drcpainmd.com/booking" class="cta-button cta-primary">Schedule My Consult</a>
-        </div>
-      </div>
-      
-      <h3 style="color: #1f2937;">Why Act Now?</h3>
+
+      <h3 style="color: #1f2937;">Why This Matters:</h3>
       <ul>
-        <li><strong>Launch Offer:</strong> $5 report discount ends soon!</li>
+        <li><strong>Evidence-Based:</strong> Strategies backed by clinical research with ${content.successRate} success rates.</li>
         <li><strong>Community Impact:</strong> Join PainCrowdsource.org to track progress and help refine ${guideName.toLowerCase()} solutions.</li>
         <li><strong>Proven Results:</strong> ${content.provenResults}</li>
       </ul>
@@ -191,7 +181,10 @@ export function getEducationalGuideEmailTemplate(params: GuideTemplateParams) {
       <div style="text-align: center; font-size: 12px; color: #666;">
         <p>Powered by PainFinder™ and DrCPainMD.com | HIPAA-Compliant Data Handling</p>
         <p>You're receiving this email because you completed a PainOptix assessment.</p>
-        <p>To delete your data, visit <a href="${process.env.NEXT_PUBLIC_APP_URL}/delete-my-data">this link</a>.</p>
+        <p>You can always access your guide at: <a href="${process.env.NEXT_PUBLIC_APP_URL}/my-assessments">${process.env.NEXT_PUBLIC_APP_URL}/my-assessments</a></p>
+        <p style="margin-top: 10px; font-style: italic;">
+          This email is for educational purposes only. No doctor-patient relationship is created through this service.
+        </p>
         <p>&copy; ${new Date().getFullYear()} PainOptix™. All rights reserved.</p>
       </div>
     </body>
@@ -221,35 +214,32 @@ Take Action Now: Discover evidence-based strategies to relieve your ${guideName.
 
 ----------------------------------------
 
-READY TO EASE YOUR ${guideName.toUpperCase()}? CHOOSE YOUR RELIEF PLAN
+YOUR COMPLETE ${guideName.toUpperCase()} GUIDE IS READY
 
-With PainFinder™, you're steps away from moving freely again. Pick the option that fits you:
+Access your personalized guide now — it's completely FREE.
 
-$5 ENHANCED REPORT (Was $7 – 28% Off for First 1,000 Users!)
-Learn what ${guideName.toLowerCase()} means for you, get daily relief tips, and follow a 7-day starter plan.
-Get My Report Now: ${guideUrl}/upgrade?tier=enhanced
+YOUR COMPREHENSIVE GUIDE INCLUDES:
+- Detailed explanation of your ${guideName.toLowerCase()} pattern
+- Evidence-based exercises and stretches
+- Daily management strategies
+- When to seek medical care
+- 14-day recovery roadmap
 
-$20 COMPREHENSIVE MONOGRAPH
-Access a physician-written guide by Dr. Carpentier with ${content.successRate} success rate.
-Unlock My Monograph: ${guideUrl}/upgrade?tier=monograph
+Access My Free Guide: ${guideUrl}
 
-$250 TELEHEALTH CONSULT
-Book a one-on-one video call with Dr. Carpentier. Limited spots!
-Schedule My Consult: https://drcpainmd.com/booking
-
-WHY ACT NOW?
-- Launch Offer: $5 report discount ends soon!
-- Community Impact: Join PainCrowdsource.org
+WHY THIS MATTERS:
+- Evidence-Based: Strategies backed by clinical research with ${content.successRate} success rates.
+- Community Impact: Join PainCrowdsource.org to track progress.
 - Proven Results: ${content.provenResults}
 
 DISCLAIMER: These tools are educational and do not diagnose or treat medical conditions.
 
-View Your Free Guide First: ${guideUrl}
+Access My Free Guide: ${guideUrl}
 Join PainCrowdsource: https://paincrowdsource.org
 
 Powered by PainFinder™ and DrCPainMD.com | HIPAA-Compliant Data Handling
 
-To delete your data: ${process.env.NEXT_PUBLIC_APP_URL}/delete-my-data
+You can always access your guide at: ${process.env.NEXT_PUBLIC_APP_URL}/my-assessments
 © ${new Date().getFullYear()} PainOptix™. All rights reserved.
   `.trim()
   
