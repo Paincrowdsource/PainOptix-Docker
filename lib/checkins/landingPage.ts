@@ -5,7 +5,7 @@ export function renderConfirmationHtml(
   value: 'better' | 'same' | 'worse',
   day: number,
   assessmentId: string,
-  userTier: 'free' | 'enhanced' | 'comprehensive' | 'consultation' = 'free'
+  _userTier?: 'free' | 'enhanced' | 'comprehensive' | 'consultation' // Kept for API compatibility, unused in free model
 ): string {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://painoptix.com';
   const normalizedAppUrl = appUrl.replace(/\/$/, '');
@@ -21,9 +21,6 @@ export function renderConfirmationHtml(
   const encodedSource = encodeURIComponent(source);
 
   const guideUrl = `${normalizedAppUrl}/guide/${encodedAssessmentId}?source=${encodedSource}`;
-  const enhancedUpgradeUrl = `${normalizedAppUrl}/guide/${encodedAssessmentId}/upgrade?tier=enhanced&source=${encodedSource}`;
-  const monographUpgradeUrl = `${normalizedAppUrl}/guide/${encodedAssessmentId}/upgrade?tier=monograph&source=${encodedSource}`;
-  const consultUrl = `${normalizedAppUrl}/comprehensive-care?assessment=${encodedAssessmentId}&source=${encodedSource}`;
   const logoUrl = `${normalizedAppUrl}/branding/painoptix_logo_bg_removed.png`;
 
   let title = '';
@@ -31,106 +28,29 @@ export function renderConfirmationHtml(
   let ctaButtons = '';
   let followUpCopy = '';
 
-  // Generate purchase-aware CTAs based on user's response and existing tier
+  // Generate CTAs based on user's response - all guides are FREE
   if (value === 'better') {
     title = 'Great to hear!';
-
-    if (userTier === 'consultation') {
-      // Consultation purchasers: no upsells, just acknowledgment
-      message = `Great to hear you're feeling better on day ${day}. You can discuss your progress during your scheduled consultation with Dr. Carpentier.`;
-      ctaButtons = `
-        <a href="${guideUrl}" class="btn primary">View Your Assessment Results</a>
-      `;
-    } else if (userTier === 'free') {
-      message = `Great to hear you're feeling better on day ${day}. Keep the momentum going with a deeper plan.`;
-      ctaButtons = `
-        <a href="${enhancedUpgradeUrl}" class="btn primary">Upgrade to the Enhanced Guide ($5)</a>
-        <a href="${monographUpgradeUrl}" class="btn secondary">Get the Complete Monograph ($20)</a>
-      `;
-    } else if (userTier === 'enhanced') {
-      message = `Great to hear you're feeling better on day ${day}. Consider our comprehensive monograph for even deeper insights.`;
-      ctaButtons = `
-        <a href="${monographUpgradeUrl}" class="btn primary">Get the Complete Monograph ($20)</a>
-        <a href="${guideUrl}" class="btn secondary">View Your Enhanced Guide</a>
-      `;
-    } else {
-      // comprehensive tier - they have everything
-      message = `Great to hear you're feeling better on day ${day}. You're on the right track with your comprehensive guide.`;
-      ctaButtons = `
-        <a href="${guideUrl}" class="btn primary">View Your Comprehensive Guide</a>
-      `;
-      if (process.env.FEATURE_BUNDLE_350 === 'true') {
-        ctaButtons += `
-        <a href="${consultUrl}" class="btn secondary">Schedule Comprehensive Support</a>`;
-      }
-    }
+    message = `Great to hear you're feeling better on day ${day}! Keep up the good work with your personalized guide.`;
+    ctaButtons = `
+      <a href="${guideUrl}" class="btn primary">View Your Complete Guide</a>
+      <a href="https://paincrowdsource.org" class="btn secondary">Join PainCrowdsource</a>
+    `;
   } else if (value === 'same') {
     title = 'Thanks for checking in';
-
-    if (userTier === 'consultation') {
-      // Consultation purchasers: no upsells, just acknowledgment
-      message = `Plateaus are normal around day ${day}. Be sure to mention this when you speak with Dr. Carpentier during your consultation.`;
-      ctaButtons = `
-        <a href="${guideUrl}" class="btn primary">View Your Assessment Results</a>
-      `;
-    } else if (userTier === 'free') {
-      message = `Plateaus are normal around day ${day}. Our enhanced upgrade adds step-by-step strategies to help you break through.`;
-      ctaButtons = `
-        <a href="${enhancedUpgradeUrl}" class="btn primary">Unlock the Enhanced Guide</a>
-        <a href="${guideUrl}" class="btn secondary">View Your Current Guide</a>
-      `;
-    } else if (userTier === 'enhanced') {
-      message = `Plateaus are normal around day ${day}. The comprehensive monograph offers additional strategies and professional illustrations.`;
-      ctaButtons = `
-        <a href="${monographUpgradeUrl}" class="btn primary">Upgrade to the Monograph ($20)</a>
-        <a href="${guideUrl}" class="btn secondary">Review Your Enhanced Guide</a>
-      `;
-    } else {
-      // comprehensive tier
-      message = `Plateaus are normal around day ${day}. Review your comprehensive guide for advanced strategies.`;
-      ctaButtons = `
-        <a href="${guideUrl}" class="btn primary">Review Your Comprehensive Guide</a>
-      `;
-      if (process.env.FEATURE_BUNDLE_350 === 'true') {
-        ctaButtons += `
-        <a href="${consultUrl}" class="btn secondary">Consider Professional Support</a>`;
-      }
-    }
+    message = `Plateaus are normal around day ${day}. Your comprehensive guide includes strategies to help you break through — review it for next steps.`;
+    ctaButtons = `
+      <a href="${guideUrl}" class="btn primary">Review Your Guide</a>
+      <a href="https://paincrowdsource.org" class="btn secondary">See What Helps Others</a>
+    `;
   } else {
     // value === 'worse'
     title = 'We hear you';
-    const hasBundle = process.env.FEATURE_BUNDLE_350 === 'true';
-
-    if (userTier === 'consultation') {
-      // Consultation purchasers: no upsells, focus on professional help they already purchased
-      message = `If things feel tougher by day ${day}, consider discussing this with Dr. Carpentier during your consultation. For urgent symptoms, always seek immediate medical care.`;
-      ctaButtons = `
-        <a href="${guideUrl}" class="btn primary">View Your Assessment Results</a>
-      `;
-    } else if (userTier === 'free') {
-      message = `If things feel tougher by day ${day}, the comprehensive monograph goes deeper and includes professional illustrations to guide next steps.`;
-      ctaButtons = `
-        <a href="${monographUpgradeUrl}" class="btn primary">Get the Comprehensive Monograph</a>
-        ${hasBundle ? `<a href="${consultUrl}" class="btn secondary">Schedule Comprehensive Support</a>` : ''}
-      `;
-    } else if (userTier === 'enhanced') {
-      message = `If things feel tougher by day ${day}, the comprehensive monograph includes professional illustrations and deeper guidance.`;
-      ctaButtons = `
-        <a href="${monographUpgradeUrl}" class="btn primary">Upgrade to the Full Monograph</a>
-        ${hasBundle ? `<a href="${consultUrl}" class="btn secondary">Schedule Comprehensive Support</a>` : ''}
-      `;
-    } else {
-      // comprehensive tier - focus on support
-      message = `If things feel tougher by day ${day}, review your comprehensive guide carefully. Consider professional support if symptoms persist.`;
-      ctaButtons = hasBundle ? `
-        <a href="${consultUrl}" class="btn primary">Schedule Comprehensive Support</a>
-        <a href="${guideUrl}" class="btn secondary">Review Your Comprehensive Guide</a>
-      ` : `
-        <a href="${guideUrl}" class="btn primary">Review Your Comprehensive Guide</a>
-      `;
-    }
-
-    followUpCopy = (hasBundle && userTier !== 'comprehensive') ? '' : `
+    message = `If things feel tougher by day ${day}, your guide includes guidance for when symptoms persist. For urgent symptoms, always seek immediate medical care.`;
+    ctaButtons = `
+      <a href="${guideUrl}" class="btn primary">Review Your Guide</a>
+    `;
+    followUpCopy = `
       <p class="follow-up">If you're still concerned, use the note box below to tell us more. Remember, if symptoms escalate or feel urgent, please seek in-person medical care.</p>
     `;
   }
