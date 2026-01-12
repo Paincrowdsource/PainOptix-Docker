@@ -135,7 +135,10 @@ export default function CheckInsPage() {
       // Fetch queue data from API endpoint (bypasses RLS)
       const queueResponse = await fetch('/api/admin/checkins/queue', {
         credentials: 'include',
-        cache: 'no-store'
+        cache: 'no-store',
+        headers: {
+          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+        }
       })
       if (!queueResponse.ok) {
         throw new Error('Failed to fetch queue items')
@@ -153,7 +156,10 @@ export default function CheckInsPage() {
       // Fetch responses from API endpoint (bypasses RLS)
       const responsesResponse = await fetch('/api/admin/checkins/responses', {
         credentials: 'include',
-        cache: 'no-store'
+        cache: 'no-store',
+        headers: {
+          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+        }
       })
       if (!responsesResponse.ok) {
         throw new Error('Failed to fetch responses')
@@ -171,7 +177,10 @@ export default function CheckInsPage() {
       // Fetch revenue from API endpoint (bypasses RLS)
       const revenueResponse = await fetch('/api/admin/checkins/revenue', {
         credentials: 'include',
-        cache: 'no-store'
+        cache: 'no-store',
+        headers: {
+          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+        }
       })
       if (!revenueResponse.ok) {
         throw new Error('Failed to fetch revenue')
@@ -230,7 +239,12 @@ export default function CheckInsPage() {
       setLoadingAssessments(true)
 
       // Use server route instead of direct Supabase client
-      const response = await fetch('/api/admin/checkins/assessments/list')
+      const response = await fetch('/api/admin/checkins/assessments/list', {
+        credentials: 'include',
+        headers: {
+          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+        }
+      })
 
       if (!response.ok) {
         throw new Error('Failed to load assessments')
@@ -256,7 +270,12 @@ export default function CheckInsPage() {
       setLoadingTemplates(true)
 
       // Use server route instead of direct Supabase client
-      const response = await fetch('/api/admin/checkins/templates/list')
+      const response = await fetch('/api/admin/checkins/templates/list', {
+        credentials: 'include',
+        headers: {
+          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+        }
+      })
 
       if (!response.ok) {
         throw new Error('Failed to load templates')
@@ -367,8 +386,10 @@ export default function CheckInsPage() {
     try {
       const response = await fetch('/api/admin/checkins/dispatch', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
         },
         body: JSON.stringify({ dryRun: true }),
       })
@@ -401,8 +422,10 @@ export default function CheckInsPage() {
     try {
       const response = await fetch('/api/admin/checkins/dispatch', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
+          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
         },
         body: JSON.stringify({ dryRun: false }),
       })

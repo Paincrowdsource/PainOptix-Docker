@@ -48,7 +48,12 @@ export default function HealthStatus() {
     try {
       setLoading(true)
       setError(null)
-      const response = await fetch('/api/admin/checkins/health')
+      const response = await fetch('/api/admin/checkins/health', {
+        credentials: 'include',
+        headers: {
+          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+        }
+      })
 
       if (!response.ok) {
         throw new Error('Failed to fetch health status')
