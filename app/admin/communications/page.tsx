@@ -49,7 +49,7 @@ export default function CommunicationsPage() {
         headers: {
           'Content-Type': 'application/json',
           // Add admin password as fallback auth
-          'x-admin-password': 'PainOptix2025Admin!'
+          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
         }
       })
 
