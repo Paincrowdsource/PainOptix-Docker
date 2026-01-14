@@ -382,7 +382,10 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
         initialPainScore: data.initialPainScore,
         referrerSource: new URLSearchParams(window.location.search).get('ref') || 'organic',
         guideType: selectedGuide,
-        disclosures: session.disclosures
+        disclosures: session.disclosures,
+        // Fix: Add required fields for SMS validation (added Jan 14, 2026)
+        smsOptIn: data.contactMethod === 'sms',
+        deliveryMethod: data.contactMethod
       };
 
       const submitAssessment = async () => {
