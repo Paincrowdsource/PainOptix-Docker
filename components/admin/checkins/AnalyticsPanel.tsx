@@ -35,19 +35,12 @@ interface ResponseRecord {
   } | null
 }
 
-interface RevenueRecord {
-  amount_cents: number | null
-  created_at: string
-  source: string
-}
-
 interface AnalyticsPanelProps {
   queueItems: QueueItem[]
   responses: ResponseRecord[]
-  revenue: RevenueRecord[]
 }
 
-export default function AnalyticsPanel({ queueItems, responses, revenue }: AnalyticsPanelProps) {
+export default function AnalyticsPanel({ queueItems, responses }: AnalyticsPanelProps) {
   const branchDistribution = useMemo(() => {
     const base = {
       better: 0,
@@ -65,29 +58,6 @@ export default function AnalyticsPanel({ queueItems, responses, revenue }: Analy
       { branch: 'Feeling worse', value: base.worse },
     ]
   }, [responses])
-
-  const revenueTimeline = useMemo(() => {
-    const today = new Date()
-    const buckets: { key: string; label: string; revenue: number }[] = []
-    const index = new Map<string, number>()
-
-    for (let i = 29; i >= 0; i -= 1) {
-      const date = subDays(today, i)
-      const key = format(date, 'yyyy-MM-dd')
-      index.set(key, buckets.length)
-      buckets.push({ key, label: format(date, 'MMM d'), revenue: 0 })
-    }
-
-    revenue.forEach((record) => {
-      const key = format(new Date(record.created_at), 'yyyy-MM-dd')
-      const bucketIndex = index.get(key)
-      if (bucketIndex !== undefined) {
-        buckets[bucketIndex].revenue += (record.amount_cents || 0) / 100
-      }
-    })
-
-    return buckets
-  }, [revenue])
 
   const queueByDay = useMemo(() => {
     const map = new Map<string, { label: string; queued: number; sent: number; failed: number }>()
@@ -123,41 +93,18 @@ export default function AnalyticsPanel({ queueItems, responses, revenue }: Analy
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <h3 className="mb-4 text-sm font-semibold text-gray-900">Response distribution</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={branchDistribution}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey="branch" tickLine={false} axisLine={false} />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="value" fill="#2563eb" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <h3 className="mb-4 text-sm font-semibold text-gray-900">Revenue attribution (30 days)</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueTimeline}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} />
-                <YAxis tickFormatter={(value) => `$${value}`} />
-                <Tooltip
-                  formatter={(value: number | string) => {
-                    const numeric = typeof value === 'number' ? value : Number(value)
-                    return [`$${numeric.toFixed(2)}`, 'Revenue']
-                  }}
-                />
-                <Legend />
-                <Line type="monotone" dataKey="revenue" stroke="#9333ea" strokeWidth={2} dot={false} name="Revenue ($)" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <h3 className="mb-4 text-sm font-semibold text-gray-900">Response distribution</h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={branchDistribution}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <XAxis dataKey="branch" tickLine={false} axisLine={false} />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="value" fill="#2563eb" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

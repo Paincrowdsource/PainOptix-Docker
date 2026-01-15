@@ -286,9 +286,6 @@ export default function AssessmentsPage() {
                   Guide Type
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tier
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Delivery
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -320,15 +317,6 @@ export default function AssessmentsPage() {
                       <div className="text-sm text-gray-900">
                         {assessment.guide_type?.replace(/_/g, ' ')}
                       </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                        assessment.payment_tier === 'comprehensive' ? 'bg-green-100 text-green-800' :
-                        assessment.payment_tier === 'enhanced' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {assessment.payment_tier}
-                      </span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex space-x-2">
@@ -422,8 +410,6 @@ export default function AssessmentsPage() {
                   <h3 className="font-medium mb-2">Assessment Details</h3>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <p><strong>Guide Type:</strong> {selectedAssessment.guide_type?.replace(/_/g, ' ')}</p>
-                    <p><strong>Payment Tier:</strong> {selectedAssessment.payment_tier}</p>
-                    <p><strong>Payment Completed:</strong> {selectedAssessment.payment_completed ? 'Yes' : 'No'}</p>
                     <p><strong>Created:</strong> {new Date(selectedAssessment.created_at).toLocaleString()}</p>
                   </div>
                 </div>

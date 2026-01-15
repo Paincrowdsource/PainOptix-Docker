@@ -1,46 +1,39 @@
-﻿'use client'
+'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { RefreshCw, ExternalLink, Activity, TrendingUp, Users, BarChart, CheckCircle } from 'lucide-react'
-import { getBrowserSupabase } from '@/lib/supabase'
 
 export default function AnalyticsPage() {
-  const supabase = useMemo(() => getBrowserSupabase(), [])
   const [refreshing, setRefreshing] = useState(false)
   const [businessMetrics, setBusinessMetrics] = useState({
     totalAssessments: 0,
     weeklyAssessments: 0,
-    totalPurchases: 0,
   })
 
   const loadBusinessMetrics = useCallback(async () => {
     try {
-      const { count: totalAssessments } = await supabase
-        .from('assessments')
-        .select('*', { count: 'exact', head: true })
+      const response = await fetch('/api/admin/analytics', {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: {
+          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+        }
+      })
 
-      const weekAgo = new Date()
-      weekAgo.setDate(weekAgo.getDate() - 7)
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics')
+      }
 
-      const { count: weeklyAssessments } = await supabase
-        .from('assessments')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', weekAgo.toISOString())
-
-      const { count: totalPurchases } = await supabase
-        .from('assessments')
-        .select('*', { count: 'exact', head: true })
-        .neq('tier', 'standard')
+      const data = await response.json()
 
       setBusinessMetrics({
-        totalAssessments: totalAssessments || 0,
-        weeklyAssessments: weeklyAssessments || 0,
-        totalPurchases: totalPurchases || 0,
+        totalAssessments: data.totalAssessments || 0,
+        weeklyAssessments: data.weeklyAssessments || 0,
       })
     } catch (error) {
       console.error('Error loading business metrics:', error)
     }
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     loadBusinessMetrics()
@@ -109,7 +102,7 @@ export default function AnalyticsPage() {
 
       <div className="mb-8">
         <h2 className="mb-4 text-lg font-semibold">Business Metrics</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="rounded-lg bg-white p-6 shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -133,19 +126,6 @@ export default function AnalyticsPage() {
                 <p className="mt-1 text-xs text-gray-500">Last 7 days</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-400" />
-            </div>
-          </div>
-
-          <div className="rounded-lg bg-white p-6 shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Paid Tiers</p>
-                <p className="mt-1 text-2xl font-semibold text-gray-900">
-                  {businessMetrics.totalPurchases.toLocaleString()}
-                </p>
-                <p className="mt-1 text-xs text-gray-500">Enhanced + Monograph</p>
-              </div>
-              <BarChart className="h-8 w-8 text-purple-400" />
             </div>
           </div>
         </div>

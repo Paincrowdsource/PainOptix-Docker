@@ -12,7 +12,7 @@ import HealthStatus from "@/components/admin/checkins/HealthStatus"
 import { AlertCircle, CheckCircle } from 'lucide-react'
 
 type CheckInValue = 'better' | 'same' | 'worse'
-type TabKey = 'overview' | 'queue' | 'responses' | 'revenue' | 'manual' | 'templates' | 'analytics'
+type TabKey = 'overview' | 'queue' | 'responses' | 'manual' | 'templates' | 'analytics'
 
 interface CheckInQueueItem {
   id: string
@@ -52,15 +52,6 @@ interface CheckInResponse {
   contact_phone?: string | null
 }
 
-interface RevenueEvent {
-  id: string
-  assessment_id: string
-  source: string
-  stripe_id: string | null
-  amount_cents: number | null
-  created_at: string
-}
-
 interface AssessmentSummary {
   id: string
   email: string | null
@@ -93,7 +84,6 @@ interface StatsState {
   sent24h: number
   failed24h: number
   responses24h: number
-  revenue24h: number
 }
 
 interface FlashMessage {
@@ -107,7 +97,6 @@ export default function CheckInsPage() {
   const [flash, setFlash] = useState<FlashMessage | null>(null)
   const [queueItems, setQueueItems] = useState<CheckInQueueItem[]>([])
   const [responses, setResponses] = useState<CheckInResponse[]>([])
-  const [revenue, setRevenue] = useState<RevenueEvent[]>([])
   const [assessments, setAssessments] = useState<AssessmentSummary[]>([])
   const [templates, setTemplates] = useState<MessageTemplate[]>([])
   const [inserts, setInserts] = useState<DiagnosisInsert[]>([])
@@ -116,7 +105,6 @@ export default function CheckInsPage() {
     sent24h: 0,
     failed24h: 0,
     responses24h: 0,
-    revenue24h: 0,
   })
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [loadingAssessments, setLoadingAssessments] = useState(false)
@@ -174,20 +162,6 @@ export default function CheckInsPage() {
 
       setResponses(responseData as CheckInResponse[])
 
-      // Fetch revenue from API endpoint (bypasses RLS)
-      const revenueResponse = await fetch('/api/admin/checkins/revenue', {
-        credentials: 'include',
-        cache: 'no-store',
-        headers: {
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
-        }
-      })
-      if (!revenueResponse.ok) {
-        throw new Error('Failed to fetch revenue')
-      }
-      const { revenue: revenueData } = await revenueResponse.json()
-      setRevenue(revenueData as RevenueEvent[])
-
       const dueNow =
         queueData?.filter(
           (item: CheckInQueueItem) => item.status === 'queued' && new Date(item.due_at) <= now,
@@ -214,17 +188,11 @@ export default function CheckInsPage() {
           (item: CheckInResponse) => new Date(item.created_at) >= twentyFourHoursAgo,
         ).length || 0
 
-      const revenue24h =
-        revenueData
-          ?.filter((item: RevenueEvent) => new Date(item.created_at) >= twentyFourHoursAgo)
-          .reduce((sum: number, item: RevenueEvent) => sum + (item.amount_cents || 0), 0) || 0
-
       setStats({
         dueNow,
         sent24h,
         failed24h,
         responses24h,
-        revenue24h,
       })
     } catch (error: any) {
       console.error('Error loading check-ins data:', error)
@@ -486,20 +454,12 @@ export default function CheckInsPage() {
       { id: 'overview' as const, label: 'Overview' },
       { id: 'queue' as const, label: 'Queue', badge: queueItems.length },
       { id: 'responses' as const, label: 'Responses', badge: responses.length },
-      { id: 'revenue' as const, label: 'Revenue' },
       { id: 'manual' as const, label: 'Manual Trigger' },
       { id: 'templates' as const, label: 'Templates & Inserts' },
       { id: 'analytics' as const, label: 'Analytics' },
     ],
     [queueItems.length, responses.length],
   )
-
-  const totalRevenue = useMemo(() => {
-    return revenue.reduce(
-      (sum, record) => sum + (record.amount_cents || 0),
-      0,
-    ) / 100
-  }, [revenue])
 
   return (
     <div className="p-6">
@@ -581,7 +541,6 @@ export default function CheckInsPage() {
               <OverviewPanel
                 queueItems={queueItems}
                 responses={responses}
-                revenue={revenue}
                 onExportResponses={handleResponseExport}
               />
             </div>
@@ -601,48 +560,6 @@ export default function CheckInsPage() {
               responses={responses}
               onExport={handleResponseExport}
             />
-          )}
-
-          {activeTab === 'revenue' && (
-            <div className="rounded-lg bg-white p-6 shadow">
-              <h3 className="text-lg font-semibold mb-4">Revenue Attribution</h3>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                {[3, 7, 14].map((day) => {
-                  const dayRevenue = revenue.filter(
-                    (record) => record.source === `checkin_d${day}`,
-                  )
-                  const total = dayRevenue.reduce(
-                    (sum, record) => sum + (record.amount_cents || 0),
-                    0,
-                  )
-
-                  return (
-                    <div
-                      key={day}
-                      className="rounded-lg border border-gray-200 p-4"
-                    >
-                      <h4 className="mb-2 font-semibold text-gray-900">
-                        Day {day} check-ins
-                      </h4>
-                      <div className="text-2xl font-bold text-purple-600">
-                        ${(total / 100).toFixed(2)}
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        {dayRevenue.length} purchase{dayRevenue.length === 1 ? '' : 's'}
-                      </p>
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
-                <span className="text-lg font-semibold text-gray-900">
-                  Total attributed revenue
-                </span>
-                <span className="text-2xl font-bold text-purple-600">
-                  ${totalRevenue.toFixed(2)}
-                </span>
-              </div>
-            </div>
           )}
 
           {activeTab === 'manual' && (
@@ -674,7 +591,6 @@ export default function CheckInsPage() {
             <AnalyticsPanel
               queueItems={queueItems}
               responses={responses}
-              revenue={revenue}
             />
           )}
         </>

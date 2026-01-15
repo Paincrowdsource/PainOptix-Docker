@@ -32,10 +32,6 @@ interface OverviewPanelProps {
       guide_type?: string | null
     } | null
   }>
-  revenue: Array<{
-    amount_cents: number | null
-    created_at: string
-  }>
   onExportResponses: () => void
 }
 
@@ -44,7 +40,6 @@ type TrendBucket = {
   label: string
   sent: number
   responses: number
-  revenue: number
 }
 
 type ResponseBar = {
@@ -59,7 +54,6 @@ const WINDOW_CHOICES = [7, 14, 30]
 export default function OverviewPanel({
   queueItems,
   responses,
-  revenue,
   onExportResponses,
 }: OverviewPanelProps) {
   const [windowDays, setWindowDays] = useState<number>(14)
@@ -144,7 +138,6 @@ export default function OverviewPanel({
         label: format(date, 'MMM d'),
         sent: 0,
         responses: 0,
-        revenue: 0,
       })
     }
 
@@ -166,25 +159,8 @@ export default function OverviewPanel({
       }
     })
 
-    revenue.forEach((record) => {
-      const key = format(new Date(record.created_at), 'yyyy-MM-dd')
-      const bucketIndex = index.get(key)
-      if (bucketIndex !== undefined) {
-        buckets[bucketIndex].revenue += (record.amount_cents || 0) / 100
-      }
-    })
-
     return buckets
-  }, [queueItems, responses, revenue, windowDays])
-
-  const revenue30d = useMemo(() => {
-    const threshold = subDays(new Date(), 30)
-    return (
-      revenue
-        .filter((record) => new Date(record.created_at) >= threshold)
-        .reduce((sum, record) => sum + (record.amount_cents || 0), 0) / 100
-    )
-  }, [revenue])
+  }, [queueItems, responses, windowDays])
 
   const topDiagnoses = useMemo(() => {
     const map = new Map<string, number>()
@@ -237,7 +213,7 @@ export default function OverviewPanel({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
           <p className="text-sm text-gray-500">Queued check-ins</p>
           <p className="mt-2 text-2xl font-semibold text-gray-900">{queuedCount}</p>
@@ -258,13 +234,6 @@ export default function OverviewPanel({
           <p className="text-sm text-gray-500">&quot;Feeling worse&quot; replies</p>
           <p className="mt-2 text-2xl font-semibold text-orange-600">{worseCount}</p>
           <p className="mt-1 text-xs text-gray-500">Monitor for red-flag follow-up</p>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-gray-500">Revenue (30 days)</p>
-          <p className="mt-2 text-2xl font-semibold text-purple-600">
-            ${revenue30d.toFixed(2)}
-          </p>
-          <p className="mt-1 text-xs text-gray-500">Attributed to check-ins</p>
         </div>
       </div>
 
@@ -297,24 +266,15 @@ export default function OverviewPanel({
               <LineChart data={timelineData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis dataKey="label" tickLine={false} axisLine={false} />
-                <YAxis yAxisId="left" allowDecimals={false} />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tickFormatter={(value) => `$${value}`}
-                />
+                <YAxis allowDecimals={false} />
                 <Tooltip
                   formatter={(value: number | string, name) => {
                     const numeric = typeof value === 'number' ? value : Number(value)
-                    if (name === 'Revenue ($)') {
-                      return [`$${numeric.toFixed(2)}`, name]
-                    }
                     return [numeric.toFixed(0), name]
                   }}
                 />
                 <Legend />
                 <Line
-                  yAxisId="left"
                   type="monotone"
                   dataKey="sent"
                   stroke="#2563eb"
@@ -323,22 +283,12 @@ export default function OverviewPanel({
                   name="Sent"
                 />
                 <Line
-                  yAxisId="left"
                   type="monotone"
                   dataKey="responses"
                   stroke="#0f172a"
                   strokeWidth={2}
                   dot={false}
                   name="Responses"
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#9333ea"
-                  strokeWidth={2}
-                  dot={false}
-                  name="Revenue ($)"
                 />
               </LineChart>
             </ResponsiveContainer>

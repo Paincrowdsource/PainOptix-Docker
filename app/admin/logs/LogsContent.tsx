@@ -1,14 +1,13 @@
-﻿'use client'
+'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { createSupabaseBrowserClient } from '@/lib/supabase-client'
+import { useState, useEffect, useCallback } from 'react'
 import { Activity, AlertCircle, CheckCircle, XCircle, Clock, RefreshCw, Search, Filter } from 'lucide-react'
 
 interface CommunicationLog {
   id: string
   assessment_id: string
-  type: 'email' | 'sms'
-  status: 'sent' | 'delivered' | 'failed' | 'bounced'
+  channel: 'email' | 'sms'
+  status: 'sent' | 'delivered' | 'failed' | 'bounced' | 'pending'
   recipient: string
   subject?: string
   message?: string
@@ -18,7 +17,6 @@ interface CommunicationLog {
 }
 
 export default function LogsContent() {
-  const supabase = useMemo(() => createSupabaseBrowserClient(), [])
   const [logs, setLogs] = useState<CommunicationLog[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -31,31 +29,26 @@ export default function LogsContent() {
     try {
       setRefreshing(true)
 
-      let query = supabase
-        .from('communication_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100)
+      // Build query params
+      const params = new URLSearchParams()
+      if (filterType !== 'all') params.set('type', filterType)
+      if (filterStatus !== 'all') params.set('status', filterStatus)
+      if (searchTerm) params.set('search', searchTerm)
 
-      if (filterType !== 'all') {
-        query = query.eq('type', filterType)
+      const response = await fetch(`/api/admin/logs?${params.toString()}`, {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: {
+          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch logs')
       }
 
-      if (filterStatus !== 'all') {
-        query = query.eq('status', filterStatus)
-      }
-
-      if (searchTerm) {
-        query = query.or(`recipient.ilike.%${searchTerm}%,assessment_id.ilike.%${searchTerm}%`)
-      }
-
-      const { data, error: fetchError } = await query
-
-      if (fetchError) {
-        throw fetchError
-      }
-
-      setLogs(data || [])
+      const data = await response.json()
+      setLogs(data.logs || [])
       setError(null)
     } catch (err: any) {
       console.error('Error fetching logs:', err)
@@ -64,7 +57,7 @@ export default function LogsContent() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [filterType, filterStatus, searchTerm, supabase])
+  }, [filterType, filterStatus, searchTerm])
 
   useEffect(() => {
     fetchLogs()
@@ -199,8 +192,8 @@ export default function LogsContent() {
                     {new Date(log.created_at).toLocaleString()}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTypeBadgeClass(log.type)}`}>
-                      {log.type.toUpperCase()}
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTypeBadgeClass(log.channel)}`}>
+                      {log.channel?.toUpperCase() || 'N/A'}
                     </span>
                   </td>
                   <td className="whitespace-nowrap px-6 py-4">

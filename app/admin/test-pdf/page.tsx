@@ -16,9 +16,9 @@ const GUIDE_TYPES = [
 ]
 
 const TIERS = [
-  { id: 'free', name: 'Free', price: '$0' },
-  { id: 'enhanced', name: 'Enhanced', price: '$5' },
-  { id: 'comprehensive', name: 'Comprehensive', price: '$20' }
+  { id: 'free', name: 'Free' },
+  { id: 'enhanced', name: 'Enhanced' },
+  { id: 'comprehensive', name: 'Comprehensive' }
 ]
 
 export default function TestPDFPage() {
@@ -119,7 +119,7 @@ export default function TestPDFPage() {
                         ) : (
                           <>
                             <Download className="h-4 w-4 mr-2" />
-                            {tier.name} ({tier.price})
+                            {tier.name}
                           </>
                         )}
                       </button>
