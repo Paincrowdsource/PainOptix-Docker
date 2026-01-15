@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { createSupabaseBrowserClient } from '@/lib/supabase-client';
-import { Menu, X, FileText, BarChart3, Users, MessageSquare, TestTube, ScrollText, LogOut, Activity, CheckCircle, Beaker } from 'lucide-react';
+import { Menu, X, FileText, BarChart3, Users, MessageSquare, TestTube, ScrollText, LogOut, Activity, CheckCircle } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 
 interface AdminLayoutClientProps {
@@ -62,19 +62,13 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
                 <Image
                   src="/branding/painoptix_logo_bg_removed.png"
                   alt="PainOptix"
-                  width={32}
-                  height={32}
+                  width={44}
+                  height={44}
                   className="hidden sm:block"
                 />
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-gray-900">
-                    PainOptix <span className="text-gray-400 font-normal">Admin</span>
-                  </h1>
-                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
-                    <Beaker className="h-3 w-3" />
-                    Clinical Pilot
-                  </span>
-                </div>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  PainOptix <span className="text-gray-400 font-normal">Admin</span>
+                </h1>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -97,12 +91,12 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
         <nav className="hidden md:flex md:w-64 md:flex-col bg-white border-r border-gray-200">
           {/* Sidebar Header */}
           <div className="p-4 border-b border-gray-100">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Image
                 src="/branding/painoptix_logo_bg_removed.png"
                 alt="PainOptix"
-                width={28}
-                height={28}
+                width={40}
+                height={40}
               />
               <span className="text-sm font-medium text-gray-700">Admin Portal</span>
             </div>
@@ -149,12 +143,12 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
             <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white shadow-xl">
               {/* Mobile Menu Header */}
               <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <Image
                     src="/branding/painoptix_logo_bg_removed.png"
                     alt="PainOptix"
-                    width={28}
-                    height={28}
+                    width={40}
+                    height={40}
                   />
                   <span className="text-sm font-medium text-gray-700">Admin Portal</span>
                 </div>
