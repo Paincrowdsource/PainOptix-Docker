@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import { Search, Download, Eye, Mail, MessageSquare, CheckCircle, XCircle, Trash2, RefreshCw } from 'lucide-react'
+import { Search, Download, Eye, Mail, MessageSquare, CheckCircle, XCircle, Trash2, RefreshCw, Copy, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import DeleteConfirmationModal from '@/components/admin/DeleteConfirmationModal'
 
@@ -45,7 +45,18 @@ export default function AssessmentsClient({ assessments: initialAssessments }: P
     assessment: null
   })
   const [isDeleting, setIsDeleting] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
   const router = useRouter()
+
+  const copyResearchId = async (researchId: string) => {
+    try {
+      await navigator.clipboard.writeText(researchId)
+      setCopiedId(researchId)
+      setTimeout(() => setCopiedId(null), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -214,9 +225,28 @@ export default function AssessmentsClient({ assessments: initialAssessments }: P
                 return (
                   <tr key={assessment.id} className="hover:bg-gray-50">
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <span className="text-sm font-mono text-blue-600 font-medium">
-                        {assessment.research_id || '—'}
-                      </span>
+                      {assessment.research_id ? (
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center px-3 py-1.5 rounded-md bg-blue-50 border border-blue-200">
+                            <span className="text-base font-mono font-bold text-blue-700 tracking-wide">
+                              {assessment.research_id}
+                            </span>
+                          </span>
+                          <button
+                            onClick={() => copyResearchId(assessment.research_id!)}
+                            className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                            title="Copy Research ID"
+                          >
+                            {copiedId === assessment.research_id ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div>
@@ -335,8 +365,32 @@ export default function AssessmentsClient({ assessments: initialAssessments }: P
               <div className="space-y-6">
                 <div>
                   <h3 className="font-medium mb-2">Contact Information</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p><strong>Research ID:</strong> <span className="font-mono text-blue-600">{selectedAssessment.research_id || 'N/A'}</span></p>
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                    <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+                      <strong>Research ID:</strong>
+                      {selectedAssessment.research_id ? (
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center px-3 py-1.5 rounded-md bg-blue-50 border border-blue-200">
+                            <span className="text-lg font-mono font-bold text-blue-700 tracking-wide">
+                              {selectedAssessment.research_id}
+                            </span>
+                          </span>
+                          <button
+                            onClick={() => copyResearchId(selectedAssessment.research_id!)}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded hover:bg-gray-100"
+                            title="Copy Research ID"
+                          >
+                            {copiedId === selectedAssessment.research_id ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">N/A</span>
+                      )}
+                    </div>
                     <p><strong>Email:</strong> {selectedAssessment.email || 'N/A'}</p>
                     <p><strong>Phone:</strong> {selectedAssessment.phone_number || 'N/A'}</p>
                     <p><strong>Name:</strong> {selectedAssessment.name || 'N/A'}</p>

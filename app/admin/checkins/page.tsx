@@ -9,10 +9,11 @@ import ResponsesPanel from '@/components/admin/checkins/ResponsesPanel'
 import TemplateManager from '@/components/admin/checkins/TemplateManager'
 import AnalyticsPanel from '@/components/admin/checkins/AnalyticsPanel'
 import HealthStatus from "@/components/admin/checkins/HealthStatus"
-import { AlertCircle, CheckCircle } from 'lucide-react'
+import AlertsPanel from "@/components/admin/checkins/AlertsPanel"
+import { AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react'
 
 type CheckInValue = 'better' | 'same' | 'worse'
-type TabKey = 'overview' | 'queue' | 'responses' | 'manual' | 'templates' | 'analytics'
+type TabKey = 'overview' | 'queue' | 'responses' | 'settings'
 
 interface CheckInQueueItem {
   id: string
@@ -111,6 +112,7 @@ export default function CheckInsPage() {
   const [loadingTemplates, setLoadingTemplates] = useState(false)
   const [hasLoadedAssessments, setHasLoadedAssessments] = useState(false)
   const [hasLoadedTemplates, setHasLoadedTemplates] = useState(false)
+  const [alertCount, setAlertCount] = useState(0)
 
   const loadData = useCallback(async () => {
     try {
@@ -423,12 +425,14 @@ export default function CheckInsPage() {
   }, [loadData])
 
   useEffect(() => {
-    if (activeTab === 'manual' && !hasLoadedAssessments && !loadingAssessments) {
-      handleAssessmentsLoad()
-    }
-
-    if (activeTab === 'templates' && !hasLoadedTemplates && !loadingTemplates) {
-      handleTemplatesLoad()
+    // Load data for Settings tab (combines Manual Trigger + Templates)
+    if (activeTab === 'settings') {
+      if (!hasLoadedAssessments && !loadingAssessments) {
+        handleAssessmentsLoad()
+      }
+      if (!hasLoadedTemplates && !loadingTemplates) {
+        handleTemplatesLoad()
+      }
     }
   }, [
     activeTab,
@@ -451,14 +455,12 @@ export default function CheckInsPage() {
 
   const tabs = useMemo(
     () => [
-      { id: 'overview' as const, label: 'Overview' },
+      { id: 'overview' as const, label: 'Overview', badge: alertCount > 0 ? alertCount : undefined, isAlert: alertCount > 0 },
       { id: 'queue' as const, label: 'Queue', badge: queueItems.length },
       { id: 'responses' as const, label: 'Responses', badge: responses.length },
-      { id: 'manual' as const, label: 'Manual Trigger' },
-      { id: 'templates' as const, label: 'Templates & Inserts' },
-      { id: 'analytics' as const, label: 'Analytics' },
+      { id: 'settings' as const, label: 'Settings' },
     ],
-    [queueItems.length, responses.length],
+    [queueItems.length, responses.length, alertCount],
   )
 
   return (
@@ -506,6 +508,7 @@ export default function CheckInsPage() {
         <nav className="-mb-px flex flex-wrap gap-4">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id
+            const hasAlert = 'isAlert' in tab && tab.isAlert
             return (
               <button
                 key={tab.id}
@@ -516,9 +519,14 @@ export default function CheckInsPage() {
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
               >
+                {hasAlert && <AlertTriangle className="h-4 w-4 text-red-500" />}
                 {tab.label}
                 {typeof tab.badge === 'number' && (
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    hasAlert
+                      ? 'bg-red-100 text-red-700 animate-pulse'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
                     {tab.badge}
                   </span>
                 )}
@@ -536,6 +544,9 @@ export default function CheckInsPage() {
         <>
           {activeTab === 'overview' && (
             <div className="space-y-6">
+              {/* Safety Alerts - Most Important */}
+              <AlertsPanel onAlertCountChange={setAlertCount} />
+
               <HealthStatus />
               <Stats {...stats} />
               <OverviewPanel
@@ -543,6 +554,15 @@ export default function CheckInsPage() {
                 responses={responses}
                 onExportResponses={handleResponseExport}
               />
+
+              {/* Analytics Section */}
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Analytics</h3>
+                <AnalyticsPanel
+                  queueItems={queueItems}
+                  responses={responses}
+                />
+              </div>
             </div>
           )}
 
@@ -562,36 +582,40 @@ export default function CheckInsPage() {
             />
           )}
 
-          {activeTab === 'manual' && (
-            <ManualTriggerPanel
-              assessments={assessments}
-              loading={loadingAssessments}
-              hasLoaded={hasLoadedAssessments}
-              onLoad={handleAssessmentsLoad}
-              onQueue={handleManualQueued}
-              onError={(message) => setFlash({ type: 'error', message })}
-            />
-          )}
+          {activeTab === 'settings' && (
+            <div className="space-y-8">
+              {/* Manual Trigger Section */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Manual Trigger</h3>
+                <ManualTriggerPanel
+                  assessments={assessments}
+                  loading={loadingAssessments}
+                  hasLoaded={hasLoadedAssessments}
+                  onLoad={handleAssessmentsLoad}
+                  onQueue={handleManualQueued}
+                  onError={(message) => setFlash({ type: 'error', message })}
+                />
+              </div>
 
-          {activeTab === 'templates' && (
-            <TemplateManager
-              templates={templates}
-              inserts={inserts}
-              loading={loadingTemplates}
-              hasLoaded={hasLoadedTemplates}
-              onLoad={handleTemplatesLoad}
-              onTemplateUpdated={handleTemplateUpdated}
-              onInsertUpdated={handleInsertUpdated}
-              onSuccess={(message) => setFlash({ type: 'success', message })}
-              onError={(message) => setFlash({ type: 'error', message })}
-            />
-          )}
+              {/* Divider */}
+              <div className="border-t border-gray-200" />
 
-          {activeTab === 'analytics' && (
-            <AnalyticsPanel
-              queueItems={queueItems}
-              responses={responses}
-            />
+              {/* Templates Section */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Templates & Inserts</h3>
+                <TemplateManager
+                  templates={templates}
+                  inserts={inserts}
+                  loading={loadingTemplates}
+                  hasLoaded={hasLoadedTemplates}
+                  onLoad={handleTemplatesLoad}
+                  onTemplateUpdated={handleTemplateUpdated}
+                  onInsertUpdated={handleInsertUpdated}
+                  onSuccess={(message) => setFlash({ type: 'success', message })}
+                  onError={(message) => setFlash({ type: 'error', message })}
+                />
+              </div>
+            </div>
           )}
         </>
       )}

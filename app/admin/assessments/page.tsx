@@ -3,18 +3,20 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { getBrowserSupabase } from '@/lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
-import { Search, Download, Eye, Mail, MessageSquare, CheckCircle, XCircle, Trash2, RefreshCw } from 'lucide-react'
+import { Search, Download, Eye, Mail, MessageSquare, CheckCircle, XCircle, Trash2, RefreshCw, Copy, Check } from 'lucide-react'
 import { useSearchParams, usePathname, useRouter } from 'next/navigation'
 import DeleteConfirmationModal from '@/components/admin/DeleteConfirmationModal'
 
 interface Assessment {
   id: string
+  research_id: string | null
   email: string | null
   phone_number: string | null
   name: string | null
   guide_type: string
   payment_tier: string
   payment_completed: boolean
+  delivery_method: string | null
   created_at: string
   guide_deliveries?: any[]
   responses?: any
@@ -35,7 +37,8 @@ export default function AssessmentsPage() {
     assessment: null
   })
   const [isDeleting, setIsDeleting] = useState(false)
-  
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const router = useRouter()
@@ -118,9 +121,20 @@ export default function AssessmentsPage() {
     setSearchDebounce(newDebounce)
   }, [searchDebounce, searchParams, pathname, router])
 
+  const copyResearchId = useCallback(async (researchId: string) => {
+    try {
+      await navigator.clipboard.writeText(researchId)
+      setCopiedId(researchId)
+      setTimeout(() => setCopiedId(null), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }, [])
+
   const filteredAssessments = assessments.filter(assessment => {
     const search = searchTerm.toLowerCase()
     return (
+      assessment.research_id?.toLowerCase().includes(search) ||
       assessment.email?.toLowerCase().includes(search) ||
       assessment.phone_number?.includes(search) ||
       assessment.name?.toLowerCase().includes(search) ||
@@ -262,7 +276,7 @@ export default function AssessmentsPage() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by email, phone, name, or guide type..."
+            placeholder="Search by Research ID, email, phone, name, or guide type..."
             value={searchTerm}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -279,6 +293,9 @@ export default function AssessmentsPage() {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Research ID
+                </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Contact
                 </th>
@@ -303,6 +320,30 @@ export default function AssessmentsPage() {
                 
                 return (
                   <tr key={assessment.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {assessment.research_id ? (
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center px-3 py-1.5 rounded-md bg-blue-50 border border-blue-200">
+                            <span className="text-base font-mono font-bold text-blue-700 tracking-wide">
+                              {assessment.research_id}
+                            </span>
+                          </span>
+                          <button
+                            onClick={() => copyResearchId(assessment.research_id!)}
+                            className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                            title="Copy Research ID"
+                          >
+                            {copiedId === assessment.research_id ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div>
                         {assessment.email && (
@@ -397,6 +438,25 @@ export default function AssessmentsPage() {
               </div>
 
               <div className="space-y-6">
+                {/* Research ID - Prominent Display */}
+                {selectedAssessment.research_id && (
+                  <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <span className="text-sm font-medium text-blue-700">Research ID:</span>
+                    <span className="text-xl font-mono font-bold text-blue-800">{selectedAssessment.research_id}</span>
+                    <button
+                      onClick={() => copyResearchId(selectedAssessment.research_id!)}
+                      className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded transition-colors"
+                      title="Copy Research ID"
+                    >
+                      {copiedId === selectedAssessment.research_id ? (
+                        <Check className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <Copy className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                )}
+
                 <div>
                   <h3 className="font-medium mb-2">Contact Information</h3>
                   <div className="bg-gray-50 p-4 rounded-lg">
