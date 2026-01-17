@@ -282,19 +282,9 @@ export async function deliverEducationalGuide(assessmentId: string, options: Del
         .eq('id', assessmentId)
     }
     
-    // Schedule 14-day follow-up
-    if (deliverySuccess) {
-      const followUpDate = new Date()
-      followUpDate.setDate(followUpDate.getDate() + 14)
-      
-      await supabase
-        .from('follow_ups')
-        .insert({
-          assessment_id: assessmentId,
-          scheduled_for: followUpDate.toISOString()
-        })
-    }
-    
+    // Note: Legacy follow_ups table inserts removed 2025-01-17
+    // The check_in_queue system now handles all follow-ups (days 3, 7, 14)
+
     return deliverySuccess
   } catch (error) {
     console.error('Guide delivery error:', error)

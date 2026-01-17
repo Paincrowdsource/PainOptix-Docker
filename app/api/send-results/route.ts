@@ -99,33 +99,9 @@ export async function POST(req: Request) {
       assessmentId
     });
     
-    // Schedule follow-ups for free tier
-    if (tier === 'free' && !redFlag) {
-      // Day 3 follow-up (always scheduled)
-      const runAt3 = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-      await supabase
-        .from('follow_ups')
-        .insert({
-          assessment_id: assessmentId,
-          type: 'free_d3',
-          run_at: runAt3,
-          sent: false
-        });
-      await logEvent('email_followup_scheduled', { assessmentId, type: 'free_d3' });
-      
-      // Day 14 follow-up (V1.2 requirement - always scheduled, but requires engagement to send)
-      const runAt14 = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-      await supabase
-        .from('follow_ups')
-        .insert({
-          assessment_id: assessmentId,
-          type: 'free_d14',
-          run_at: runAt14,
-          sent: false
-        });
-      await logEvent('email_followup_scheduled', { assessmentId, type: 'free_d14' });
-    }
-    
+    // Note: Legacy follow_ups table inserts removed 2025-01-17
+    // The check_in_queue system now handles all follow-ups (days 3, 7, 14)
+
     return NextResponse.json({ ok: true });
     
   } catch (error) {
