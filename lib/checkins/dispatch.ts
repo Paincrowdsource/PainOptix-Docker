@@ -94,8 +94,30 @@ export async function dispatchDue(
           .eq('id', message.assessment_id)
           .single();
 
-        if (!assessment?.email) {
+        if (!assessment) {
+          // Assessment was deleted - mark as failed to prevent infinite retry
+          log("dispatch_orphaned", { assessmentId: message.assessment_id }, "warn");
+          await supabase
+            .from('check_in_queue')
+            .update({
+              status: 'failed',
+              last_error: 'Assessment not found (deleted)'
+            })
+            .eq('id', message.id);
+          result.failed++;
+          continue;
+        }
+
+        if (!assessment.email) {
+          // Assessment exists but has no email - mark as failed
           log("dispatch_no_email", { assessmentId: message.assessment_id }, "warn");
+          await supabase
+            .from('check_in_queue')
+            .update({
+              status: 'failed',
+              last_error: 'No email address on assessment'
+            })
+            .eq('id', message.id);
           result.failed++;
           continue;
         }

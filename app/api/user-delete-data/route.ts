@@ -165,6 +165,48 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
+    // 6.5 Delete check_in_queue records (scheduled check-in messages)
+    const { error: checkInQueueError } = await supabaseAdmin
+      .from('check_in_queue')
+      .delete()
+      .eq('assessment_id', assessmentId)
+
+    if (checkInQueueError) {
+      console.error('Error deleting check-in queue records:', checkInQueueError)
+      return NextResponse.json(
+        { error: 'Failed to delete assessment data' },
+        { status: 500 }
+      )
+    }
+
+    // 6.6 Delete check_in_responses records (user responses to check-ins)
+    const { error: checkInResponsesError } = await supabaseAdmin
+      .from('check_in_responses')
+      .delete()
+      .eq('assessment_id', assessmentId)
+
+    if (checkInResponsesError) {
+      console.error('Error deleting check-in responses:', checkInResponsesError)
+      return NextResponse.json(
+        { error: 'Failed to delete assessment data' },
+        { status: 500 }
+      )
+    }
+
+    // 6.7 Delete communication_logs records (email/SMS send history)
+    const { error: commLogsError } = await supabaseAdmin
+      .from('communication_logs')
+      .delete()
+      .eq('assessment_id', assessmentId)
+
+    if (commLogsError) {
+      console.error('Error deleting communication logs:', commLogsError)
+      return NextResponse.json(
+        { error: 'Failed to delete assessment data' },
+        { status: 500 }
+      )
+    }
+
     // 7. Finally, delete the main assessment record (contains personal data)
     const { error: assessmentError } = await supabaseAdmin
       .from('assessments')
