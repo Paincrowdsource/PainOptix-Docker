@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { ArrowLeft, ArrowRight, Loader2, Info, CheckCircle, AlertCircle, Check, Star, Zap, BookOpen, Shield, Lock, Award, Activity, Crown, Phone, RefreshCw } from 'lucide-react';
 import { withRetry, storeFailedOperation, isRetriableError, generateErrorCode } from '@/lib/error-recovery';
@@ -66,6 +66,9 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
   // Draft recovery state
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [savedDraft, setSavedDraft] = useState<AssessmentDraft | null>(null);
+
+  // Debounce ref to prevent duplicate submissions
+  const lastSubmitTimeRef = useRef<number>(0);
 
   // Initialize session on component mount
   useEffect(() => {
@@ -334,6 +337,14 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
 
   // Handle contact submission
   const handleContactSubmit = async (data: any) => {
+    // Debounce: prevent rapid duplicate submissions (2 second window)
+    const now = Date.now();
+    if (now - lastSubmitTimeRef.current < 2000) {
+      console.log('Debounce: Ignoring duplicate submission within 2 seconds');
+      return;
+    }
+    lastSubmitTimeRef.current = now;
+
     setIsSubmitting(true);
 
     try {

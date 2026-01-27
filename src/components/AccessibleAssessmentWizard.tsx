@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { ArrowLeft, ArrowRight, Loader2, Info, CheckCircle, AlertCircle } from 'lucide-react';
 import { withRetry, storeFailedOperation, isRetriableError, generateErrorCode } from '@/lib/error-recovery';
@@ -78,6 +78,9 @@ export const AccessibleAssessmentWizard: React.FC<AssessmentWizardProps> = ({ on
   const { announce, AnnouncementRegion } = useAnnouncement();
   const mainContentRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  // Debounce ref to prevent duplicate submissions
+  const lastSubmitTimeRef = useRef<number>(0);
 
   // Initialize session on component mount
   useEffect(() => {
@@ -295,9 +298,17 @@ export const AccessibleAssessmentWizard: React.FC<AssessmentWizardProps> = ({ on
   };
 
   const handleContactSubmit = async () => {
+    // Debounce: prevent rapid duplicate submissions (2 second window)
+    const now = Date.now();
+    if (now - lastSubmitTimeRef.current < 2000) {
+      console.log('Debounce: Ignoring duplicate submission within 2 seconds');
+      return;
+    }
+    lastSubmitTimeRef.current = now;
+
     setIsSubmitting(true);
     setErrors('');
-    
+
     const submitAssessment = async () => {
       const assessmentData = {
         responses: Array.from(responses.entries()).map(([questionId, answer]) => ({

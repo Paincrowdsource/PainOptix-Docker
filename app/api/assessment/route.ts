@@ -80,6 +80,68 @@ export async function POST(req: NextRequest) {
     const supabase = getServiceSupabase()
 
     // ==========================================================
+    // RAPID DUPLICATE PREVENTION (30-second time window)
+    // ==========================================================
+    // Check for any assessment created within the last 30 seconds with same contact info
+    // This prevents race conditions from rapid-fire submissions
+    const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString()
+
+    if (phoneNumber) {
+      const { data: recentByPhone } = await supabase
+        .from('assessments')
+        .select('id, research_id, created_at')
+        .eq('phone_number', phoneNumber)
+        .gte('created_at', thirtySecondsAgo)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (recentByPhone) {
+        logger.info('Rapid duplicate prevented (phone match within 30s)', {
+          existingId: recentByPhone.id,
+          researchId: recentByPhone.research_id,
+          createdAt: recentByPhone.created_at
+        })
+        return NextResponse.json({
+          success: true,
+          assessmentId: recentByPhone.id,
+          guideType: guideType,
+          message: 'Assessment already submitted',
+          deduplicated: true
+        })
+      }
+    }
+
+    if (email && !phoneNumber) {
+      const { data: recentByEmail } = await supabase
+        .from('assessments')
+        .select('id, research_id, created_at')
+        .eq('email', email)
+        .gte('created_at', thirtySecondsAgo)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (recentByEmail) {
+        logger.info('Rapid duplicate prevented (email match within 30s)', {
+          existingId: recentByEmail.id,
+          researchId: recentByEmail.research_id,
+          createdAt: recentByEmail.created_at
+        })
+        return NextResponse.json({
+          success: true,
+          assessmentId: recentByEmail.id,
+          guideType: guideType,
+          message: 'Assessment already submitted',
+          deduplicated: true
+        })
+      }
+    }
+    // ==========================================================
+    // END RAPID DUPLICATE PREVENTION
+    // ==========================================================
+
+    // ==========================================================
     // PHASE 1 PIVOT: Deduplication with Phone Priority
     // ==========================================================
     // Check if user already exists - prevents duplicate research_ids

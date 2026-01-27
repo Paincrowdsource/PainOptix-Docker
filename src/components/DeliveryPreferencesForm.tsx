@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { FieldGroup, FormLabel, FormInput, FormCheckbox } from './FieldGroup';
 import { Shield, Lock, Award, CheckCircle, Mail, MessageSquare, ChevronRight, Send, Loader2 } from 'lucide-react';
 
@@ -32,6 +32,9 @@ export const DeliveryPreferencesForm: React.FC<DeliveryPreferencesFormProps> = (
   const [smsOptIn, setSmsOptIn] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Debounce ref to prevent duplicate submissions
+  const lastSubmitTimeRef = useRef<number>(0);
 
   // Phone number formatting - (xxx) xxx-xxxx
   const formatPhoneNumber = (value: string): string => {
@@ -87,6 +90,14 @@ export const DeliveryPreferencesForm: React.FC<DeliveryPreferencesFormProps> = (
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+
+    // Debounce: prevent rapid duplicate submissions (2 second window)
+    const now = Date.now();
+    if (now - lastSubmitTimeRef.current < 2000) {
+      console.log('Debounce: Ignoring duplicate submission within 2 seconds');
+      return;
+    }
+    lastSubmitTimeRef.current = now;
 
     setIsSubmitting(true);
 
