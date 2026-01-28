@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { FieldGroup, FormLabel, FormInput, FormCheckbox } from './FieldGroup';
-import { Shield, Lock, Award, CheckCircle, Mail, MessageSquare, ChevronRight, Send, Loader2 } from 'lucide-react';
+import { Shield, Lock, Award, CheckCircle, Mail, MessageSquare, ChevronRight, Send, Loader2, Info } from 'lucide-react';
 
 interface DeliveryPreferencesFormProps {
   assessmentId: string;
@@ -184,6 +184,14 @@ export const DeliveryPreferencesForm: React.FC<DeliveryPreferencesFormProps> = (
             </div>
             <p className="text-blue-100">
               Your comprehensive guide will be delivered instantly. Free, no payment required.
+            </p>
+          </div>
+
+          {/* Value proposition - why participation matters */}
+          <div className="mx-8 mt-6 flex items-start gap-3 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
+            <Info className="w-5 h-5 text-[#0B5394] mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Your participation matters.</span> Responses help us refine our algorithm, making results more accurate and useful for everyone.
             </p>
           </div>
 
