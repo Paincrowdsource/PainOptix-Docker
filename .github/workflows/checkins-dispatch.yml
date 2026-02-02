@@ -14,29 +14,43 @@ jobs:
       - name: Trigger Check-ins Dispatch
         id: dispatch
         run: |
-          response=$(curl -s -X POST https://painoptix.com/api/checkins/dispatch \
-            -H "Authorization: Bearer ${{ secrets.DISPATCH_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -w "\nHTTP_STATUS:%{http_code}")
+          MAX_RETRIES=3
+          ATTEMPT=0
+          SUCCESS=false
 
-          # Extract body and status
-          body=$(echo "$response" | sed -n '1,/^HTTP_STATUS:/p' | sed '$d')
-          status=$(echo "$response" | grep "HTTP_STATUS:" | cut -d: -f2)
+          while [ $ATTEMPT -lt $MAX_RETRIES ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "Attempt $ATTEMPT of $MAX_RETRIES"
 
-          echo "Response body: $body"
-          echo "HTTP status: $status"
+            response=$(curl -s -X POST https://painoptix.com/api/checkins/dispatch \
+              --connect-timeout 10 \
+              --max-time 60 \
+              -H "Authorization: Bearer ${{ secrets.DISPATCH_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -w "\nHTTP_STATUS:%{http_code}") || true
 
-          # Check for success
-          if [ "$status" != "200" ]; then
-            echo "::error::Dispatch failed with status $status"
-            exit 1
-          fi
+            # Extract body and status
+            body=$(echo "$response" | sed -n '1,/^HTTP_STATUS:/p' | sed '$d')
+            status=$(echo "$response" | grep "HTTP_STATUS:" | cut -d: -f2)
 
-          # Verify ok:true in response
-          if echo "$body" | grep -q '"ok":true'; then
-            echo "✅ Dispatch successful"
-          else
-            echo "::error::Dispatch returned ok:false"
-            echo "$body"
+            echo "Response body: $body"
+            echo "HTTP status: $status"
+
+            # Check for success
+            if [ "$status" = "200" ] && echo "$body" | grep -q '"ok":true'; then
+              echo "Dispatch successful"
+              SUCCESS=true
+              break
+            fi
+
+            echo "Attempt $ATTEMPT failed (status=$status)"
+            if [ $ATTEMPT -lt $MAX_RETRIES ]; then
+              echo "Retrying in 15 seconds..."
+              sleep 15
+            fi
+          done
+
+          if [ "$SUCCESS" != "true" ]; then
+            echo "::error::Dispatch failed after $MAX_RETRIES attempts (last status=$status)"
             exit 1
           fi
