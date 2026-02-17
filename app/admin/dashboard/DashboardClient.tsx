@@ -10,6 +10,8 @@ import DropoffAnalytics from '@/components/admin/DropoffAnalytics'
 
 interface DashboardData {
   totalAssessments: number
+  guestAssessments?: number
+  claimedAssessments?: number
   freeGuidesDelivered: number
   deliveryStats: {
     emailSuccess: number
@@ -142,6 +144,11 @@ export default function DashboardClient({ data, timePeriod }: Props) {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{data.totalAssessments}</div>
+                {(data.guestAssessments != null || data.claimedAssessments != null) && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {data.claimedAssessments ?? 0} claimed, {data.guestAssessments ?? 0} guests
+                  </p>
+                )}
               </CardContent>
             </Card>
 
@@ -229,9 +236,16 @@ export default function DashboardClient({ data, timePeriod }: Props) {
                 {data.recentAssessments.map((assessment: any) => (
                   <div key={assessment.id} className="flex items-center justify-between border-b pb-4 last:border-0">
                     <div>
-                      <p className="font-medium">{assessment.email || assessment.phone || 'Anonymous'}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{assessment.email || assessment.phone_number || 'Anonymous'}</p>
+                        {assessment.is_guest && (
+                          <span className="inline-flex text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">
+                            Guest
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-600">
-                        {assessment.diagnosis || 'No diagnosis'} • {assessment.payment_tier || 'free'}
+                        {assessment.guide_type?.replace(/_/g, ' ') || 'No diagnosis'} • {assessment.payment_tier || 'free'}
                       </p>
                     </div>
                     <div className="text-right">

@@ -17,6 +17,7 @@ interface Assessment {
   payment_tier: string
   payment_completed: boolean
   delivery_method: string | null
+  is_guest?: boolean
   created_at: string
   guide_deliveries?: any[]
   responses?: any
@@ -143,7 +144,7 @@ export default function AssessmentsPage() {
   })
 
   const exportToCSV = () => {
-    const headers = ['ID', 'Email', 'Phone', 'Guide Type', 'Payment Tier', 'Payment Completed', 'Created At']
+    const headers = ['ID', 'Email', 'Phone', 'Guide Type', 'Payment Tier', 'Payment Completed', 'Status', 'Created At']
     const rows = filteredAssessments.map(a => [
       a.id,
       a.email || '',
@@ -151,6 +152,7 @@ export default function AssessmentsPage() {
       a.guide_type,
       a.payment_tier,
       a.payment_completed ? 'Yes' : 'No',
+      a.is_guest ? 'Guest' : 'Claimed',
       new Date(a.created_at).toLocaleString()
     ])
 
@@ -352,6 +354,11 @@ export default function AssessmentsPage() {
                         {assessment.phone_number && (
                           <div className="text-sm text-gray-500">{assessment.phone_number}</div>
                         )}
+                        {assessment.is_guest && (
+                          <span className="inline-flex mt-1 text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">
+                            Guest
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
@@ -469,6 +476,14 @@ export default function AssessmentsPage() {
                 <div>
                   <h3 className="font-medium mb-2">Assessment Details</h3>
                   <div className="bg-gray-50 p-4 rounded-lg">
+                    <p>
+                      <strong>Status:</strong>{' '}
+                      {selectedAssessment.is_guest ? (
+                        <span className="inline-flex px-2 py-0.5 rounded bg-amber-100 text-amber-700 text-sm font-medium">Guest (unclaimed)</span>
+                      ) : (
+                        <span className="inline-flex px-2 py-0.5 rounded bg-green-100 text-green-700 text-sm font-medium">Claimed</span>
+                      )}
+                    </p>
                     <p><strong>Guide Type:</strong> {selectedAssessment.guide_type?.replace(/_/g, ' ')}</p>
                     <p><strong>Created:</strong> {new Date(selectedAssessment.created_at).toLocaleString()}</p>
                   </div>

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { formatDistanceToNow } from 'date-fns'
+import { MessageSquare, Mail } from 'lucide-react'
 
 interface ResponseRecord {
   id: string
@@ -10,6 +11,8 @@ interface ResponseRecord {
   day: number
   value: 'better' | 'same' | 'worse'
   note: string | null
+  pain_score?: number | null
+  source?: string | null
   created_at: string
   assessment?: {
     email?: string | null
@@ -116,7 +119,9 @@ export default function ResponsesPanel({ responses, onExport }: ResponsesPanelPr
           <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
             <tr>
               <th className="px-4 py-3 text-left">Day</th>
+              <th className="px-4 py-3 text-left">Pain</th>
               <th className="px-4 py-3 text-left">Outcome</th>
+              <th className="px-4 py-3 text-left">Source</th>
               <th className="px-4 py-3 text-left">Recipient</th>
               <th className="px-4 py-3 text-left">Diagnosis</th>
               <th className="px-4 py-3 text-left">Note</th>
@@ -126,7 +131,7 @@ export default function ResponsesPanel({ responses, onExport }: ResponsesPanelPr
           <tbody className="divide-y divide-gray-100 text-gray-700">
             {filteredResponses.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
+                <td colSpan={8} className="px-4 py-8 text-center text-sm text-gray-500">
                   No responses match the current filters.
                 </td>
               </tr>
@@ -142,6 +147,19 @@ export default function ResponsesPanel({ responses, onExport }: ResponsesPanelPr
               return (
                 <tr key={response.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-medium text-gray-900">Day {response.day}</td>
+                  <td className="px-4 py-3 text-sm text-gray-900">
+                    {response.pain_score != null ? (
+                      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                        response.pain_score <= 3 ? 'bg-green-100 text-green-700' :
+                        response.pain_score <= 6 ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {response.pain_score}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">--</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
@@ -154,6 +172,13 @@ export default function ResponsesPanel({ responses, onExport }: ResponsesPanelPr
                     >
                       {VALUE_LABELS[response.value]}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {response.source === 'sms_reply' ? (
+                      <span title="SMS reply"><MessageSquare className="h-4 w-4 text-green-600" /></span>
+                    ) : response.source === 'email_link' ? (
+                      <span title="Email link"><Mail className="h-4 w-4 text-blue-600" /></span>
+                    ) : null}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">{email}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{diagnosis}</td>

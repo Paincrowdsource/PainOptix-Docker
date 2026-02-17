@@ -144,6 +144,19 @@ export async function GET(request: NextRequest) {
       deliveryStats.emailFailed = Math.max(deliveryStats.emailFailed, deliveryFailed)
     }
 
+    // Get guest vs claimed counts
+    const { count: guestCount, error: guestError } = await supabaseService
+      .from('v_assessments_visible')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_guest', true)
+
+    if (guestError) {
+      console.error('Error counting guest assessments:', guestError)
+    }
+
+    const guestAssessments = guestCount || 0
+    const claimedAssessments = (totalAssessments || 0) - guestAssessments
+
     // Get recent assessments
     const { data: recentAssessments, error: recentError } = await supabaseService
       .from('v_assessments_visible')
@@ -164,6 +177,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       totalAssessments: totalAssessments || 0,
+      guestAssessments,
+      claimedAssessments,
       totalRevenue,
       revenueByTier,
       deliveryStats,
