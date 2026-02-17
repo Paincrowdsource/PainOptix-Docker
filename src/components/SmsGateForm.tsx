@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, Loader2, MessageSquare } from 'lucide-react';
+import { ChevronRight, Loader2, MessageSquare, Shield, Clock, BarChart3 } from 'lucide-react';
 import { FormInput, FormLabel } from './FieldGroup';
 
 interface SmsGateFormProps {
@@ -60,15 +60,37 @@ export const SmsGateForm: React.FC<SmsGateFormProps> = ({ isSubmitting, onSubmit
     <div className="relative min-h-screen bg-gradient-to-b from-white via-gray-50/30 to-white -m-8 p-8">
       <div className="relative z-10 max-w-2xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-[#0B5394] to-[#084074] px-8 py-6">
-            <h2 className="text-2xl font-normal text-white mb-2">Start Your 14-Day Tracker</h2>
-            <p className="text-blue-100">
-              We&apos;ll send you a once-daily text asking how your pain feels (0-10). This builds your personal
-              progress chart.
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#0B5394] to-[#084074] px-8 py-8 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-4">
+              <MessageSquare className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-light text-white tracking-tight">Start Your 14-Day Tracker</h2>
+            <p className="text-blue-100 mt-2 max-w-md mx-auto">
+              One text per day. Reply with your pain score. Watch your progress chart build.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          {/* Benefit strip */}
+          <div className="px-8 pt-6 pb-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
+                <Clock className="w-5 h-5 text-[#0B5394] flex-shrink-0" />
+                <span className="text-sm text-gray-700">10 seconds per day</span>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
+                <BarChart3 className="w-5 h-5 text-[#0B5394] flex-shrink-0" />
+                <span className="text-sm text-gray-700">Personal progress chart</span>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
+                <Shield className="w-5 h-5 text-[#0B5394] flex-shrink-0" />
+                <span className="text-sm text-gray-700">Cancel anytime via STOP</span>
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="px-8 pt-4 pb-8 space-y-6">
+            {/* Phone field */}
             <div>
               <FormLabel htmlFor="phone" required>
                 <span className="inline-flex items-center gap-2">
@@ -90,6 +112,7 @@ export const SmsGateForm: React.FC<SmsGateFormProps> = ({ isSubmitting, onSubmit
               />
             </div>
 
+            {/* Email field */}
             <div>
               <FormLabel htmlFor="email">Email (optional)</FormLabel>
               <FormInput
@@ -105,34 +128,39 @@ export const SmsGateForm: React.FC<SmsGateFormProps> = ({ isSubmitting, onSubmit
               />
             </div>
 
-            <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+            {/* SMS Consent */}
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={smsConsent}
                   onChange={(e) => setSmsConsent(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="mt-1 h-5 w-5 rounded border-gray-300 text-[#0B5394] focus:ring-[#0B5394]"
                 />
-                <span className="text-sm text-gray-700">
-                  I consent to receive SMS messages from PainOptix / Dr. C. Message and data rates may apply.
-                  Reply STOP to unsubscribe.
-                </span>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 mb-1">SMS Consent</p>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    I consent to receive SMS messages from PainOptix / Dr. C. Message and data rates may apply.
+                    Reply STOP to unsubscribe.
+                  </p>
+                </div>
               </label>
               {errors.smsConsent && <p className="text-red-500 text-sm mt-2">{errors.smsConsent}</p>}
             </div>
 
-            <div className="flex justify-between pt-2 border-t border-gray-100">
+            {/* Buttons */}
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 pt-2 border-t border-gray-100">
               <button
                 type="button"
                 onClick={onBack}
-                className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className="px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors font-medium"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-8 py-3 bg-[#0B5394] text-white rounded-lg hover:bg-[#084074] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 font-medium shadow-sm flex items-center gap-2 disabled:opacity-60"
+                className="px-8 py-3 bg-[#0B5394] text-white rounded-xl hover:bg-[#084074] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 font-medium shadow-sm flex items-center gap-2 disabled:opacity-60"
               >
                 {isSubmitting ? (
                   <>

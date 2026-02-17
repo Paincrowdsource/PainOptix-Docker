@@ -1,4 +1,5 @@
 import React from 'react';
+import { CheckCircle, MessageSquare, Mail, Clock, Shield, Lock } from 'lucide-react';
 
 interface CheckYourInboxProps {
   contactMethod: 'email' | 'sms';
@@ -7,83 +8,104 @@ interface CheckYourInboxProps {
 
 export const CheckYourInbox: React.FC<CheckYourInboxProps> = ({ contactMethod, contactInfo }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12">
-      <div className="max-w-2xl mx-auto text-center px-4">
-        {/* Success Icon */}
-        <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        
-        <h1 className="text-3xl font-bold mb-4 text-gray-900">
-          Assessment Complete!
-        </h1>
-        
-        <div className="medical-card mb-8">
-          <p className="text-lg text-gray-700 mb-4">
-            Your personalized Educational Guide has been sent to:
-          </p>
-          
-          <p className="text-xl font-semibold text-blue-600 mb-6">
-            {contactInfo}
-          </p>
-          
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-            <p className="text-sm text-blue-800 mb-2">
-              <strong>Delivery Time:</strong> 2-3 minutes
-            </p>
-            <p className="text-sm text-blue-800">
-              <strong>Check your {contactMethod === 'email' ? 'inbox and spam folder' : 'messages'}</strong>
-            </p>
+    <div className="relative min-h-screen bg-gradient-to-b from-white via-gray-50/30 to-white -m-8 p-8">
+      <div className="relative z-10 max-w-2xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#0B5394] to-[#084074] px-8 py-8 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-light text-white tracking-tight">
+              Your Tracker Is Active
+            </h2>
+            <p className="text-blue-100 mt-2">Assessment complete. Here&apos;s what happens next.</p>
           </div>
-        </div>
-        
-        <div className="medical-card">
-          <h2 className="text-xl font-semibold mb-4">What Happens Next?</h2>
-          <div className="space-y-3 text-left">
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-xs font-bold text-blue-600">1</span>
+
+          <div className="p-8 space-y-6">
+            {/* Delivery confirmation */}
+            <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-5 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                {contactMethod === 'sms' ? (
+                  <MessageSquare className="w-5 h-5 text-[#0B5394]" />
+                ) : (
+                  <Mail className="w-5 h-5 text-[#0B5394]" />
+                )}
+                <p className="text-sm font-medium text-gray-700">Sent to</p>
               </div>
-              <p className="text-gray-700">
-                Open your {contactMethod === 'email' ? 'email' : 'text message'} to access your Educational Guide
-              </p>
+              <p className="text-lg font-semibold text-[#0B5394]">{contactInfo}</p>
+              <div className="mt-3 flex items-center justify-center gap-2 text-sm text-gray-600">
+                <Clock className="w-4 h-4" />
+                <span>Arrives in 2-3 minutes</span>
+              </div>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-xs font-bold text-blue-600">2</span>
+
+            {/* What happens next */}
+            <div>
+              <h2 className="text-lg font-medium text-gray-900 mb-3">What Happens Next</h2>
+              <div className="w-12 h-px bg-[#0B5394] mb-4"></div>
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-[#0B5394]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-sm font-semibold text-[#0B5394]">1</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Check your {contactMethod === 'sms' ? 'messages' : 'inbox'}</p>
+                    <p className="text-sm text-gray-600">Your Educational Guide is on its way.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-[#0B5394]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-sm font-semibold text-[#0B5394]">2</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Daily check-in starts tomorrow</p>
+                    <p className="text-sm text-gray-600">You&apos;ll receive one text per day asking for your pain score (0-10). Just reply with a number.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-[#0B5394]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-sm font-semibold text-[#0B5394]">3</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Watch your progress build</p>
+                    <p className="text-sm text-gray-600">After a few days, your personal progress chart will show trends in your recovery.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-[#0B5394]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-sm font-semibold text-[#0B5394]">4</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">14-day review</p>
+                    <p className="text-sm text-gray-600">At the end of your tracker, you&apos;ll receive a full summary of your progress.</p>
+                  </div>
+                </div>
               </div>
-              <p className="text-gray-700">
-                Review your personalized information based on your symptoms
-              </p>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-xs font-bold text-blue-600">3</span>
+
+            {/* Support link */}
+            <p className="text-center text-sm text-gray-500">
+              Need help?{' '}
+              <a href="mailto:support@painoptix.com" className="text-[#0B5394] hover:underline">
+                support@painoptix.com
+              </a>
+            </p>
+
+            {/* Trust indicators */}
+            <div className="pt-6 border-t border-gray-100">
+              <div className="flex justify-center gap-8">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-[#0B5394]" />
+                  <span className="text-xs text-gray-600">HIPAA Compliant</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-[#0B5394]" />
+                  <span className="text-xs text-gray-600">256-bit SSL</span>
+                </div>
               </div>
-              <p className="text-gray-700">
-                Consider enhanced guides for detailed treatment information
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-xs font-bold text-blue-600">4</span>
-              </div>
-              <p className="text-gray-700">
-                We&apos;ll check in with you in 14 days to track your progress
-              </p>
             </div>
           </div>
-        </div>
-        
-        <div className="mt-8">
-          <p className="text-sm text-gray-600">
-            Need help? Contact our support team at{' '}
-            <a href="mailto:support@painoptix.com" className="text-blue-600 hover:underline">
-              support@painoptix.com
-            </a>
-          </p>
         </div>
       </div>
     </div>
