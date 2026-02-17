@@ -9,7 +9,7 @@ export function getFreeTierWelcomeTemplate(ctx: { assessmentResults: any; userTi
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Your PainOptix Educational Assessment Results</title>
+  <title>Your Pain Pattern Analysis is Ready</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body style="margin: 0; padding: 24px; background: #F6F8FB; font-family: 'Segoe UI', Roboto, Arial, sans-serif; color: #1F2937;">
@@ -140,8 +140,8 @@ export function getFreeTierWelcomeTemplate(ctx: { assessmentResults: any; userTi
               <!-- Follow-up Notice -->
               <div style="margin: 24px 0; padding: 16px; background: #FEF3C7; border-radius: 8px;">
                 <p style="margin: 0; font-size: 14px; color: #78350F;">
-                  <strong>📅 We'll check in with you</strong><br>
-                  We'll send you follow-up emails over the next 14 days to see how you're doing and provide additional educational resources.
+                  <strong>📅 Your 14-Day Recovery Tracker</strong><br>
+                  We'll check in over the next 14 days to track your progress. If you opted into SMS, you'll get a quick daily text — just reply with your pain level (0-10) to build your recovery timeline.
                 </p>
               </div>
 

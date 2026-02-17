@@ -249,5 +249,5 @@ export function getSMSTemplate(params: GuideTemplateParams) {
   const guideName = guideDisplayNames[guideType] || 'Educational Guide'
   const guideUrl = `${process.env.NEXT_PUBLIC_APP_URL}/guide/${assessmentId}`
   
-  return `PainFinder: Your personalized ${guideName} guide is ready! Access your full report here for FREE: ${guideUrl} Reply STOP to unsubscribe.`
+  return `PainOptix: Your ${guideName} pattern guide is ready. View it here: ${guideUrl} — Reply STOP to unsubscribe.`
 }

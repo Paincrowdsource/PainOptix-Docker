@@ -44,7 +44,7 @@ export async function POST(req: Request) {
         html = getEnhancedConfirmationTemplate({ assessmentResults, userTier: tier });
         emailType = 'enhanced_immediate';
       } else {
-        subject = 'Your PainOptix Educational Assessment & Free Guide';
+        subject = 'Your Pain Pattern Analysis is Ready';
         html = getFreeTierWelcomeTemplate({ assessmentResults, userTier: tier });
         emailType = 'free_immediate';
       }

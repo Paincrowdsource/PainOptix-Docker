@@ -193,9 +193,9 @@ export async function deliverEducationalGuide(assessmentId: string, options: Del
           userTier: tier 
         })
         emailTemplate = {
-          subject: 'Your PainOptix Educational Assessment & Free Guide',
+          subject: 'Your Pain Pattern Analysis is Ready',
           html,
-          text: 'Your PainOptix Educational Assessment & Free Guide is Ready. Please view this email in HTML format.'
+          text: 'Your Pain Pattern Analysis is Ready. Please view this email in HTML format.'
         }
       }
       

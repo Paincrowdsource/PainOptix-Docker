@@ -60,17 +60,17 @@ export function LandingPageV1Client() {
     <section id="start-check" className="py-24 bg-gradient-to-b from-gray-50/50 to-white">
       <div className="max-w-3xl mx-auto px-6 lg:px-8 text-center">
         <h2 className="text-3xl font-light text-gray-900 mb-4">
-          Ready to Start?
+          Ready to Find Your Pattern?
         </h2>
         <p className="text-lg text-gray-600 mb-8">
-          Get your personalized plan in just 2 minutes
+          16 questions. 2 minutes. Physician-designed.
         </p>
         <button onClick={handleStartAssessment} className="inline-flex px-8 py-3 bg-[#0B5394] text-white text-lg font-medium rounded shadow-sm hover:bg-[#084074] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
-          Start Free Check
+          Find My Pain Pattern
           <ArrowRight className="inline-block ml-2 w-5 h-5" />
         </button>
         <p className="mt-4 text-sm text-gray-500">
-          Delivered instantly by text. No payment required.
+          Free educational assessment — results delivered by text.
         </p>
       </div>
     </section>
@@ -117,27 +117,27 @@ export function LandingPageV1Client() {
 
           {/* Main headline - refined medical typography */}
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-normal tracking-tight text-gray-900 leading-[1.1]" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
-            Make Sense of Your
-            <span className="block text-[#0B5394] font-light">Back Pain.</span>
-            <span className="block text-gray-900">Fast!</span>
+            Discover Your
+            <span className="block text-[#0B5394] font-light">Back Pain Pattern.</span>
           </h1>
 
           {/* Subheadline */}
           <p className="mt-6 text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Take a free, two-minute educational check to see which back-pain type most closely matches your symptoms.
-            We&apos;ll text your personalized plan instantly. No payment required.
+            Answer 16 clinically-validated questions designed by a board-certified
+            physician. You&apos;ll receive a personalized pain pattern analysis and a
+            14-day recovery tracker — all free.
           </p>
 
           {/* CTA Section */}
           <div className="mt-10">
             <button onClick={handleStartAssessment} className="inline-flex px-8 py-3 bg-[#0B5394] text-white text-lg font-medium rounded shadow-sm hover:bg-[#084074] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
-              Start Free Check
+              Find My Pain Pattern
               <ArrowRight className="inline-block ml-2 w-5 h-5" />
             </button>
 
             {/* Disclaimer - clear and visible */}
             <p className="mt-4 text-sm text-gray-600">
-              PainFinder™ provides educational content only. Not a diagnostic tool.
+              Educational assessment only — not a medical diagnosis.
             </p>
 
             {recentAssessment && (
@@ -192,7 +192,7 @@ export function LandingPageV1Client() {
       <div className="border-y border-gray-100 bg-gray-50/50">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <p className="text-sm text-gray-600 text-center">
-            <strong>Note:</strong> PainFinder™ provides educational content only and is not a diagnostic tool.
+            <strong>Note:</strong> PainOptix™ provides educational content only and is not a diagnostic tool.
             Always consult healthcare professionals for medical advice.
           </p>
         </div>
@@ -240,10 +240,11 @@ export function LandingPageV1Client() {
                   </div>
                 </div>
                 <div className="flex-grow">
-                  <h3 className="text-xl font-medium text-gray-900 mb-2">Receive Your Plan Instantly</h3>
+                  <h3 className="text-xl font-medium text-gray-900 mb-2">See Your Pain Pattern</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Get a comprehensive personalized guide delivered directly to your phone by secure text message.
-                    Includes exercises, management strategies, and a 14-day follow-up plan.
+                    Your results identify which of 9 clinical back-pain patterns most closely matches
+                    your symptoms — plus a personalized guide with exercises, management strategies,
+                    and what to discuss with your doctor.
                   </p>
                 </div>
               </div>
@@ -261,10 +262,10 @@ export function LandingPageV1Client() {
                   </div>
                 </div>
                 <div className="flex-grow">
-                  <h3 className="text-xl font-medium text-gray-900 mb-2">Take Informed Action</h3>
+                  <h3 className="text-xl font-medium text-gray-900 mb-2">Track Your Recovery</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Use your guide&apos;s evidence-based recommendations to make informed decisions
-                    about your care and discuss options with your healthcare provider.
+                    Opt in to our free 14-day SMS check-in program. We&apos;ll text you daily
+                    to track your pain level — so you and your provider can see what&apos;s working.
                   </p>
                 </div>
               </div>
@@ -328,7 +329,7 @@ export function LandingPageV1Client() {
                 <span className="text-lg font-medium text-gray-900">PainOptix™</span>
               </div>
               <p className="text-gray-600 text-sm">
-                Professional back pain assessment designed by medical experts.
+                Physician-designed back pain pattern analysis and recovery tracking.
               </p>
             </div>
 
@@ -381,7 +382,7 @@ export function LandingPageV1Client() {
           {/* Medical Disclaimer */}
           <div className="mt-8 p-6 rounded-lg bg-white border border-gray-200">
             <p className="text-xs text-gray-600 leading-relaxed">
-              <strong>Medical Disclaimer:</strong> PainFinder™ does not diagnose medical conditions or recommend specific treatments.
+              <strong>Medical Disclaimer:</strong> PainOptix™ does not diagnose medical conditions or recommend specific treatments.
               A complete diagnosis requires a physical exam, imaging, or other testing — symptoms alone are not enough.
               <Link href="/about" className="text-blue-600 hover:text-blue-700 underline">Learn more about what a full diagnosis involves</Link>.
               Your result reflects a common symptom pattern that matches your questionnaire responses.
