@@ -197,6 +197,7 @@ export type Database = {
           has_red_flags: boolean | null
           id: string
           initial_pain_score: number | null
+          is_guest: boolean | null
           marketing_opted_out: boolean | null
           name: string | null
           paincrowdsource_id: string | null
@@ -229,6 +230,7 @@ export type Database = {
           has_red_flags?: boolean | null
           id?: string
           initial_pain_score?: number | null
+          is_guest?: boolean | null
           marketing_opted_out?: boolean | null
           name?: string | null
           paincrowdsource_id?: string | null
@@ -261,6 +263,7 @@ export type Database = {
           has_red_flags?: boolean | null
           id?: string
           initial_pain_score?: number | null
+          is_guest?: boolean | null
           marketing_opted_out?: boolean | null
           name?: string | null
           paincrowdsource_id?: string | null
@@ -325,6 +328,8 @@ export type Database = {
           day: number
           id: string
           note: string | null
+          pain_score: number | null
+          source: string | null
           value: string
         }
         Insert: {
@@ -333,6 +338,8 @@ export type Database = {
           day: number
           id?: string
           note?: string | null
+          pain_score?: number | null
+          source?: string | null
           value: string
         }
         Update: {
@@ -341,6 +348,8 @@ export type Database = {
           day?: number
           id?: string
           note?: string | null
+          pain_score?: number | null
+          source?: string | null
           value?: string
         }
         Relationships: []

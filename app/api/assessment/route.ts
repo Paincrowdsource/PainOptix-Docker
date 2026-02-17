@@ -226,6 +226,7 @@ export async function POST(req: NextRequest) {
           delivery_method: deliveryMethod || 'sms',
           sms_consent_timestamp: smsOptIn ? new Date().toISOString() : null,
           updated_at: new Date().toISOString(),
+          is_guest: false,
           // Phase 1 Pivot: Force monograph tier for everyone
           payment_tier: 'comprehensive',
           payment_completed: true,
@@ -254,6 +255,7 @@ export async function POST(req: NextRequest) {
           sms_opt_in: smsOptIn || false,
           delivery_method: deliveryMethod || 'sms',
           sms_consent_timestamp: smsOptIn ? new Date().toISOString() : null,
+          is_guest: false,
           // Phase 1 Pivot: Force monograph tier for everyone
           payment_tier: 'comprehensive',
           payment_completed: true,

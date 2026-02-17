@@ -9,6 +9,8 @@ import { FieldGroup, FormLabel, FormRadioGroup, FormRadioItem, FormCheckbox } fr
 import { ContactCollection } from './ContactCollection';
 import { CheckYourInbox } from './CheckYourInbox';
 import { DeliveryPreferencesForm } from './DeliveryPreferencesForm';
+import { PatternRecognized } from './PatternRecognized';
+import { SmsGateForm } from './SmsGateForm';
 
 // Algorithm imports
 import { Questions, EducationalGuide } from '@/types/algorithm';
@@ -19,7 +21,7 @@ interface AssessmentWizardProps {
   onComplete?: (guideType: EducationalGuide, sessionId: string) => void;
 }
 
-type WizardStep = 'disclaimer' | 'assessment' | 'contact' | 'delivery' | 'complete';
+type WizardStep = 'disclaimer' | 'assessment' | 'pattern_recognized' | 'contact' | 'delivery' | 'complete';
 
 // Draft persistence constants
 const DRAFT_STORAGE_KEY = 'painoptix_assessment_draft';
@@ -35,6 +37,9 @@ interface AssessmentDraft {
 }
 
 export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }) => {
+  const valueFirstEnabled = ['1', 'true'].includes(
+    (process.env.NEXT_PUBLIC_VALUE_FIRST_FUNNEL || '').toLowerCase()
+  );
   const [currentStep, setCurrentStep] = useState<WizardStep>('disclaimer');
   const [currentQuestionId, setCurrentQuestionId] = useState<string>('Q1');
   const [responses, setResponses] = useState<Map<string, any>>(new Map());
@@ -55,6 +60,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
   
   // Payment state
   const [assessmentId, setAssessmentId] = useState<string>('');
+  const [guestAssessmentId, setGuestAssessmentId] = useState<string>('');
   const [selectedTier, setSelectedTier] = useState<'free' | 'enhanced' | 'monograph'>('free');
   const [selectedGuide, setSelectedGuide] = useState<EducationalGuide | null>(null);
   const [disclosures, setDisclosures] = useState<string[]>([]);
@@ -69,6 +75,17 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
 
   // Debounce ref to prevent duplicate submissions
   const lastSubmitTimeRef = useRef<number>(0);
+  const trackedEventsRef = useRef<Set<string>>(new Set());
+
+  const trackValueFirstEvent = (eventName: string, once = true) => {
+    if (!valueFirstEnabled || typeof window === 'undefined' || !window.gtag) return;
+    if (once && trackedEventsRef.current.has(eventName)) return;
+    if (once) trackedEventsRef.current.add(eventName);
+
+    window.gtag('event', eventName, {
+      event_category: 'value_first',
+    });
+  };
 
   // Initialize session on component mount
   useEffect(() => {
@@ -267,6 +284,25 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
     return true;
   };
 
+  const buildResponsesArray = (
+    sourceResponses: Map<string, any>,
+    stringifyAnswers: boolean
+  ) => {
+    return Array.from(sourceResponses.entries())
+      .filter(([questionId, answer]) => {
+        if (!answer || answer === '' || (Array.isArray(answer) && answer.length === 0)) {
+          console.warn(`Skipping empty answer for question ${questionId}`);
+          return false;
+        }
+        return true;
+      })
+      .map(([questionId, answer]) => ({
+        questionId,
+        question: Questions[questionId as keyof typeof Questions].text,
+        answer: stringifyAnswers ? String(answer) : answer
+      }));
+  };
+
   // Handle next question
   const handleNext = async () => {
     if (!validateAnswer()) return;
@@ -310,9 +346,59 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
         );
       }
     } else {
-      // All questions answered, move to contact collection
-      console.log('✅ All questions answered, moving to contact form');
-      setCurrentStep('contact');
+      console.log('✅ All questions answered');
+
+      if (!valueFirstEnabled) {
+        setCurrentStep('contact');
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        const session = guideSelector.getSession();
+        const computedGuide = guideSelector.selectEducationalGuide();
+        const guestResponsesArray = buildResponsesArray(newResponses, false);
+
+        if (guestResponsesArray.length === 0) {
+          throw new Error('No valid responses found. Please complete the assessment.');
+        }
+
+        const guestResponse = await fetch('/api/assessment/guest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            responses: guestResponsesArray,
+            referrerSource: new URLSearchParams(window.location.search).get('ref') || 'organic'
+          })
+        });
+
+        const guestResult = await guestResponse.json();
+        if (!guestResponse.ok || !guestResult.success) {
+          throw new Error(guestResult.error || 'Failed to save guest assessment');
+        }
+
+        setSelectedGuide((guestResult.guideType || computedGuide) as EducationalGuide);
+        setDisclosures(session.disclosures);
+        setGuestAssessmentId(guestResult.assessmentId);
+        setAssessmentId(guestResult.assessmentId);
+
+        await completeSession(guestResult.assessmentId);
+
+        trackValueFirstEvent('quiz_completed');
+        setCurrentStep('pattern_recognized');
+      } catch (error: any) {
+        const errorCode = generateErrorCode();
+        console.error('Guest assessment creation failed', error, { errorCode });
+        toast.error(
+          <div>
+            <p>Unable to save your assessment progress.</p>
+            <p className="text-xs mt-1">Error code: {errorCode}</p>
+          </div>
+        );
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -359,20 +445,7 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
       });
 
       // Prepare responses array - filter out any empty answers
-      const responsesArray = Array.from(responses.entries())
-        .filter(([questionId, answer]) => {
-          // Ensure answer is not empty
-          if (!answer || answer === '') {
-            console.warn(`Skipping empty answer for question ${questionId}`);
-            return false;
-          }
-          return true;
-        })
-        .map(([questionId, answer]) => ({
-          questionId,
-          question: Questions[questionId as keyof typeof Questions].text,
-          answer: String(answer) // Ensure answer is a string
-        }));
+      const responsesArray = buildResponsesArray(responses, true);
 
       // Ensure we have at least one response
       if (responsesArray.length === 0) {
@@ -484,6 +557,65 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
           </div>
         );
       }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePatternContinue = () => {
+    trackValueFirstEvent('start_tracker_clicked');
+    setCurrentStep('contact');
+  };
+
+  const handleGuestClaimSubmit = async (data: { phoneNumber: string; email?: string }) => {
+    const now = Date.now();
+    if (now - lastSubmitTimeRef.current < 2000) {
+      console.log('Debounce: Ignoring duplicate submission within 2 seconds');
+      return;
+    }
+    lastSubmitTimeRef.current = now;
+
+    if (!guestAssessmentId || !sessionId) {
+      toast.error('Missing guest session state. Please retry the assessment.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/assessment/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assessmentId: guestAssessmentId,
+          sessionId,
+          phoneNumber: data.phoneNumber,
+          email: data.email
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to claim assessment');
+      }
+
+      setAssessmentId(result.assessmentId);
+      setContactInfo({
+        method: 'sms',
+        value: data.phoneNumber
+      });
+
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      trackValueFirstEvent('phone_submitted');
+      window.location.href = `/guide/${result.assessmentId}`;
+    } catch (error: any) {
+      const errorCode = generateErrorCode();
+      console.error('Claim submission failed', error, { errorCode });
+      toast.error(
+        <div>
+          <p>Failed to start your tracker.</p>
+          <p className="text-xs mt-1">Error code: {errorCode}</p>
+        </div>
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -672,7 +804,50 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
       </div>
     );
   }
+
+  if (currentStep === 'pattern_recognized') {
+    if (!selectedGuide) {
+      return (
+        <div className="max-w-2xl mx-auto p-4 md:p-6">
+          <div className="medical-card text-center">
+            <p className="mb-4">Unable to load your pattern preview.</p>
+            <button
+              type="button"
+              onClick={() => setCurrentStep('assessment')}
+              className="btn-primary"
+            >
+              Return to Assessment
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="max-w-3xl mx-auto p-4 md:p-6">
+        <PatternRecognized
+          guideType={selectedGuide}
+          onContinue={handlePatternContinue}
+          onBack={() => setCurrentStep('assessment')}
+          onViewed={() => trackValueFirstEvent('results_screen_viewed')}
+        />
+      </div>
+    );
+  }
+
   if (currentStep === 'contact') {
+    if (valueFirstEnabled) {
+      return (
+        <div className="max-w-2xl mx-auto p-4 md:p-6">
+          <SmsGateForm
+            isSubmitting={isSubmitting}
+            onSubmit={handleGuestClaimSubmit}
+            onBack={() => setCurrentStep('pattern_recognized')}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-2xl mx-auto p-4 md:p-6">
         <ContactCollection
@@ -864,8 +1039,3 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
     </div>
   );
 };
-
-
-
-
-

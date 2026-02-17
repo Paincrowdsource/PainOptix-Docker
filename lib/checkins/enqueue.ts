@@ -1,19 +1,23 @@
 import { getServiceSupabase } from '@/lib/supabase';
-import type { CheckInDay } from './token';
 
 interface EnqueueResult {
   created: number;
   skippedReason?: string;
 }
 
+function isEnabled(value: string | undefined): boolean {
+  const normalized = (value || '').trim().toLowerCase();
+  return normalized === '1' || normalized === 'true';
+}
+
 /**
  * Compute due_at timestamp for a check-in
  * Target: 10:00 AM America/New_York on the specified day
  * @param createdAt The assessment creation timestamp
- * @param day Number of days after assessment (3, 7, or 14)
+ * @param day Number of days after assessment
  * @returns UTC timestamp for when the check-in should be sent
  */
-function computeDueAt(createdAt: string, day: CheckInDay): Date {
+function computeDueAt(createdAt: string, day: number): Date {
   const created = new Date(createdAt);
   const dueDate = new Date(created);
 
@@ -39,17 +43,18 @@ export async function enqueueCheckinsForAssessment(
   assessmentId: string
 ): Promise<EnqueueResult> {
   // Check if feature is enabled
-  if (process.env.CHECKINS_ENABLED !== '1') {
+  if (!isEnabled(process.env.CHECKINS_ENABLED)) {
     return { created: 0, skippedReason: 'disabled' };
   }
 
   const supabase = getServiceSupabase();
+  const dailyEnabled = isEnabled(process.env.CHECKINS_DAILY);
 
   try {
     // Get assessment details
     const { data: assessment, error: assessmentError } = await supabase
       .from('assessments')
-      .select('id, created_at, email, phone_number, guide_type')
+      .select('id, created_at, email, phone_number, guide_type, sms_opt_in, sms_opted_out')
       .eq('id', assessmentId)
       .single();
 
@@ -77,25 +82,52 @@ export async function enqueueCheckinsForAssessment(
       return { created: 0, skippedReason: 'purchased' };
     }
 
-    // Determine channel (prefer email over SMS)
-    const channel = assessment.email ? 'email' : assessment.phone_number ? 'sms' : null;
+    const assessmentCreatedAt = assessment.created_at || new Date().toISOString();
 
-    if (!channel) {
-      console.error('No contact method available for assessment:', assessmentId);
-      return { created: 0, skippedReason: 'no_contact' };
+    const smsEligible =
+      Boolean(assessment.phone_number) &&
+      assessment.sms_opt_in === true &&
+      assessment.sms_opted_out !== true;
+
+    let queueEntries:
+      | Array<{
+          assessment_id: string;
+          day: number;
+          due_at: string;
+          template_key: string;
+          channel: string;
+          status: string;
+        }>
+      | null = null;
+
+    if (dailyEnabled && smsEligible) {
+      const days = Array.from({ length: 14 }, (_, index) => index + 1);
+      queueEntries = days.map((day) => ({
+        assessment_id: assessmentId,
+        day,
+        due_at: computeDueAt(assessmentCreatedAt, day).toISOString(),
+        template_key: `sms.day${day}`,
+        channel: 'sms',
+        status: 'queued',
+      }));
+    } else {
+      // Legacy fallback behavior: days 3, 7, and 14 with channel preference.
+      const legacyChannel = assessment.email ? 'email' : assessment.phone_number ? 'sms' : null;
+      if (!legacyChannel) {
+        console.error('No contact method available for assessment:', assessmentId);
+        return { created: 0, skippedReason: 'no_contact' };
+      }
+
+      const legacyDays = [3, 7, 14];
+      queueEntries = legacyDays.map((day) => ({
+        assessment_id: assessmentId,
+        day,
+        due_at: computeDueAt(assessmentCreatedAt, day).toISOString(),
+        template_key: `day${day}.same`,
+        channel: legacyChannel,
+        status: 'queued',
+      }));
     }
-
-    // Prepare queue entries for days 3, 7, and 14
-    // Using 'same' variant as default for first check-in (more neutral than 'initial')
-    const days: CheckInDay[] = [3, 7, 14];
-    const queueEntries = days.map(day => ({
-      assessment_id: assessmentId,
-      day,
-      due_at: computeDueAt(assessment.created_at, day).toISOString(),
-      template_key: `day${day}.same`,
-      channel,
-      status: 'queued'
-    }));
 
     // Upsert entries (idempotent - won't create duplicates)
     const { data: inserted, error: insertError } = await supabase

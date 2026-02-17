@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { createSupabaseRouteHandlerClient } from '@/lib/supabase-ssr';
+import { Questions } from '@/types/algorithm';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,7 +115,10 @@ export async function GET(request: NextRequest) {
           dropoffMap.set(key, {
             count: 0,
             questionNumber: session.drop_off_question_number || 0,
-            questionText: progressRecord?.question_text || 'Unknown Question'
+            questionText: progressRecord?.question_text
+              || Questions[session.drop_off_question_id as keyof typeof Questions]?.text
+              || Questions[`Q${session.drop_off_question_number}` as keyof typeof Questions]?.text
+              || 'Unknown Question'
           });
         }
         const current = dropoffMap.get(key)!;

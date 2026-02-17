@@ -1,6 +1,8 @@
 import { log } from '@/lib/logger';
 import { getServiceSupabase } from '@/lib/supabase';
 import { sendEmail } from '@/lib/mailer/sendEmail';
+import { sendSMS } from '@/lib/communications';
+import { logEvent } from '@/lib/logging';
 import { sign, type CheckInDay, type CheckInValue } from './token';
 import { isWithinSendWindow, isBeforeStartDate } from './time-utils';
 import { resolveDiagnosisCode } from './diagnosis';
@@ -18,6 +20,25 @@ interface DispatchResult {
   skipped: number;
   failed: number;
   errors?: string[];
+}
+
+const MILESTONE_SMS_INSERTS: Record<number, string> = {
+  3: 'PainOptix Day 3 milestone: small daily gains can add up.',
+  7: 'PainOptix Day 7 milestone: steady progress is the goal.',
+  14: 'PainOptix Day 14 milestone: consistency matters long-term.',
+};
+
+function getSmsCheckinMessage(day: number): string {
+  const base = `PainOptix Day ${day}: How is your pain right now? Reply 0-10. Reply STOP to opt out.`;
+  const milestoneInsert = MILESTONE_SMS_INSERTS[day];
+  return milestoneInsert ? `${milestoneInsert} ${base}` : base;
+}
+
+function toCheckInDay(day: number): CheckInDay | null {
+  if (day === 3 || day === 7 || day === 14) {
+    return day;
+  }
+  return null;
 }
 
 /**
@@ -46,7 +67,6 @@ export async function dispatchDue(
       .from('check_in_queue')
       .select('*')
       .eq('status', 'queued')
-      .eq('channel', 'email') // For now, only handling email
       .lte('due_at', new Date().toISOString())
       .limit(limit);
 
@@ -90,7 +110,7 @@ export async function dispatchDue(
         // Get assessment details
         const { data: assessment } = await supabase
           .from('assessments')
-          .select('email, guide_type, created_at')
+          .select('email, phone_number, guide_type, created_at, sms_opted_out')
           .eq('id', message.assessment_id)
           .single();
 
@@ -108,6 +128,134 @@ export async function dispatchDue(
           continue;
         }
 
+        // Check if dry run or sandbox mode
+        const isDryRun = options.dryRun || process.env.CHECKINS_SANDBOX === '1';
+
+        // SMS dispatch path (daily cadence + any queued SMS rows)
+        if (message.channel === 'sms') {
+          if (!assessment.phone_number) {
+            log("dispatch_no_phone", { assessmentId: message.assessment_id }, "warn");
+            await supabase
+              .from('check_in_queue')
+              .update({
+                status: 'failed',
+                last_error: 'No phone number on assessment'
+              })
+              .eq('id', message.id);
+            result.failed++;
+            continue;
+          }
+
+          if (assessment.sms_opted_out) {
+            log("dispatch_skip_opted_out", { assessmentId: message.assessment_id, day: message.day }, "warn");
+            await supabase
+              .from('check_in_queue')
+              .update({
+                status: 'skipped',
+                last_error: 'SMS opted out'
+              })
+              .eq('id', message.id);
+            result.skipped++;
+            continue;
+          }
+
+          const smsText = getSmsCheckinMessage(message.day);
+
+          if (isDryRun) {
+            const hashedPhone = createHash('sha256').update(assessment.phone_number).digest('hex').substring(0, 8);
+            console.info('[DRY RUN] Would send SMS check-in:', {
+              template: message.template_key,
+              to: `***${hashedPhone}`,
+              assessmentId: message.assessment_id.substring(0, 8),
+              day: message.day,
+              channel: 'sms'
+            });
+
+            if (options.dryRun) {
+              await supabase
+                .from('check_in_queue')
+                .update({
+                  status: 'skipped',
+                  last_error: 'Dry run mode'
+                })
+                .eq('id', message.id);
+            }
+            result.skipped++;
+            continue;
+          }
+
+          const smsResult = await sendSMS({
+            to: assessment.phone_number,
+            message: smsText,
+          });
+
+          if (!smsResult.success) {
+            await supabase
+              .from('check_in_queue')
+              .update({
+                status: 'failed',
+                last_error: smsResult.error || 'Unknown SMS send error'
+              })
+              .eq('id', message.id);
+
+            await logCommunication({
+              assessmentId: message.assessment_id,
+              templateKey: `checkin_day${message.day}`,
+              status: 'failed',
+              channel: 'sms',
+              recipient: assessment.phone_number,
+              message: smsText.substring(0, 500),
+              errorMessage: smsResult.error || 'Unknown SMS send error',
+            });
+
+            result.failed++;
+            result.errors?.push(`SMS send failed for ${message.id}: ${smsResult.error}`);
+            log("dispatch_send_error", { messageId: message.id, err: smsResult.error }, "error");
+            continue;
+          }
+
+          await logCommunication({
+            assessmentId: message.assessment_id,
+            templateKey: `checkin_day${message.day}`,
+            status: 'sent',
+            channel: 'sms',
+            providerId: smsResult.sid,
+            recipient: assessment.phone_number,
+            message: smsText.substring(0, 500),
+          });
+
+          await supabase
+            .from('check_in_queue')
+            .update({
+              status: 'sent',
+              sent_at: new Date().toISOString()
+            })
+            .eq('id', message.id);
+
+          await logEvent('sms_sent', {
+            assessmentId: message.assessment_id,
+            day: message.day,
+            queueId: message.id,
+            channel: 'sms',
+          });
+
+          result.sent++;
+          log("dispatch_sent", { assessmentId: message.assessment_id.substring(0, 8), day: message.day, channel: 'sms' });
+          continue;
+        }
+
+        if (message.channel !== 'email') {
+          await supabase
+            .from('check_in_queue')
+            .update({
+              status: 'failed',
+              last_error: `Unsupported channel: ${message.channel}`
+            })
+            .eq('id', message.id);
+          result.failed++;
+          continue;
+        }
+
         if (!assessment.email) {
           // Assessment exists but has no email - mark as failed
           log("dispatch_no_email", { assessmentId: message.assessment_id }, "warn");
@@ -116,6 +264,19 @@ export async function dispatchDue(
             .update({
               status: 'failed',
               last_error: 'No email address on assessment'
+            })
+            .eq('id', message.id);
+          result.failed++;
+          continue;
+        }
+
+        const emailDay = toCheckInDay(message.day);
+        if (!emailDay) {
+          await supabase
+            .from('check_in_queue')
+            .update({
+              status: 'failed',
+              last_error: `Invalid email check-in day: ${message.day}`
             })
             .eq('id', message.id);
           result.failed++;
@@ -222,12 +383,9 @@ export async function dispatchDue(
           insert: diagnosisInsert?.insert_text || 'Continue with gentle movement today.',
           encouragement,
           assessmentId: message.assessment_id,
-          day: message.day as CheckInDay,
+          day: emailDay,
           branch: branch
         });
-
-        // Check if dry run or sandbox mode
-        const isDryRun = options.dryRun || process.env.CHECKINS_SANDBOX === '1';
 
         if (isDryRun) {
           // Log the message details without sending

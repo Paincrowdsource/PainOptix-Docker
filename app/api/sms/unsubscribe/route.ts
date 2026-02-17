@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-admin'
 import { logger } from '@/lib/logger'
+import { processSmsOptOut } from '@/lib/sms/opt-out'
 
 // Force dynamic rendering to prevent build-time static generation
 export const dynamic = 'force-dynamic';
@@ -21,10 +21,11 @@ export async function POST(req: NextRequest) {
     // Extract phone number and message
     const phoneNumber = body.From as string
     const messageBody = (body.Body as string || '').toUpperCase().trim()
+    const normalizedKeyword = messageBody.replace(/[^A-Z]/g, '')
     
     // Check if this is a STOP request
     const stopKeywords = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT']
-    const isStopRequest = stopKeywords.includes(messageBody)
+    const isStopRequest = stopKeywords.includes(normalizedKeyword)
     
     if (!isStopRequest) {
       // Not a stop request, return empty response
@@ -37,31 +38,7 @@ export async function POST(req: NextRequest) {
     // Process opt-out
     logger.info('Processing SMS opt-out', { phoneNumber })
     
-    // 1. Add to opt-out table
-    const { error: optOutError } = await supabaseAdmin
-      .from('sms_opt_outs')
-      .upsert({
-        phone_number: phoneNumber,
-        opted_out_at: new Date().toISOString(),
-        opt_out_source: 'sms_stop'
-      }, {
-        onConflict: 'phone_number'
-      })
-    
-    if (optOutError) {
-      logger.error('Failed to record SMS opt-out', optOutError)
-      // Don't throw - we still want to update assessments
-    }
-    
-    // 2. Update any existing assessments with this phone number
-    const { error: assessmentError } = await supabaseAdmin
-      .from('assessments')
-      .update({ sms_opted_out: true })
-      .eq('phone_number', phoneNumber)
-    
-    if (assessmentError) {
-      logger.error('Failed to update assessment opt-out status', assessmentError)
-    }
+    await processSmsOptOut(phoneNumber, 'sms_stop_unsubscribe')
     
     // 3. Return Twilio-compatible response
     // Twilio expects an empty 200 response or TwiML
