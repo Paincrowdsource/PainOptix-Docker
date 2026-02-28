@@ -826,7 +826,8 @@ export const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete }
     return (
       <div className="max-w-3xl mx-auto p-4 md:p-6">
         <PatternRecognized
-          guideType={selectedGuide}
+          responses={responses}
+          isUrgent={selectedGuide === 'urgent_symptoms'}
           onContinue={handlePatternContinue}
           onBack={() => setCurrentStep('assessment')}
           onViewed={() => trackValueFirstEvent('results_screen_viewed')}
