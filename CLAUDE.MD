@@ -1,147 +1,59 @@
-# CLAUDE.md - PainOptix V1.2
+# CLAUDE.md - PainOptix
 
-This is the PainOptix V1.2 project, completely separate from PainCrowdsource.
+## What This Is
+Diagnostic assessment tool for back pain. Free for all users — everyone gets the full Monograph guide. SMS-first contact capture with 14-day daily check-ins for pain score tracking.
 
-## Project Overview
-PainOptix V1.2 is a diagnostic assessment tool for back pain with these key features:
-- Email/SMS required before showing results
-- Results sent via message only (never shown on screen)
-- Universal data capture (all users, not just paid)
-- 14-day follow-up automation
-- Auto-enrollment to PainCrowdsource for paid users
+- **Framework**: Next.js 14, TypeScript, Tailwind
+- **Database**: Supabase (Postgres + RLS)
+- **SMS/Email**: Twilio + SendGrid
+- **PDF**: Puppeteer with system Chromium
+- **Deployment**: Docker on DigitalOcean App Platform
 
-## Key V1.2 Requirements from Bradley
-1. Collect email/SMS upfront (before diagnosis)
-2. Send results via email/SMS only
-3. Track ALL assessments (free and paid)
-4. 14-day follow-up (not 72-hour)
-5. Delete My Data feature
-6. Referrer source tracking
-7. Initial pain score collection
-8. Telehealth booking tracking (future)
+## Current Business Model
+- Payments hibernated (`DISABLE_PAYMENTS=true`) — Stripe code exists but is bypassed
+- All users receive the Monograph (comprehensive guide) for free
+- SMS collection is the primary goal — phone required, email optional
+- Value-first funnel: assessment -> symptom echo (curiosity gap) -> SMS capture -> guide delivery
+- 14-day daily SMS check-ins tracking pain scores (0-10)
+- Guest assessments supported (can complete without contact info, claim later)
 
-## Archive Reference
-Original V1.0 code is preserved in:
-- Repository: https://github.com/Paincrowdsource/PainCrowdsourceWebsite
-- Branch: painoptix-v1-archive
-- Contains: All original code, documentation, TODOs
+## Deployment — This Repo IS Production
+Pushes to `main` auto-deploy to DigitalOcean app `painoptix-clean`. No staging environment.
+- GitHub: `Paincrowdsource/PainOptix-Docker`
+- Test locally, then commit and push
 
-To access archived files:
+## Supabase — Read This Every Session
+Production DB is **"Paincrowdsource Staging"** (project ID: `wljwlgjeqoulxvwbfgpy`).
+This IS production despite the misleading name. The other project "PainCrowdSource.Org" (`usefhnghfstaloqxitlx`) is a DIFFERENT application.
+
+## PDF Generation
+Only Monograph tier is actively generated. Bibliography/formatting rules are in `.claude/rules/pdf-generation.md` (auto-loads when touching `lib/pdf/**`). Key rule: server formatting is authoritative, client defers.
+
+Key files: `lib/pdf/puppeteer-generator.ts`, `lib/pdf/enhanced-dom-glue-ship.ts`, `lib/pdf/master-template.ts`
+
+## Key Commands
 ```bash
-git remote add archive https://github.com/Paincrowdsource/PainCrowdsourceWebsite.git
-git fetch archive painoptix-v1-archive
-git checkout archive/painoptix-v1-archive -- "path/to/file"
-Development Status
-
-[] Repository created
-[] Next.js 14 initialized
-[] Dependencies installed
-[] Supabase schema created
-[]Email/SMS gateway configured
-[]Diagnostic engine ported
-[]V1.2 flow implemented
-## DEPLOYMENT NOTICE
-**⚠️ IMPORTANT: This repository IS the production deployment**
-
-- **Production deployment**: This docker-repo directory
-- **GitHub**: Pushes to `Paincrowdsource/PainOptix-Docker`
-- **DigitalOcean App**: `painoptix-clean` (auto-deploys on push to main)
-- **Why**: DigitalOcean requires specific Docker configuration
-
-### To Deploy Changes:
-1. Test in parent repo first
-2. Copy changes to this `docker-repo`
-3. Commit and push from here
-4. DigitalOcean auto-deploys to painoptix-clean app
-
-### Current Production Features:
-- Enhanced V2 PDF formatting (feature-flagged)
-- All three tiers working
-- See `docker-repo/CLAUDE.md` for deployment details
-
-## ⚠️ BIBLIOGRAPHY FORMATTING - NEVER TOUCH WITHOUT READING THIS
-
-### The Great Bibliography War (January 2025)
-**Time Lost: 12+ hours over multiple days**
-**Problem: Enhanced PDF bibliographies were completely broken**
-
-### DO NOT EVER:
-1. ❌ Let both server AND client format the bibliography (they will fight)
-2. ❌ Try to keep full DOI URLs unbroken in PDFs (Puppeteer WILL break at "/")
-3. ❌ Add sentinel tokens without removing them at EVERY stage
-4. ❌ Trust that markdown `breaks: false` will solve formatting issues
-5. ❌ Modify enhanced-dom-glue-ship.ts bibliography section without testing ALL guides
-
-### ALWAYS DO:
-1. ✅ Server formatting is authoritative (normalizeEnhancedBibliography)
-2. ✅ Use [DOI] markers instead of full URLs
-3. ✅ Split entries at year pattern boundaries: `(?<=\(\d{4}[a-z]?\)\.)`
-4. ✅ Check for `ol.bibliography` before client-side manipulation
-5. ✅ Test with BOTH facet_arthropathy AND sciatica (different complexity)
-
-### Current Architecture:
-```
-Markdown → HTML (marked.parse with breaks: false)
-     ↓
-Server: normalizeEnhancedBibliography() splits and formats
-     ↓
-Server: finalDeSentinelize() removes any remaining tokens
-     ↓
-Client: DOM glue ONLY protects page ranges if ol.bibliography exists
-     ↓
-Puppeteer generates PDF
+npm run dev            # Local development
+npm run build          # Production build
+npm run test:pdfs      # PDF generation tests
 ```
 
-### Key Files:
-- `lib/pdf/puppeteer-generator.ts` - Server-side bibliography normalization
-- `lib/pdf/enhanced-dom-glue-ship.ts` - Client-side DOM manipulation (BE CAREFUL!)
-- `lib/pdf/master-template.ts` - CSS styles for bibliography
-
-### Testing Commands:
-```bash
-# Generate Enhanced PDF
-curl -X POST "http://localhost:3000/api/download-guide?assessmentId=admin-test-facet_arthropathy&tier=enhanced" -o test.pdf
-
-# Check entry count (should be 10 for facet, 9 for sciatica)
-grep -c '<li>' debug/enhanced-facet_arthropathy-final.html
-
-# Verify no sentinels
-grep -c "\\[\\[DOI" debug/enhanced-facet_arthropathy-final.html  # Should be 0
+## Environment Flags (production)
+```
+DISABLE_PAYMENTS=true              # Bypasses Stripe, everyone gets Monograph
+NEXT_PUBLIC_VALUE_FIRST_FUNNEL=true  # SMS-first funnel
+NEXT_PUBLIC_DISABLE_PAYMENTS=true    # Hides upgrade UI
+CHECKINS_ENABLED=true              # 14-day daily SMS check-ins
+ENHANCED_V2=1                      # Legacy: only affects Enhanced tier (not served)
+DEBUG_PDF=1                        # Saves debug HTML for PDF troubleshooting
 ```
 
-### Signs Something Is Wrong:
-- PDF size < 200KB (should be 230-250KB for Enhanced)
-- Multiple authors in single numbered item
-- [[DOI|...]] or [[RANGE|...]] visible in PDF
-- "DOI:" appears alone at end of line
-- Page ranges split across lines
+## Documentation
+- `.claude/rules/` — Path-scoped rules (auto-load when touching relevant code)
+- `docs/architecture/` — Admin auth, PDF pipeline
+- `docs/checkins/` — Check-ins spec, content format, rollout
+- `docs/operations/` — Testing guide, known issues
+- `docs/archive/` — Historical incident reports (preserved for reference)
 
-### Emergency Contacts:
-- If bibliographies break again, check git blame on these files
-- Original fix: January 2025 (check commit history)
-- Key insight: Server must win, client must defer
-
-## Other Critical Systems
-
-### PDF Generation Tiers
-- **Monograph**: $20 tier, includes images (5-9MB files)
-- **Enhanced**: $5 tier, text only with bibliography (230-250KB)
-- **Standard**: Free tier, basic formatting
-
-### Environment Variables
-- `ENHANCED_V2=1` - Enables Enhanced v2 formatting
-- `BIB_DOI_MODE=label` - Uses [DOI] markers (other options: link, omit)
-- `DEBUG_PDF=1` - Saves debug HTML files
-
-**Last Updated: January 2025 - After the Bibliography War**
-
-## Supabase Project Confusion - IMPORTANT
-
-The PainOptix production database is **"Paincrowdsource Staging"** (project ID: `wljwlgjeqoulxvwbfgpy`).
-
-- This is NOT a staging environment - it is the actual production database despite the misleading name
-- The other project "PainCrowdSource.Org" (`usefhnghfstaloqxitlx`) is for a different application
-- **Always use project_id: `wljwlgjeqoulxvwbfgpy` for PainOptix queries**
-
-This confusion happens every session - remember this!
-
+## Legacy Code Note
+The codebase contains Stripe checkout, 3-tier payment logic (Standard/Enhanced/Monograph), and upgrade flows. This code is hibernated via feature flags, not deleted. If you encounter payment/tier code, it's intentionally disabled — don't remove it or try to fix it.

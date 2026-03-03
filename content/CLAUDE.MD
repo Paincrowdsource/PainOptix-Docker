@@ -1,28 +1,30 @@
-# PainOptix Project Content Context (`CLAUDE.MD`)
+# PainOptix Content Guide
 
-### 1. PROJECT OVERVIEW
-- PainOptix is a medical education platform that generates personalized pain assessment reports
-- Three pricing tiers: FREE ($0), ENHANCED ($5), MONOGRAPH ($20)
-- Built with Next.js 15, Supabase, Stripe, TypeScript
-- Staging: painoptixstaging.netlify.app
-- Production: Not yet launched
+## Overview
+PainOptix generates personalized pain assessment guides as PDFs. All users receive the Monograph (comprehensive) tier for free.
 
-### 2. ARCHITECTURE DECISIONS
-- PDF Generation: Use ONLY `lib/pdf/final-renderer.ts` - all other renderers are deprecated
-- Database: Supabase with Row Level Security
-- Payments: Stripe checkout with webhook handling
-- Email: SendGrid
-- SMS: Twilio
-- Deployment: Netlify with environment variables
+## Architecture
+- **PDF Renderer**: `lib/pdf/puppeteer-generator.ts` (Puppeteer-based, NOT jspdf or final-renderer)
+- **Database**: Supabase with Row Level Security
+- **Payments**: Hibernated (`DISABLE_PAYMENTS=true`) — Stripe code exists but is bypassed
+- **Email**: SendGrid
+- **SMS**: Twilio
+- **Deployment**: Docker on DigitalOcean App Platform
 
-### 3. CRITICAL BUSINESS LOGIC
-- Assessment flow: User takes assessment → Saved to DB → Payment (if not free) → PDF generated → Email sent
-- Content hierarchy: FREE (basic info) → ENHANCED (clinical guide) → MONOGRAPH (comprehensive medical document)
-- PDF must maintain professional medical document standards with Dr. Carpentier's branding
+## Content Tiers (Legacy — Everyone Gets Monograph Now)
+- **Monograph** (active): Comprehensive medical document with bibliography, images, 30+ pages
+- **Enhanced** (hibernated): Clinical guide with exercises, 15+ pages — code exists but not served
+- **Standard/Free** (hibernated): Basic info guide, 5+ pages — code exists but not served
 
-### 4. CONTENT STRUCTURE REQUIREMENTS
+## Content Structure
 
-#### Enhanced Tier Markdown MUST have:
+### Monograph Markdown
+- Full markdown with bibliography section
+- May contain `[Name Placeholder]` and `[Date Placeholder]` — replaced at render time in API route
+- Content sentinels (`END`, `[END]`, `>>END`) removed by `stripEndMarkers()` before HTML conversion
+- `>>BIBLIOGRAPHY` converted to `## Bibliography` by `stripEndMarkers()`
+
+### Enhanced Markdown (Legacy)
 ```yaml
 ---
 title: Condition Name
@@ -39,62 +41,27 @@ Summary text here
 >>END
 
 ## Regular markdown content...
-Monograph Tier:
+```
 
-Full markdown with bibliography
-May contain [Name Placeholder] and [Date Placeholder] that must be replaced
+## Key Files
+- `lib/pdf/puppeteer-generator.ts` — Main PDF renderer (generatePdfV2, generatePdfFromContent)
+- `app/api/download-guide/route.ts` — PDF download endpoint
+- `content/guides/monograph/*.md` — Monograph content files (actively served)
+- `content/guides/enhanced/*.md` — Enhanced content files (legacy)
+- `content/guides/free/*.md` — Standard content files (legacy)
 
-5. PDF RENDERING RULES
+## Client Requirements
+- Dr. Bradley W. Carpentier, MD — Board-certified pain management specialist
+- Business entity: Dr. C. Pain MD Holdings, LLC
+- Maintain professional medical document standards
+- Never remove Dr. Carpentier attribution
 
-ALWAYS use generatePainOptixPdf from lib/pdf/final-renderer.ts
-Required features: Blue headers, professional cover page, info boxes, Times font for body
-Content width: 168mm (with 2mm safety buffer)
-Must handle: Headers (##), Subheaders (###), Bold (text), Bullets (- or •)
+## Testing
+```bash
+npm run test:pdfs
 
-6. COMMON PITFALLS & SOLUTIONS
+# Manual test
+curl -X POST "http://localhost:3000/api/download-guide?assessmentId=admin-test-facet_arthropathy&tier=monograph" -o test.pdf
+```
 
-If PDF has no styling → Wrong renderer being used
-If text overflows → Check CONTENT_WIDTH buffer
-If placeholders show → Not replaced in API route
-If no blue headers → Markdown missing YAML frontmatter
-
-7. TESTING CHECKLIST
-Before ANY PDF changes:
-
-Test all 3 tiers for same condition
-Verify blue headers appear
-Check cover page renders properly
-Ensure no text overflow
-Confirm bibliography formatting (monograph only)
-
-8. FILE OWNERSHIP
-
-lib/pdf/final-renderer.ts - THE ONLY PDF RENDERER (never create alternatives)
-app/api/download-guide/route.ts - Must use final-renderer
-content/guides/[tier]/*.md - Content files requiring specific structure
-app/components/AssessmentForm.tsx - Contains SMS opt-in logic
-
-9. ENVIRONMENT VARIABLES
-List all required env vars and their purposes...
-10. CLIENT REQUIREMENTS
-
-Dr. Bradley W. Carpentier, MD - Board-certified pain management specialist
-Business entity: Dr. C. Pain MD Holdings, LLC
-Must maintain professional medical document standards
-SMS/Email follow-up system critical for patient engagement
-
-11. COMMANDS & SHORTCUTS
-
-Generate test PDFs: Use admin mode with specific guide type and tier
-Test Stripe: Use test card 4242424242424242
-Check PDF: Always verify in actual PDF reader, not browser preview
-
-12. NEVER DO THIS
-
-Create new PDF renderers
-Modify jspdf-generator.ts or layout.ts (deprecated)
-Use localStorage in artifacts
-Change business entity name
-Remove Dr. Carpentier attribution
-
-Append any project-specific patterns, conventions, and lessons learned discovered during analysis
+Always verify PDFs in an actual PDF reader, not browser preview. Use test card `4242424242424242` if Stripe is ever reactivated.

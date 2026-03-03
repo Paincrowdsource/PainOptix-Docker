@@ -1,37 +1,64 @@
-# PainOptix Docker Deployment
+# PainOptix
 
-This repository is specifically configured for Docker deployment on DigitalOcean.
+Diagnostic assessment tool for back pain. Users complete a 16-question assessment, receive a personalized Monograph guide, and get 14 days of daily SMS check-ins tracking their pain progression.
 
-## ⚠️ CRITICAL SYSTEMS - READ BEFORE MODIFYING
+## Tech Stack
 
-### PDF Generation System
-⛔ DO NOT MODIFY without reading:
-- **PDF_GENERATION_RULES.md** - Critical rules and settings
-- **PDF_GENERATION_ACTUAL.md** - Implementation details
-- **TESTING_GUIDE.md** - Required test cases
+- **Framework**: Next.js 14 (App Router)
+- **Database**: Supabase (Postgres + Auth + Row Level Security)
+- **SMS**: Twilio
+- **Email**: SendGrid
+- **PDF Generation**: Puppeteer with system Chromium
+- **Deployment**: Docker on DigitalOcean App Platform
 
-**Recent Critical Fixes (August 15, 2025):**
-- Enhanced PDFs: Disabled transformLists() to fix bullet/bibliography formatting
-- Monograph PDFs: Added stripEndMarkers() to remove content artifacts
-- All PDFs: Standardized on Letter format with 1" margins (no scaling)
+## Quick Start
 
-**Known Issues (FIXED - Do Not Reintroduce):**
-- ❌ DON'T enable transformLists() - it breaks list formatting
-- ❌ DON'T add scale parameters - causes text cutoff
-- ❌ DON'T change from Letter format - breaks layout
-- ❌ DON'T modify 1" margins - causes content overflow
-- ❌ DON'T remove stripEndMarkers() - END text will appear
-
-**Quick Test Command:**
 ```bash
-npm run test:pdfs
+# Copy environment variables
+cp .env.example .env.local
+
+# Install dependencies
+npm install
+
+# Run locally
+npm run dev        # http://localhost:3000
 ```
 
-## Important Note
-This repository does NOT contain package.json or package-lock.json at the root level.
-Instead, the Dockerfile creates these files during the build process.
+## Project Structure
 
-This approach ensures DigitalOcean uses Docker instead of Node.js buildpack.
+```
+app/              # Next.js App Router (pages, API routes, admin dashboard)
+lib/              # Core business logic
+  auth/           # Admin authentication (dual-layer: cookie + Supabase)
+  checkins/       # 14-day daily SMS check-in system
+  pdf/            # PDF generation (Puppeteer)
+  email/          # Email templates and sequences
+components/       # React components
+content/          # Guide content (markdown files)
+  guides/         # free/, enhanced/, monograph/
+docs/             # Documentation
+  architecture/   # System architecture (admin auth, PDF pipeline)
+  checkins/       # Check-ins spec and operations
+  operations/     # Testing, known issues, ops guides
+  archive/        # Historical incident reports
+supabase/         # Database migrations
+scripts/          # Utility and maintenance scripts
+.claude/rules/    # AI agent rules (path-scoped, auto-load)
+```
 
 ## Deployment
-The app is configured to deploy automatically via DigitalOcean App Platform using Docker. 
+
+This repository auto-deploys to production on push to `main`. There is no staging environment — test locally first.
+
+See [CLAUDE.md](./CLAUDE.md) for deployment details and critical project rules.
+
+## Documentation
+
+| Topic | Location |
+|-------|----------|
+| AI agent instructions | [CLAUDE.md](./CLAUDE.md) |
+| Admin authentication | [docs/architecture/admin-auth.md](./docs/architecture/admin-auth.md) |
+| PDF generation pipeline | [docs/architecture/pdf-pipeline.md](./docs/architecture/pdf-pipeline.md) |
+| Check-ins system spec | [docs/checkins/SPEC.md](./docs/checkins/SPEC.md) |
+| Testing guide | [docs/operations/testing-guide.md](./docs/operations/testing-guide.md) |
+| Known issues | [docs/operations/known-issues.md](./docs/operations/known-issues.md) |

@@ -1,11 +1,12 @@
-# EducationalGuideContentStructure
+# Educational Guide Content Structure
 
-## DirectoryStructure
-- `/free/` - Basiceducationalguides (includedwithassessment)
-- `/enhanced/` - $5enhancedguides (detailedinformation)
-- `/monograph/` - $20comprehensivemonographs
+## Directory Structure
+- `/free/` — Basic educational guides (legacy, not actively served)
+- `/enhanced/` — Enhanced guides (legacy, not actively served)
+- `/monograph/` — Comprehensive monographs (active — all users receive this tier)
 
-## FileNamingConventionFilesshouldbenamedexactlyastheguidetypes:
+## File Naming Convention
+Files should be named exactly as the guide types:
 - sciatica.md
 - upper_lumbar_radiculopathy.md
 - si_joint_dysfunction.md
@@ -16,17 +17,19 @@
 - lumbar_instability.md
 - urgent_symptoms.md
 
-## PDFConversionWhenBradleysendsPDFs, use:
-```bashnpmrunpdf2md -- --input "path/to/pdf" --output "content/guides/enhanced/sciatica.md"
+## PDF Conversion
+When Bradley sends PDFs, use:
+```bash
+npm run pdf2md -- --input "path/to/pdf" --output "content/guides/monograph/sciatica.md"
 ```
 
-## ContentFormatEachmarkdownfileshouldhave:
+## Content Format
+Each markdown file should have frontmatter:
 ```markdown
-- --
-title: "SciaticaEducationalGuide"
-tier: "enhanced" # or "monograph"
-price: 5 # or20
-- --
+---
+title: "Sciatica Educational Guide"
+tier: "monograph"
+---
 
-# Contentgoeshere
+# Content goes here
 ```
