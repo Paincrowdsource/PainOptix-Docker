@@ -14,10 +14,7 @@ export default function AnalyticsPage() {
     try {
       const response = await fetch('/api/admin/analytics', {
         credentials: 'include',
-        cache: 'no-store',
-        headers: {
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
-        }
+        cache: 'no-store'
       })
 
       if (!response.ok) {

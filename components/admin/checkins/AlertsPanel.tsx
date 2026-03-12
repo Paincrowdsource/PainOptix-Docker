@@ -37,9 +37,6 @@ export default function AlertsPanel({ onAlertCountChange }: AlertsPanelProps) {
 
       const response = await fetch('/api/admin/checkins/alerts', {
         credentials: 'include',
-        headers: {
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
-        }
       })
 
       if (!response.ok) {
@@ -64,8 +61,7 @@ export default function AlertsPanel({ onAlertCountChange }: AlertsPanelProps) {
         method: 'DELETE',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ alertId })
       })

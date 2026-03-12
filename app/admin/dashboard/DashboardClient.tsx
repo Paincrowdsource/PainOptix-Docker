@@ -266,7 +266,7 @@ export default function DashboardClient({ data, timePeriod }: Props) {
           </Card>
         </>
       ) : (
-        <DropoffAnalytics />
+        <DropoffAnalytics timePeriod={timePeriod} />
       )}
     </div>
   )

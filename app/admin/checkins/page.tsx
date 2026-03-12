@@ -125,10 +125,7 @@ export default function CheckInsPage() {
       // Fetch queue data from API endpoint (bypasses RLS)
       const queueResponse = await fetch('/api/admin/checkins/queue', {
         credentials: 'include',
-        cache: 'no-store',
-        headers: {
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
-        }
+        cache: 'no-store'
       })
       if (!queueResponse.ok) {
         throw new Error('Failed to fetch queue items')
@@ -146,10 +143,7 @@ export default function CheckInsPage() {
       // Fetch responses from API endpoint (bypasses RLS)
       const responsesResponse = await fetch('/api/admin/checkins/responses', {
         credentials: 'include',
-        cache: 'no-store',
-        headers: {
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
-        }
+        cache: 'no-store'
       })
       if (!responsesResponse.ok) {
         throw new Error('Failed to fetch responses')
@@ -210,10 +204,7 @@ export default function CheckInsPage() {
 
       // Use server route instead of direct Supabase client
       const response = await fetch('/api/admin/checkins/assessments/list', {
-        credentials: 'include',
-        headers: {
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
-        }
+        credentials: 'include'
       })
 
       if (!response.ok) {
@@ -241,10 +232,7 @@ export default function CheckInsPage() {
 
       // Use server route instead of direct Supabase client
       const response = await fetch('/api/admin/checkins/templates/list', {
-        credentials: 'include',
-        headers: {
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
-        }
+        credentials: 'include'
       })
 
       if (!response.ok) {
@@ -358,8 +346,7 @@ export default function CheckInsPage() {
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ dryRun: true }),
       })
@@ -394,8 +381,7 @@ export default function CheckInsPage() {
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ dryRun: false }),
       })

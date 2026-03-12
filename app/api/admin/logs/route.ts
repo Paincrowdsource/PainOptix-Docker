@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
     // Build query
     let query = supabase
-      .from('communication_logs')
+      .from('v_communication_logs_visible')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(100)

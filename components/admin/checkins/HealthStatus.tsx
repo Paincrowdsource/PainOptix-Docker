@@ -50,9 +50,6 @@ export default function HealthStatus() {
       setError(null)
       const response = await fetch('/api/admin/checkins/health', {
         credentials: 'include',
-        headers: {
-          'x-admin-password': 'P@inOpt!x#Adm1n2025$ecure'
-        }
       })
 
       if (!response.ok) {

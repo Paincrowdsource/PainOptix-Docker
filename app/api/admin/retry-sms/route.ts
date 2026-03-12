@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
-import { createSupabaseRouteHandlerClient } from '@/lib/supabase-ssr';
+import { isAdminRequest } from '@/lib/admin/auth';
 import { deliverEducationalGuide } from '@/lib/guide-delivery';
 
 export const dynamic = 'force-dynamic';
@@ -15,38 +15,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: NextRequest) {
   try {
-    // Auth check (same pattern as other admin endpoints)
-    const { supabase } = await createSupabaseRouteHandlerClient(request);
-    const { data: { session } } = await supabase.auth.getSession();
-
-    let isAuthenticated = false;
-    let isAdmin = false;
-
-    if (session?.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_role')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profile?.user_role === 'admin') {
-        isAuthenticated = true;
-        isAdmin = true;
-      }
-    }
-
-    // Fallback to password auth
-    if (!isAuthenticated) {
-      const authHeader = request.headers.get('x-admin-password');
-      const adminPassword = process.env.ADMIN_PASSWORD;
-
-      if (authHeader && adminPassword && authHeader === adminPassword) {
-        isAuthenticated = true;
-        isAdmin = true;
-      }
-    }
-
-    if (!isAuthenticated || !isAdmin) {
+    if (!(await isAdminRequest(request))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

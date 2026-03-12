@@ -27,6 +27,16 @@ export async function isAdminRequest(request: NextRequest): Promise<boolean> {
     console.warn('Admin auth via Supabase failed', error)
   }
 
+  // Check admin-session cookie (set at login, matches middleware check)
+  if (!isAuthenticated) {
+    const sessionCookie = request.cookies.get('admin-session')
+    if (sessionCookie?.value === 'authenticated') {
+      isAuthenticated = true
+      isAdmin = true
+    }
+  }
+
+  // Fallback: password header (for API/curl access)
   if (!isAuthenticated) {
     const adminPassword = process.env.ADMIN_PASSWORD?.trim()
     const headerPassword = request.headers.get('x-admin-password')?.trim()

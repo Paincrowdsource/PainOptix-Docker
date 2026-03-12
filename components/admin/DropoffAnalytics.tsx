@@ -16,7 +16,11 @@ interface DropoffStats {
   peakDropoffTimes: any[]
 }
 
-export default function DropoffAnalytics() {
+interface DropoffAnalyticsProps {
+  timePeriod?: string
+}
+
+export default function DropoffAnalytics({ timePeriod = '30d' }: DropoffAnalyticsProps) {
   const [stats, setStats] = useState<DropoffStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -25,14 +29,10 @@ export default function DropoffAnalytics() {
   const loadDropoffData = useCallback(async () => {
     try {
       // Use API route with service role access
-      const response = await fetch('/api/admin/dropoff-analytics', {
+      const response = await fetch(`/api/admin/dropoff-analytics?timePeriod=${timePeriod}`, {
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          // Add admin password if available from localStorage
-          ...(typeof window !== 'undefined' && localStorage.getItem('adminPassword')
-            ? { 'x-admin-password': localStorage.getItem('adminPassword') || '' }
-            : {})
+          'Content-Type': 'application/json'
         }
       })
 
@@ -52,7 +52,7 @@ export default function DropoffAnalytics() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [timePeriod])
 
   useEffect(() => {
     loadDropoffData()
@@ -121,7 +121,7 @@ export default function DropoffAnalytics() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalStarted}</div>
-            <p className="text-xs text-muted-foreground">Last 30 days</p>
+            <p className="text-xs text-muted-foreground">{timePeriod === '30d' ? 'Last 30 days' : timePeriod === '90d' ? 'Last 90 days' : timePeriod === 'ytd' ? 'Year to date' : 'All time'}</p>
           </CardContent>
         </Card>
 

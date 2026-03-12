@@ -17,8 +17,8 @@ export async function POST(req: NextRequest) {
           .update({
             [evt.event === 'open' ? 'opened_at' : 'clicked_at']: new Date().toISOString()
           })
-          .eq('message_id', evt.sg_message_id)
-          .not('message_id', 'is', null);
+          .eq('provider_message_id', evt.sg_message_id)
+          .not('provider_message_id', 'is', null);
       }
     }
 

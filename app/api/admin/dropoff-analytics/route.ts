@@ -1,67 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
-import { createSupabaseRouteHandlerClient } from '@/lib/supabase-ssr';
+import { isAdminRequest } from '@/lib/admin/auth';
 import { Questions } from '@/types/algorithm';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Method 1: Try Supabase Auth first
-    const { supabase } = await createSupabaseRouteHandlerClient(request);
-
-    // Check if user is authenticated
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
-
-    let isAuthenticated = false;
-    let isAdmin = false;
-
-    if (session?.user) {
-      // Check if user has admin role
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_role')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profile?.user_role === 'admin') {
-        isAuthenticated = true;
-        isAdmin = true;
-      }
-    }
-
-    // Method 2: Fallback to simple password check if Supabase auth fails
-    if (!isAuthenticated) {
-      // Check for admin password in header as fallback
-      const authHeader = request.headers.get('x-admin-password');
-      const adminPassword = process.env.ADMIN_PASSWORD;
-
-      if (authHeader && adminPassword && authHeader === adminPassword) {
-        isAuthenticated = true;
-        isAdmin = true;
-      }
-    }
-
-    // If still not authenticated, return 401
-    if (!isAuthenticated || !isAdmin) {
-      return NextResponse.json({
-        error: 'Unauthorized'
-      }, { status: 401 });
+    if (!(await isAdminRequest(request))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Use service role client to bypass RLS
     const supabaseService = getServiceSupabase();
 
-    // Get sessions from last 30 days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // Compute date cutoff from timePeriod query param
+    const timePeriod = request.nextUrl.searchParams.get('timePeriod') || '30d';
+    const now = new Date();
+    let dateCutoff: string | null = null;
+    switch (timePeriod) {
+      case '90d': {
+        const d = new Date(now);
+        d.setDate(d.getDate() - 90);
+        dateCutoff = d.toISOString();
+        break;
+      }
+      case 'ytd':
+        dateCutoff = `${now.getFullYear()}-01-01T00:00:00Z`;
+        break;
+      case 'all':
+        dateCutoff = null;
+        break;
+      default: {
+        const d = new Date(now);
+        d.setDate(d.getDate() - 30);
+        dateCutoff = d.toISOString();
+        break;
+      }
+    }
 
-    // Get all sessions
-    const { data: sessions, error: sessionsError } = await supabaseService
+    // Get all sessions for the selected time period
+    let sessionsQuery = supabaseService
       .from('assessment_sessions')
       .select('*')
-      .gte('created_at', thirtyDaysAgo.toISOString())
       .order('created_at', { ascending: false });
+    if (dateCutoff) {
+      sessionsQuery = sessionsQuery.gte('created_at', dateCutoff);
+    }
+    const { data: sessions, error: sessionsError } = await sessionsQuery;
 
     if (sessionsError) {
       console.error('Error fetching sessions:', sessionsError);
@@ -147,6 +133,29 @@ export async function GET(request: NextRequest) {
       timeSpent: session.time_spent_seconds || 0
     }));
 
+    // Compute problem questions (>15% drop-off rate)
+    const problemQuestions = totalStarted > 0
+      ? dropoffsByQuestion.filter(q => (q.dropoffs / totalStarted * 100) > 15)
+      : [];
+
+    // Compute peak drop-off times by hour of day
+    const hourCounts = new Map<number, number>();
+    for (const session of incompleteSessions) {
+      const ts = session.last_active_at || session.started_at;
+      if (ts) {
+        const hour = new Date(ts).getUTCHours();
+        hourCounts.set(hour, (hourCounts.get(hour) || 0) + 1);
+      }
+    }
+    const peakDropoffTimes = Array.from(hourCounts.entries())
+      .map(([hour, count]) => ({
+        hour,
+        timeLabel: `${hour === 0 ? 12 : hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`,
+        count
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
     const stats = {
       totalStarted,
       totalCompleted,
@@ -154,8 +163,9 @@ export async function GET(request: NextRequest) {
       averageDropoffQuestion,
       dropoffsByQuestion,
       recentDropoffs,
-      problemQuestions: [], // Could be expanded
-      peakDropoffTimes: []  // Could be expanded
+      problemQuestions,
+      peakDropoffTimes,
+      timePeriod
     };
 
     return NextResponse.json(stats);
